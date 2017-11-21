@@ -42,3 +42,18 @@ def test_ethpm_doesnt_instantiate_with_invalid_package(invalid_package):
 def test_ethpm_doesnt_instantiate_with_invalid_path(invalid_path):
     with pytest.raises(ValidationError):
         Package(invalid_path)
+
+
+def test_package_object_has_name_property(valid_package):
+    current_package = Package(valid_package)
+    assert current_package.name == "wallet"
+
+
+def test_package_object_has_version_property(valid_package):
+    current_package = Package(valid_package)
+    assert current_package.version == "1.0.0"
+
+
+def test_package_has_custom_str_repr(valid_package):
+    current_package = Package(valid_package)
+    assert current_package.__repr__() == "<Package wallet==1.0.0>"

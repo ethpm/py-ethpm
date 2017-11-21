@@ -14,7 +14,6 @@ class Package(object):
     def __init__(self, lockfile):
         """
         A lockfile can be:
-
         - filesystem path
         - parsed lockfile JSON
         - lockfile URI
@@ -32,3 +31,16 @@ class Package(object):
         except jsonValidationError:
             raise ValidationError
         self.package_data = package_data
+
+    def __repr__(self):
+        name = self.name
+        version = self.version
+        return "<Package {0}=={1}>".format(name, version)
+
+    @property
+    def name(self):
+        return self.package_data['package_name']
+
+    @property
+    def version(self):
+        return self.package_data['version']
