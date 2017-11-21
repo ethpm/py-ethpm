@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-import sys
 
 from setuptools import (
     setup,
@@ -24,7 +23,7 @@ setup(
     author_email='pipermerriam@gmail.com',
     url='https://github.com/pipermerriam/ethereum-erc190',
     include_package_data=True,
-    install_requires=install_requires,
+    install_requires=[],
     setup_requires=['setuptools-markdown'],
     py_modules=['erc190'],
     license="MIT",

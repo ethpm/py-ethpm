@@ -1,7 +1,6 @@
 import pytest
-from erc190 import Package
+from erc190.package import Package
 from erc190.exceptions import ValidationError
-from jsonschema import ValidationError as VE2
 
 
 def test_ethpm_exists():
@@ -10,22 +9,25 @@ def test_ethpm_exists():
 
 @pytest.fixture()
 def valid_package():
-    return "./tests/erc190/validSample.json"
+    return "./tests/erc190/validLockfile.json"
 
 
 @pytest.fixture()
 def invalid_package():
-    return "./tests/erc190/invalidSample.json"
+    return "./tests/erc190/invalidLockfile.json"
 
 
 def test_ethpm_instantiates_with_valid_package(valid_package):
     current_package = Package(valid_package)
-    assert current_package.lockfile == valid_package
-    assert current_package.parsed_json
+    assert current_package.package_identifier == valid_package
+    assert current_package.package_data['build_dependencies']
+    assert current_package.package_data['lockfile_version']
+    assert current_package.package_data['deployments']
+    assert current_package.package_data['contract_types']
 
 
 def test_ethpm_doesnt_instantiate_with_invalid_package(invalid_package):
-    with pytest.raises(VE2):
+    with pytest.raises(ValidationError):
         Package(invalid_package)
 
 

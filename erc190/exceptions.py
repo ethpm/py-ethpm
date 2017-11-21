@@ -1,11 +1,4 @@
-class PyEVMError(Exception):
-    """
-    Base error class for all py-evm errors.
-    """
-    pass
-
-
-class ValidationError(PyEVMError):
+class ValidationError(Exception):
     """
     Error to signal something does not pass a validation check.
     """
