@@ -71,6 +71,14 @@ def validate_package_deployments(package_data):
             )
 
 
+def check_for_build_dependencies(valid_package_data):
+    """
+    Catch packages that rely on other packages
+    """
+    if valid_package_data.get('build_dependencies'):
+        raise NotImplementedError("Handling of package dependencies has not yet been implemented")
+
+
 def validate_package_exists(package_id):
     """
     Validate that package with package_id exists in ASSSETS_DIR

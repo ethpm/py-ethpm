@@ -22,7 +22,6 @@ def test_validate_package_exists_invalidates():
 
 def test_load_package():
     package_data = load_package_data("validLockfile.json")
-    assert package_data['build_dependencies']
     assert package_data['lockfile_version']
     assert package_data['deployments']
     assert package_data['contract_types']

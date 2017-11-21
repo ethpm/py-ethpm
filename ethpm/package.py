@@ -12,6 +12,7 @@ from ethpm.utils.deployment_validation import (
     validate_single_matching_uri,
 )
 from ethpm.utils.package_validation import (
+    check_for_build_dependencies,
     load_package_data,
     validate_package_against_schema,
     validate_package_exists,
@@ -36,6 +37,7 @@ class Package(object):
         package_data = load_package_data(package_id)
         validate_package_against_schema(package_data)
         validate_package_deployments(package_data)
+        check_for_build_dependencies(package_data)
 
         self.package_data = package_data
 
