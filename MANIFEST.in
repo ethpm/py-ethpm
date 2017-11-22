@@ -6,4 +6,4 @@ include requirements.txt
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 
-include erc190/assets/*
+include ethpm/assets/*

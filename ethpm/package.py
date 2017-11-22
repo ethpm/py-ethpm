@@ -5,7 +5,7 @@ from jsonschema import (
     validate,
     ValidationError as jsonValidationError
 )
-from erc190.exceptions import (
+from ethpm.exceptions import (
     ValidationError
 )
 
@@ -23,7 +23,7 @@ class Package(object):
 
         self.package_identifier = lockfile
 
-        schema_data = json.load(open('./erc190/lockfileSpecification.json'))
+        schema_data = json.load(open('./ethpm/lockfileSpecification.json'))
         package_data = json.load(open(lockfile))
 
         try:
