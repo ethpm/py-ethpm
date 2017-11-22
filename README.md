@@ -1,4 +1,4 @@
-# ERC190
+# ETHPM
 
 * parse and validate lockfiles.
 * given a web3 instance provide access to contract factory classes
@@ -11,7 +11,7 @@
 
 ## Web3
 
-The `Package` object will function much like the `Contract` class provided by `web3`.  Rather than instantiating the base class provided by `erc190`, you will instead use a `classmethod` which generates a new `Package` class for a given lockfile.
+The `Package` object will function much like the `Contract` class provided by `web3`.  Rather than instantiating the base class provided by `ethpm`, you will instead use a `classmethod` which generates a new `Package` class for a given lockfile.
 
 ```python
 OwnedPackage = BasePackage.factory('/path/to/owned-v1.0.0.json')
@@ -46,7 +46,7 @@ Owned = owned_package.contract_factories.owned
 ```
 
 In cases where a contract uses a library, the contract factory will have
-unlinked bytecode.  The `erc190` package ships with it's own subclass of
+unlinked bytecode.  The `ethpm` package ships with its own subclass of
 `web3.contract.Contract` with a few extra methods and properties related to
 bytecode linking
 
