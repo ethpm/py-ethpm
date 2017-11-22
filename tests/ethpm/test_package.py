@@ -1,6 +1,6 @@
 import pytest
-from erc190.package import Package
-from erc190.exceptions import ValidationError
+from ethpm.package import Package
+from ethpm.exceptions import ValidationError
 
 
 def test_ethpm_exists():
@@ -9,12 +9,12 @@ def test_ethpm_exists():
 
 @pytest.fixture()
 def valid_package():
-    return "./tests/erc190/validLockfile.json"
+    return "./tests/ethpm/validLockfile.json"
 
 
 @pytest.fixture()
 def invalid_package():
-    return "./tests/erc190/invalidLockfile.json"
+    return "./tests/ethpm/invalidLockfile.json"
 
 
 def test_ethpm_instantiates_with_valid_package(valid_package):

@@ -15,7 +15,7 @@ readme = open(os.path.join(DIR, 'README.md')).read()
 
 
 setup(
-    name='erc190',
+    name='ethpm',
     version='0.1.0',
     description="""Python abstraction for ERC190 packages.""",
     long_description_markdown_filename='README.md',
@@ -25,7 +25,7 @@ setup(
     include_package_data=True,
     install_requires=[],
     setup_requires=['setuptools-markdown'],
-    py_modules=['erc190'],
+    py_modules=['ethpm'],
     license="MIT",
     zip_safe=False,
     keywords='ethereum',
