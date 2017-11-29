@@ -6,6 +6,7 @@
 # Packages
 *.egg
 *.egg-info
+.eggs/
 dist
 build
 eggs
@@ -67,6 +68,7 @@ logs
 .idea/dictionaries
 .idea/vcs.xml
 .idea/jsLibraryMappings.xml
+.vscode/
 
 # Sensitive or high-churn files:
 .idea/dataSources.ids

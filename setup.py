@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-import sys
 
 from setuptools import (
     setup,
@@ -16,7 +15,7 @@ readme = open(os.path.join(DIR, 'README.md')).read()
 
 
 setup(
-    name='erc190',
+    name='ethpm',
     version='0.1.0',
     description="""Python abstraction for ERC190 packages.""",
     long_description_markdown_filename='README.md',
@@ -24,9 +23,9 @@ setup(
     author_email='pipermerriam@gmail.com',
     url='https://github.com/pipermerriam/ethereum-erc190',
     include_package_data=True,
-    install_requires=install_requires,
+    install_requires=[],
     setup_requires=['setuptools-markdown'],
-    py_modules=['erc190'],
+    py_modules=['ethpm'],
     license="MIT",
     zip_safe=False,
     keywords='ethereum',
