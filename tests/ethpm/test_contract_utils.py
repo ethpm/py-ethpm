@@ -17,8 +17,6 @@ from ethpm.utils.contract import (
 def w3():
     eth_tester = EthereumTester()
     w3 = Web3(EthereumTesterProvider(eth_tester))
-    print("!!!")
-    print(type(w3))
     return w3
 
 
