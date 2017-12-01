@@ -22,9 +22,11 @@ def validate_minimal_contract_data_present(contract_data):
         )
 
 
+CONTRACT_NAME_REGEX = re.compile("^[a-zA-Z][-a-zA-Z0-9_]{0,255}$")
+
+
 def validate_contract_name(name):
-    pattern = re.compile("^[a-zA-Z][-a-zA-Z0-9_]{0,255}$")
-    if not pattern.match(name):
+    if not CONTRACT_NAME_REGEX.match(name):
         raise ValidationError("Contract name: {0} is not valid.".format(name))
 
 
