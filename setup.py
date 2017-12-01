@@ -23,7 +23,12 @@ setup(
     author_email='pipermerriam@gmail.com',
     url='https://github.com/pipermerriam/ethereum-erc190',
     include_package_data=True,
-    install_requires=[],
+    install_requires=[
+        "web3==4.0.0b3",
+        "eth-utils==0.7.1",
+        "jsonschema==2.6.0",
+        "cytoolz==0.8.2",
+    ],
     setup_requires=['setuptools-markdown'],
     py_modules=['ethpm'],
     license="MIT",

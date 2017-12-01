@@ -32,7 +32,7 @@ def validate_contract_name(name):
 
 def validate_w3_instance(w3):
     if w3 is None or not isinstance(w3, Web3):
-        raise ValidationError("Package does not have valid web3 instance.")
+        raise ValueError("Package does not have valid web3 instance.")
 
 
 @to_dict
