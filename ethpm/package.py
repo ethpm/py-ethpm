@@ -1,14 +1,16 @@
 from ethpm.exceptions import ValidationError
 
 from ethpm.utils.package_validation import (
-    load_and_validate_package,
-    validate_package_exists
+    load_package_data,
+    validate_package_against_schema,
+    validate_package_exists,
+    validate_package_deployments,
 )
 from ethpm.utils.contract import (
+    generate_contract_factory_kwargs,
     validate_contract_name,
     validate_minimal_contract_data_present,
-    generate_contract_factory_kwargs,
-    validate_w3_instance
+    validate_w3_instance,
 )
 
 
@@ -25,8 +27,11 @@ class Package(object):
         self.package_id = package_id
 
         validate_package_exists(package_id)
-        valid_package_data = load_and_validate_package(package_id)
-        self.package_data = valid_package_data
+        package_data = load_package_data(package_id)
+        validate_package_against_schema(package_data)
+        validate_package_deployments(package_data)
+
+        self.package_data = package_data
 
     def set_default_w3(self, w3):
         """
