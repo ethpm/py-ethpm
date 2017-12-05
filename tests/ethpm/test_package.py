@@ -1,10 +1,16 @@
 import pytest
 
-from web3 import Web3
 from eth_tester import EthereumTester
+
+from web3 import Web3
+
+from web3.providers.eth_tester import (
+    EthereumTesterProvider,
+)
+
 from ethpm.package import Package
+
 from ethpm.exceptions import ValidationError
-from web3.providers.eth_tester import EthereumTesterProvider
 
 
 def test_ethpm_exists():
