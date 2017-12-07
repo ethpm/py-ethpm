@@ -42,6 +42,14 @@ def validate_package_against_schema(package_data):
         )
 
 
+def validate_deployments_are_present(package_data):
+    if "deployments" not in package_data:
+        raise ValidationError("Package doesn't have a deployments key.")
+
+    if not package_data["deployments"]:
+        raise ValidationError("Package's deployments key is empty.")
+
+
 def validate_package_deployments(package_data):
     """
     Validate that a package's deployments contracts reference existing contract_types.

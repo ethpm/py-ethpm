@@ -45,8 +45,8 @@ def test_validate_deployed_contracts_present_validates(lockfile_with_conflicting
         validate_package_deployments(package_data)
 
 
-def test_validate_deployments(lockfile_with_matching_deployments):
-    package_data = load_package_data(lockfile_with_matching_deployments)
+def test_validate_deployments(lockfile_with_matching_deployment):
+    package_data = load_package_data(lockfile_with_matching_deployment)
     validate = validate_package_deployments(package_data)
     assert validate is None
 
