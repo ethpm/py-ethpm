@@ -23,11 +23,7 @@ Then, the `OwnedPackage` can be instantiated with any `web3` intance.
 owned_package = OwnedPackage(web3)
 ```
 
-`Package` classes should be constructable from any of:
-
-* Local filesystem path to a lockfile
-* Lockfile URI
-* The parsed lockfile JSON
+A `Package` class can only be directly constructed from the parsed lockfile JSON. It can also be initialized with the lockfile's URI or the local filesystem path to a lockfile by using `Package.from_file(path)`.
 
 
 ## Contract Factories

@@ -3,10 +3,10 @@ import pytest
 from ethpm.exceptions import ValidationError
 
 from ethpm.utils.contract import (
-  validate_minimal_contract_data_present,
-  validate_contract_name,
-  generate_contract_factory_kwargs,
-  validate_w3_instance,
+    validate_minimal_contract_data_present,
+    validate_contract_name,
+    generate_contract_factory_kwargs,
+    validate_w3_instance,
 )
 
 

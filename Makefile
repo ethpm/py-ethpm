@@ -22,7 +22,7 @@ clean-pyc:
 	find . -name '*~' -exec rm -f {} +
 
 lint:
-	flake8 web3
+	flake8 ethpm
 
 test:
 	py.test tests
@@ -31,9 +31,9 @@ test-all:
 	tox
 
 build-docs:
-	rm -f docs/web3.rst
+	rm -f docs/ethpm.rst
 	rm -f docs/modules.rst
-	sphinx-apidoc -o docs/ web3
+	sphinx-apidoc -o docs/ ethpm
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
 
