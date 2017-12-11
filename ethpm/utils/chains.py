@@ -6,7 +6,6 @@ from cytoolz import curry
 from eth_utils import (
     add_0x_prefix,
     remove_0x_prefix,
-    is_integer,
     encode_hex,
 )
 
@@ -99,7 +98,4 @@ def create_BIP122_uri(chain_id, resource_type, resource_identifier):
 
 
 def create_block_uri(chain_id, block_identifier):
-    if is_integer(block_identifier):
-        return create_BIP122_uri(chain_id, 'block', str(block_identifier))
-    else:
-        return create_BIP122_uri(chain_id, 'block', remove_0x_prefix(block_identifier))
+    return create_BIP122_uri(chain_id, 'block', remove_0x_prefix(block_identifier))

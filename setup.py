@@ -28,6 +28,8 @@ setup(
         "eth-utils==0.7.1",
         "jsonschema==2.6.0",
         "cytoolz==0.8.2",
+        "eth-tester==0.1.0b4",
+        "py-evm==0.2.0a7",
     ],
     setup_requires=['setuptools-markdown'],
     py_modules=['ethpm'],

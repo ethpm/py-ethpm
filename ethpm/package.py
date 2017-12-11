@@ -84,10 +84,13 @@ class Package(object):
     # Deployments
     #
 
-    def get_deployments(self, w3):
+    def get_deployments(self, w3=None):
         """
         API to retrieve instance of deployed contract dependency.
         """
+        if w3 is None:
+            w3 = self.w3
+
         validate_w3_instance(w3)
         validate_deployments_are_present(self.package_data)
 
@@ -95,4 +98,5 @@ class Package(object):
         matching_uri = validate_single_matching_uri(all_blockchain_uris, w3)
 
         deployment_data = self.package_data["deployments"][matching_uri]
-        return Deployments(deployment_data, w3)
+        contract_types = self.package_data["contract_types"].keys()
+        return Deployments(deployment_data, contract_types, w3)
