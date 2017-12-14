@@ -1,11 +1,11 @@
 import pytest
 
+from ethpm import Package
+
 from ethpm.exceptions import ValidationError
 
 from ethpm.deployments import Deployments
 
-CONTRACT_TYPES = list(["SafeMathLib"])
-INVALID_CONTRACT_TYPES = list(["INVALID"])
 
 DEPLOYMENT_DATA = {
       "SafeMathLib": {
@@ -18,8 +18,18 @@ DEPLOYMENT_DATA = {
 
 
 @pytest.fixture
+def contract_factory(lockfile_with_matching_deployment):
+    p = Package(lockfile_with_matching_deployment)
+    return p.get_contract_type("SafeMathLib")
+
+
+VALID_CONTRACT_TYPES = {"SafeMathLib": contract_factory}
+INVALID_CONTRACT_TYPES = {"INVALID": contract_factory}
+
+
+@pytest.fixture
 def deployment(w3):
-    return Deployments(DEPLOYMENT_DATA, CONTRACT_TYPES, w3)
+    return Deployments(DEPLOYMENT_DATA, VALID_CONTRACT_TYPES, w3)
 
 
 @pytest.fixture
@@ -52,7 +62,7 @@ def test_deployment_implements_get_items(deployment):
     assert deployment.items() == expected_items
 
 
-def test_deployments_get_items_with_invalid_contract_names_raises_exception(invalid_deployment):
+def test_deployment_get_items_with_invalid_contract_names_raises_exception(invalid_deployment):
     with pytest.raises(ValidationError):
         invalid_deployment.items()
 
@@ -62,7 +72,7 @@ def test_deployment_implements_get_values(deployment):
     assert deployment.values() == expected_values
 
 
-def test_deploymnet_get_values_with_invalid_contract_names_raises_exception(invalid_deployment):
+def test_deployment_get_values_with_invalid_contract_names_raises_exception(invalid_deployment):
     with pytest.raises(ValidationError):
         invalid_deployment.values()
 
@@ -88,9 +98,9 @@ def test_get_contract_instance_without_reference_in_deployments_raises_exception
         deployment.get_contract_instance("InvalidContract")
 
 
-def test_get_contract_instance_without_reference_in_contract_types_raises_exception(deployment):
-    with pytest.raises(KeyError):
-        deployment.get_contract_instance("notInContractTypes")
+def test_get_contract_instance_without_reference_in_contract_factories_raises(invalid_deployment):
+    with pytest.raises(ValidationError):
+        invalid_deployment.get_contract_instance("SafeMathLib")
 
 
 def test_get_contract_instance_correctly_configured_raises_NotImplementedError(deployment):

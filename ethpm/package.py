@@ -97,6 +97,14 @@ class Package(object):
         all_blockchain_uris = self.package_data["deployments"].keys()
         matching_uri = validate_single_matching_uri(all_blockchain_uris, w3)
 
-        deployment_data = self.package_data["deployments"][matching_uri]
-        contract_types = self.package_data["contract_types"].keys()
-        return Deployments(deployment_data, contract_types, w3)
+        deployments = self.package_data["deployments"][matching_uri]
+        all_contract_factories = {
+            deployment_data['contract_type']: self.get_contract_type(
+                deployment_data['contract_type'],
+                w3
+            )
+            for deployment_data
+            in deployments.values()
+        }
+
+        return Deployments(deployments, all_contract_factories, w3)

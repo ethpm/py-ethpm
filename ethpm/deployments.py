@@ -10,9 +10,9 @@ class Deployments:
     Deployment object to access instances of
     deployed contracts belonging to a package.
     """
-    def __init__(self, deployment_data, contract_types, w3):
+    def __init__(self, deployment_data, contract_factories, w3):
         self.deployment_data = deployment_data
-        self.contract_types = contract_types
+        self.contract_factories = contract_factories
         self.w3 = w3
 
     def __getitem__(self, key):
@@ -26,11 +26,19 @@ class Deployments:
         return self.deployment_data.get(key)
 
     def items(self):
-        item_dict = {name: self.get(name) for name in self.deployment_data}
+        item_dict = {
+            name: self.get(name)
+            for name
+            in self.deployment_data
+        }
         return item_dict.items()
 
     def values(self):
-        values = [self.get(name) for name in self.deployment_data]
+        values = [
+            self.get(name)
+            for name
+            in self.deployment_data
+        ]
         return values
 
     def get_contract_instance(self, contract_name):
@@ -47,5 +55,5 @@ class Deployments:
         if name not in self.deployment_data:
             raise KeyError("Contract name not found in deployment data")
 
-        if name not in self.contract_types:
-            raise ValidationError("Contract name not found in contract_types")
+        if name not in self.contract_factories:
+            raise ValidationError("Contract name not found in contract_factories.")

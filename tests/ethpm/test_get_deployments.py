@@ -50,3 +50,4 @@ def test_get_deployments_with_multiple_matches_raises_exception(w3, lockfile_wit
 def test_get_deployments_with_a_match_returns_deployments(w3, matching_package):
     deployment = matching_package.get_deployments(w3)
     assert isinstance(deployment, Deployments)
+    assert "SafeMathLib" in deployment

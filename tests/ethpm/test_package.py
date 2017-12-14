@@ -1,5 +1,7 @@
 import pytest
 
+import web3
+
 from ethpm.package import Package
 
 from ethpm.exceptions import ValidationError
@@ -64,19 +66,13 @@ def test_set_default_web3(valid_package_id, w3):
 
 def test_get_contract_type_with_unique_web3(package, w3):
     contract_factory = package.get_contract_type("Wallet", w3)
-    assert hasattr(contract_factory, 'address')
-    assert hasattr(contract_factory, 'abi')
-    assert hasattr(contract_factory, 'bytecode')
-    assert hasattr(contract_factory, 'bytecode_runtime')
+    assert getattr(contract_factory, '__module__') == web3.contract.__name__
 
 
 def test_get_contract_type_with_default_web3(package, w3):
     package.set_default_w3(w3)
     contract_factory = package.get_contract_type("Wallet")
-    assert hasattr(contract_factory, 'address')
-    assert hasattr(contract_factory, 'abi')
-    assert hasattr(contract_factory, 'bytecode')
-    assert hasattr(contract_factory, 'bytecode_runtime')
+    assert getattr(contract_factory, '__module__') == web3.contract.__name__
 
 
 @pytest.mark.parametrize("invalid_w3", ({"invalid": "w3"}))
