@@ -15,6 +15,16 @@ def valid_package_id():
 
 
 @pytest.fixture()
+def package_with_dependencies():
+    return "lockfileWithBuildDependencies.json"
+
+
+@pytest.fixture()
+def owned():
+    return "owned.json"
+
+
+@pytest.fixture()
 def invalid_package_id():
     return "invalidLockfile.json"
 
@@ -28,7 +38,6 @@ def test_package_object_instantiates_with_valid_package_id(valid_package_id):
     current_package = Package(valid_package_id)
     assert current_package.package_id is valid_package_id
     assert current_package.w3 is None
-    assert current_package.package_data['build_dependencies']
     assert current_package.package_data['lockfile_version']
     assert current_package.package_data['deployments']
     assert current_package.package_data['contract_types']
@@ -108,3 +117,16 @@ def test_package_object_has_version_property(valid_package_id):
 def test_package_has_custom_str_repr(valid_package_id):
     current_package = Package(valid_package_id)
     assert current_package.__repr__() == "<Package wallet==1.0.0>"
+
+
+def test_package_cannot_be_initialized_with_build_dependencies(package_with_dependencies):
+    with pytest.raises(NotImplementedError):
+        Package(package_with_dependencies)
+    
+
+def test_package_can_be_initialized_with_empty_dependency_key(valid_package_id):
+    assert Package(valid_package_id)
+
+
+def test_package_without_build_dependencies_can_be_initialized(owned):
+    assert Package(owned)
