@@ -78,6 +78,7 @@ def lockfile_with_matching_deployment(w3, tmpdir):
     block = w3.eth.getBlock("earliest")
     block_uri = create_block_uri(w3.toHex(chain_id), w3.toHex(block.hash))
     lockfile = copy.deepcopy(LOCKFILE)
+    lockfile["deployments"] =  {}
     lockfile["deployments"][block_uri] = {
       "SafeMathLib": {
         "contract_type": "SafeMathLib",
@@ -94,7 +95,7 @@ def lockfile_with_matching_deployment(w3, tmpdir):
 @pytest.fixture
 def lockfile_with_no_matching_deployments(w3, tmpdir):
     w3.testing.mine(5)
-    incorrect_chain_id = get_chain_id(w3)[:-1] + b'X'
+    incorrect_chain_id = (b'\x00' * 31 + b'\x01')
     block = w3.eth.getBlock("earliest")
     block_uri = create_block_uri(w3.toHex(incorrect_chain_id), w3.toHex(block.hash))
     lockfile = copy.deepcopy(LOCKFILE)

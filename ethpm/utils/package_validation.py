@@ -56,7 +56,6 @@ def validate_package_deployments(package_data):
     """
     if set(("contract_types", "deployments")).issubset(package_data):
         all_contract_types = list(package_data["contract_types"].keys())
-
         all_deployments = list(package_data["deployments"].values())
         all_deployment_names = set(itertools.chain.from_iterable(
             deployment
