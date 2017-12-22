@@ -1,3 +1,5 @@
+import json
+
 from ethpm.deployments import Deployments
 
 from ethpm.exceptions import ValidationError
@@ -13,28 +15,44 @@ from ethpm.utils.deployment_validation import (
 )
 from ethpm.utils.package_validation import (
     check_for_build_dependencies,
-    load_package_data,
     validate_package_against_schema,
-    validate_package_exists,
     validate_package_deployments,
     validate_deployments_are_present,
 )
 
 
+def _load_package_data_from_file(file_obj):
+    """
+    Utility function to load package objects
+    from file objects passed to Package.from_file
+    """
+    try:
+        package_data = json.load(file_obj)
+    except json.JSONDecodeError as err:
+        raise json.JSONDecodeError(
+            "Failed to load package data. File is not a valid JSON document.",
+            err.doc,
+            err.pos,
+        )
+
+    return package_data
+
+
 class Package(object):
 
-    def __init__(self, package_id, w3=None):
+    def __init__(self, package_data, w3=None):
         """
-        A lockfile can be:
-        - filesystem path
-        - parsed lockfile JSON
-        - lockfile URI
+        A lockfile must be constructed with
+        parsed lockfile JSON.
         """
         self.w3 = w3
-        self.package_id = package_id
 
-        validate_package_exists(package_id)
-        package_data = load_package_data(package_id)
+        if not isinstance(package_data, dict):
+            raise TypeError(
+                "Package object must be initialized with a dictionary. "
+                "Got {0}".format(type(package_data))
+            )
+
         validate_package_against_schema(package_data)
         validate_package_deployments(package_data)
         check_for_build_dependencies(package_data)
@@ -73,6 +91,25 @@ class Package(object):
         name = self.name
         version = self.version
         return "<Package {0}=={1}>".format(name, version)
+
+    @classmethod
+    def from_file(cls, file_path_or_obj):
+        """
+        Allows users to create a Package object
+        from a filepath
+        """
+        if isinstance(file_path_or_obj, str):
+            with open(file_path_or_obj) as file_obj:
+                package_data = _load_package_data_from_file(file_obj)
+        elif hasattr(file_path_or_obj, 'read') and callable(file_path_or_obj.read):
+            package_data = _load_package_data_from_file(file_path_or_obj)
+        else:
+            raise TypeError(
+                "The Package.from_filemethod takes either a filesystem path or a file-like object. "
+                "Got {0} instead.".format(type(file_path_or_obj))
+            )
+
+        return cls(package_data)
 
     @property
     def name(self):

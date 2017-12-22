@@ -3,7 +3,6 @@ import pytest
 from ethpm.exceptions import ValidationError
 
 from ethpm.utils.package_validation import (
-    load_package_data,
     validate_package_exists,
     validate_package_against_schema,
     validate_package_deployments,
@@ -20,37 +19,25 @@ def test_validate_package_exists_invalidates():
         validate_package_exists("DNE")
 
 
-def test_load_package():
-    package_data = load_package_data("validLockfile.json")
-    assert package_data['lockfile_version']
-    assert package_data['deployments']
-    assert package_data['contract_types']
+def test_validate_package_validates(valid_lockfile):
+    assert validate_package_against_schema(valid_lockfile) is None
 
 
-def test_validate_package_validates():
-    package_data = load_package_data("validLockfile.json")
-    assert validate_package_against_schema(package_data) is None
-
-
-def test_validate_package_invalidates():
-    package_data = load_package_data("invalidLockfile.json")
+def test_validate_package_invalidates(invalid_lockfile):
     with pytest.raises(ValidationError):
-        validate_package_against_schema(package_data)
+        validate_package_against_schema(invalid_lockfile)
 
 
 def test_validate_deployed_contracts_present_validates(lockfile_with_conflicting_deployments):
-    package_data = load_package_data(lockfile_with_conflicting_deployments)
     with pytest.raises(ValidationError):
-        validate_package_deployments(package_data)
+        validate_package_deployments(lockfile_with_conflicting_deployments)
 
 
 def test_validate_deployments(lockfile_with_matching_deployment):
-    package_data = load_package_data(lockfile_with_matching_deployment)
-    validate = validate_package_deployments(package_data)
+    validate = validate_package_deployments(lockfile_with_matching_deployment)
     assert validate is None
 
 
 def test_validate_deployed_contracts_pr(lockfile_with_no_deployments):
-    package_data = load_package_data(lockfile_with_no_deployments)
-    validate = validate_package_deployments(package_data)
+    validate = validate_package_deployments(lockfile_with_no_deployments)
     assert validate is None

@@ -15,14 +15,6 @@ from ethpm.exceptions import ValidationError
 RELEASE_LOCKFILE_SCHEMA_PATH = os.path.join(ASSETS_DIR, 'release-lockfile.schema.v1.json')
 
 
-def load_package_data(package_id):
-    """
-    Load package json located in ASSETS_DIR.
-    """
-    with open(os.path.join(ASSETS_DIR, package_id)) as package:
-        return json.load(package)
-
-
 def _load_schema_data():
     with open(RELEASE_LOCKFILE_SCHEMA_PATH) as schema:
         return json.load(schema)
