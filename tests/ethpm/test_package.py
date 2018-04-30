@@ -67,4 +67,3 @@ def test_package_object_has_version_property(valid_lockfile):
 def test_package_has_custom_str_repr(valid_lockfile):
     current_package = Package(valid_lockfile)
     assert current_package.__repr__() == "<Package wallet==1.0.0>"
-    
