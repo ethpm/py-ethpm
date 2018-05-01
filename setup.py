@@ -30,7 +30,7 @@ setup(
         "cytoolz==0.8.2",
         "eth-tester==0.1.0b4",
         "eth-keys==0.1.0b3",
-        "rlp==0.5.1",
+        "rlp<1.0",
         "py-evm==0.2.0a7",
     ],
     setup_requires=['setuptools-markdown'],
