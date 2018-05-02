@@ -6,17 +6,17 @@ from ethpm.exceptions import ValidationError
 
 
 @pytest.fixture()
-def package(valid_lockfile):
-    return Package(valid_lockfile)
+def package(valid_package):
+    return Package(valid_package)
 
 
-def test_package_object_instantiates_with_a_web3_object(valid_lockfile, w3):
-    current_package = Package(valid_lockfile, w3)
+def test_package_object_instantiates_with_a_web3_object(valid_package, w3):
+    current_package = Package(valid_package, w3)
     assert current_package.w3 is w3
 
 
-def test_set_default_web3(valid_lockfile, w3):
-    current_package = Package(valid_lockfile)
+def test_set_default_web3(valid_package, w3):
+    current_package = Package(valid_package)
     current_package.set_default_w3(w3)
     assert current_package.w3 is w3
 
@@ -54,16 +54,16 @@ def test_get_contract_type_throws_if_name_isnt_present(package, w3):
         assert package.get_contract_type("DoesNotExist", w3)
 
 
-def test_package_object_has_name_property(valid_lockfile):
-    current_package = Package(valid_lockfile)
+def test_package_object_has_name_property(valid_package):
+    current_package = Package(valid_package)
     assert current_package.name == "wallet"
 
 
-def test_package_object_has_version_property(valid_lockfile):
-    current_package = Package(valid_lockfile)
+def test_package_object_has_version_property(valid_package):
+    current_package = Package(valid_package)
     assert current_package.version == "1.0.0"
 
 
-def test_package_has_custom_str_repr(valid_lockfile):
-    current_package = Package(valid_lockfile)
+def test_package_has_custom_str_repr(valid_package):
+    current_package = Package(valid_package)
     assert current_package.__repr__() == "<Package wallet==1.0.0>"

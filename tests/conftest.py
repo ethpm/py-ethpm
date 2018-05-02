@@ -24,8 +24,8 @@ def w3():
     return w3
 
 
-LOCKFILE = {
-  "lockfile_version": "1",
+PACKAGE = {
+  "spec_version": "2",
   "version": "1.0.0",
   "package_name": "safe-math-lib",
   "contract_types": {
@@ -55,40 +55,40 @@ LOCKFILE = {
 
 
 @pytest.fixture
-def valid_lockfile():
-    with open("ethpm/assets/validLockfile.json") as file_obj:
+def valid_package():
+    with open("ethpm/assets/validPackage.json") as file_obj:
         return json.load(file_obj)
 
 
 @pytest.fixture()
-def invalid_lockfile():
-    with open("ethpm/assets/invalidLockfile.json") as file_obj:
+def invalid_package():
+    with open("ethpm/assets/invalidPackage.json") as file_obj:
         return json.load(file_obj)
 
 
 @pytest.fixture
-def lockfile_with_no_deployments():
-    lockfile = copy.deepcopy(LOCKFILE)
-    lockfile.pop("deployments")
-    return lockfile
+def package_with_no_deployments():
+    package = copy.deepcopy(PACKAGE)
+    package.pop("deployments")
+    return package
 
 
 @pytest.fixture
-def lockfile_with_empty_deployments(tmpdir):
-    lockfile = copy.deepcopy(LOCKFILE)
-    lockfile["deployments"] = {}
-    return lockfile
+def package_with_empty_deployments(tmpdir):
+    package = copy.deepcopy(PACKAGE)
+    package["deployments"] = {}
+    return package
 
 
 @pytest.fixture
-def lockfile_with_matching_deployment(w3, tmpdir):
+def package_with_matching_deployment(w3, tmpdir):
     w3.testing.mine(5)
     chain_id = get_chain_id(w3)
     block = w3.eth.getBlock("earliest")
     block_uri = create_block_uri(w3.toHex(chain_id), w3.toHex(block.hash))
-    lockfile = copy.deepcopy(LOCKFILE)
-    lockfile["deployments"] =  {}
-    lockfile["deployments"][block_uri] = {
+    package = copy.deepcopy(PACKAGE)
+    package["deployments"] =  {}
+    package["deployments"][block_uri] = {
       "SafeMathLib": {
         "contract_type": "SafeMathLib",
         "address": "0x8d2c532d7d211816a2807a411f947b211569b68c",
@@ -96,17 +96,17 @@ def lockfile_with_matching_deployment(w3, tmpdir):
         "block": "0x420cb2b2bd634ef42f9082e1ee87a8d4aeeaf506ea5cdeddaa8ff7cbf911810c"
       }
     }
-    return lockfile
+    return package
 
 
 @pytest.fixture
-def lockfile_with_no_matching_deployments(w3, tmpdir):
+def package_with_no_matching_deployments(w3, tmpdir):
     w3.testing.mine(5)
     incorrect_chain_id = (b'\x00' * 31 + b'\x01')
     block = w3.eth.getBlock("earliest")
     block_uri = create_block_uri(w3.toHex(incorrect_chain_id), w3.toHex(block.hash))
-    lockfile = copy.deepcopy(LOCKFILE)
-    lockfile["deployments"][block_uri] = {
+    package = copy.deepcopy(PACKAGE)
+    package["deployments"][block_uri] = {
       "SafeMathLib": {
         "contract_type": "SafeMathLib",
         "address": "0x8d2c532d7d211816a2807a411f947b211569b68c",
@@ -114,11 +114,11 @@ def lockfile_with_no_matching_deployments(w3, tmpdir):
         "block": "0x420cb2b2bd634ef42f9082e1ee87a8d4aeeaf506ea5cdeddaa8ff7cbf911810c"
       }
     }
-    return lockfile
+    return package
 
 
 @pytest.fixture
-def lockfile_with_multiple_matches(w3, tmpdir):
+def package_with_multiple_matches(w3, tmpdir):
     w3.testing.mine(5)
     chain_id = get_chain_id(w3)
     block = w3.eth.getBlock("latest")
@@ -126,8 +126,8 @@ def lockfile_with_multiple_matches(w3, tmpdir):
     w3.testing.mine(1)
     second_block = w3.eth.getBlock("latest")
     second_block_uri = create_block_uri(w3.toHex(chain_id), w3.toHex(second_block.hash))
-    lockfile = copy.deepcopy(LOCKFILE)
-    lockfile['deployments'][block_uri] = {
+    package = copy.deepcopy(PACKAGE)
+    package['deployments'][block_uri] = {
         "SafeMathLib": {
             "contract_type": "SafeMathLib",
             "address": "0x8d2c532d7d211816a2807a411f947b211569b68c",
@@ -135,7 +135,7 @@ def lockfile_with_multiple_matches(w3, tmpdir):
             "block": "0x420cb2b2bd634ef42f9082e1ee87a8d4aeeaf506ea5cdeddaa8ff7cbf911810c"
         }
     }
-    lockfile['deployments'][second_block_uri] = {
+    package['deployments'][second_block_uri] = {
         "SafeMathLib": {
             "contract_type": "SafeMathLib",
             "address": "0x8d2c532d7d211816a2807a411f947b211569b68c",
@@ -143,13 +143,13 @@ def lockfile_with_multiple_matches(w3, tmpdir):
             "block": "0x420cb2b2bd634ef42f9082e1ee87a8d4aeeaf506ea5cdeddaa8ff7cbf911810c"
         }
     }
-    return lockfile
+    return package
 
 
 @pytest.fixture
-def lockfile_with_conflicting_deployments(tmpdir):
-    lockfile = copy.deepcopy(LOCKFILE)
-    lockfile["deployments"]["blockchain://41941023680923e0fe4d74a34bdac8141f2540e3ae90623718e47d66d1ca4a2d/block/1e96de11320c83cca02e8b9caf3e489497e8e432befe5379f2f08599f8aecede"] = {
+def package_with_conflicting_deployments(tmpdir):
+    package = copy.deepcopy(PACKAGE)
+    package["deployments"]["blockchain://41941023680923e0fe4d74a34bdac8141f2540e3ae90623718e47d66d1ca4a2d/block/1e96de11320c83cca02e8b9caf3e489497e8e432befe5379f2f08599f8aecede"] = {
         "WrongNameLib": {
             "contract_type": "WrongNameLib",
             "address": "0x8d2c532d7d211816a2807a411f947b211569b68c",
@@ -157,4 +157,4 @@ def lockfile_with_conflicting_deployments(tmpdir):
             "block": "0x420cb2b2bd634ef42f9082e1ee87a8d4aeeaf506ea5cdeddaa8ff7cbf911810c"
         }
     }
-    return lockfile
+    return package

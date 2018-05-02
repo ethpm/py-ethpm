@@ -42,8 +42,8 @@ class Package(object):
 
     def __init__(self, package_data, w3=None):
         """
-        A lockfile must be constructed with
-        parsed lockfile JSON.
+        A package must be constructed with
+        parsed package JSON.
         """
         self.w3 = w3
 
