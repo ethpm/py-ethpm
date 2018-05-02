@@ -1,17 +1,17 @@
 # ETHPM
 
-* parse and validate lockfiles.
+* parse and validate packages.
 * given a web3 instance provide access to contract factory classes
 * given a web3 instance provide access to all of the deployed contract instances for the chain that web3 is connected to.
 * validate package bytecode matches compilation output.
 * validate deployed bytecode matches compilation output
 * access to packages dependencies
-* construct new lockfiles
+* construct new packages 
 
 
 ## Web3
 
-The `Package` object will function much like the `Contract` class provided by `web3`.  Rather than instantiating the base class provided by `ethpm`, you will instead use a `classmethod` which generates a new `Package` class for a given lockfile.
+The `Package` object will function much like the `Contract` class provided by `web3`.  Rather than instantiating the base class provided by `ethpm`, you will instead use a `classmethod` which generates a new `Package` class for a given package.
 
 ```python
 OwnedPackage = BasePackage.factory('/path/to/owned-v1.0.0.json')
@@ -23,7 +23,7 @@ Then, the `OwnedPackage` can be instantiated with any `web3` intance.
 owned_package = OwnedPackage(web3)
 ```
 
-A `Package` class can only be directly constructed from the parsed lockfile JSON. It can also be initialized with the lockfile's URI or the local filesystem path to a lockfile by using `Package.from_file(path)`.
+A `Package` class can only be directly constructed from the parsed package JSON. It can also be initialized with the package's URI or the local filesystem path to a package by using `Package.from_file(path)`.
 
 
 ## Contract Factories
@@ -89,7 +89,7 @@ connecting to their own IPFS node.
 
 The `Package` class should verify all of the following things.
 
-* Lockfile matches json schema.
+* Package json matches release-package.schema.
 * Included bytecode matches compilation output
 * Deployed bytecode matches compilation output
 
@@ -106,6 +106,6 @@ The `Package` class should provide access to the full dependency tree.
 
 ## Testing Strategy
 
-* Load and validate lockfiles from disk.
-* Access lockfile data.
+* Load and validate packages from disk.
+* Access package data.
 * Access contract factories.

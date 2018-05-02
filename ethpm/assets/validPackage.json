@@ -1,5 +1,5 @@
 {
-  "lockfile_version": "1",
+  "spec_version": "2",
   "version": "1.0.0",
   "package_name": "wallet",
   "sources": {
@@ -93,8 +93,5 @@
       }
     }
   },
-  "build_dependencies": {
-    "owned": "ipfs://QmUwVUMVtkVctrLDeL12SoeCPUacELBU8nAxRtHUzvtjND",
-    "safe-math-lib": "ipfs://QmfUwis9K2SLwnUh62PDb929JzU5J2aFKd4kS1YErYajdq"
-  }
+  "build_dependencies": {}
 }

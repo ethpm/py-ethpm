@@ -1,0 +1,7 @@
+{
+  "tests/ethpm/test_package_validation_utils.py::test_validate_package_exists_validates[invalidLockfile.json]": true,
+  "tests/ethpm/test_package_validation_utils.py::test_validate_package_exists_validates[validLockfile.json]": true,
+  "tests/test_package_initialization.py::test_from_file_succeeds_with_valid_lockfile[True]": true,
+  "tests/test_package_initialization.py::test_from_file_succeeds_with_valid_package": true,
+  "tests/test_package_initialization.py::test_init_from_valid_lockfile_data": true
+}
