@@ -4,6 +4,7 @@ from ethpm.exceptions import ValidationError
 from web3 import Web3
 
 from eth_utils import (
+    to_bytes,
     to_dict,
     encode_hex
 )
@@ -43,6 +44,8 @@ def generate_contract_factory_kwargs(contract_data):
     if "abi" in contract_data:
         yield "abi", contract_data["abi"]
     if "bytecode" in contract_data:
-        yield "bytecode", encode_hex(contract_data["bytecode"])
+        bytecode = to_bytes(text=contract_data["bytecode"])
+        yield "bytecode", encode_hex(bytecode)
     if "runtime_bytecode" in contract_data:
-        yield "bytecode_runtime", encode_hex(contract_data["runtime_bytecode"])
+        runtime_bytecode = to_bytes(text=contract_data["bytecode"])
+        yield "bytecode_runtime", encode_hex(runtime_bytecode)

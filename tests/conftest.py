@@ -25,7 +25,7 @@ def w3():
 
 
 PACKAGE = {
-  "spec_version": "2",
+  "manifest_version": "2",
   "version": "1.0.0",
   "package_name": "safe-math-lib",
   "contract_types": {

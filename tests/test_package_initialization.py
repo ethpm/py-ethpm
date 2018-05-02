@@ -24,7 +24,7 @@ def _generate_fixture_param(tmpdir, as_file_path, file_content):
 def valid_package_from_path(tmpdir, request):
     valid_package = json.dumps({
         "package_name": "foo",
-        "spec_version": "2",
+        "manifest_version": "2",
         "version": "1.0.0",
     })
     with _generate_fixture_param(tmpdir, request.param, valid_package) as file_obj:
@@ -35,7 +35,7 @@ def valid_package_from_path(tmpdir, request):
 def invalid_package_from_path(tmpdir, request):
     invalid_package = json.dumps({
         "package_name": "foo",
-        "spec_version": "not a valid version",
+        "manifest_version": "not a valid version",
         "version": "1.0.0",
     })
     with _generate_fixture_param(tmpdir, request.param, invalid_package) as file_obj_or_path:
@@ -51,7 +51,7 @@ def non_json_package(tmpdir, request):
 def test_init_from_valid_package_data():
     minimal_package = {
         "package_name": "foo",
-        "spec_version": "2",
+        "manifest_version": "2",
         "version": "1.0.0",
     }
 
