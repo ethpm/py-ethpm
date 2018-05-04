@@ -53,14 +53,14 @@
           "type": "fallback"
         }
       ],
+      "compiler": {
+        "type": "solc",
+        "version": "0.4.6+commit.2dabbdf0.Darwin.appleclang",
+        "settings": {
+          "optimize": true
+        }
+      },
       "natspec": {
-        "compiler": {
-          "type": "solc",
-          "version": "0.4.6+commit.2dabbdf0.Darwin.appleclang",
-          "settings": {
-            "optimize": true
-          }
-        },
         "author": "Piper Merriam <pipermerriam@gmail.com>",
         "methods": {
           "approve(address,uint256)": {
@@ -93,5 +93,8 @@
       }
     }
   },
-  "build_dependencies": {}
+  "build_dependencies": {
+    "owned": "ipfs://QmUwVUMVtkVctrLDeL12SoeCPUacELBU8nAxRtHUzvtjND",
+    "safe-math-lib": "ipfs://QmfUwis9K2SLwnUh62PDb929JzU5J2aFKd4kS1YErYajdq"
+  }
 }
