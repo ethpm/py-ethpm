@@ -9,9 +9,8 @@ from ethpm.utils.package_validation import (
 )
 
 
-@pytest.mark.parametrize("id", ("invalidPackage.json", "validPackage.json"))
-def test_validate_package_exists_validates(id):
-    assert validate_package_exists(id) is None
+def test_validate_package_exists_validates():
+    assert validate_package_exists("./v2-packages/safe-math-lib/1.0.0.json") is None
 
 
 def test_validate_package_exists_invalidates():
