@@ -2,6 +2,8 @@ import itertools
 import json
 import os
 
+from typing import Dict
+
 from jsonschema import (
     validate,
     ValidationError as jsonValidationError
@@ -15,12 +17,12 @@ from ethpm.exceptions import ValidationError
 RELEASE_PACKAGE_SCHEMA_PATH = os.path.join(ASSETS_DIR, 'package.schema.v2.json')
 
 
-def _load_schema_data():
+def _load_schema_data() -> Dict:
     with open(RELEASE_PACKAGE_SCHEMA_PATH) as schema:
         return json.load(schema)
 
 
-def validate_package_against_schema(package_data):
+def validate_package_against_schema(package_data: Dict):
     """
     Load and validate package json against schema
     located at RELEASE_PACKAGE_SCHEMA_PATH.
@@ -34,7 +36,7 @@ def validate_package_against_schema(package_data):
         )
 
 
-def validate_deployments_are_present(package_data):
+def validate_deployments_are_present(package_data: Dict):
     if "deployments" not in package_data:
         raise ValidationError("Package doesn't have a deployments key.")
 
@@ -42,7 +44,7 @@ def validate_deployments_are_present(package_data):
         raise ValidationError("Package's deployments key is empty.")
 
 
-def validate_package_deployments(package_data):
+def validate_package_deployments(package_data: Dict):
     """
     Validate that a package's deployments contracts reference existing contract_types.
     """
@@ -62,7 +64,7 @@ def validate_package_deployments(package_data):
             )
 
 
-def check_for_build_dependencies(valid_package_data):
+def check_for_build_dependencies(valid_package_data: Dict):
     """
     Catch packages that rely on other packages
     """
@@ -70,7 +72,7 @@ def check_for_build_dependencies(valid_package_data):
         raise NotImplementedError("Handling of package dependencies has not yet been implemented")
 
 
-def validate_package_exists(package_id):
+def validate_package_exists(package_id: str):
     """
     Validate that package with package_id exists in ASSSETS_DIR
     """

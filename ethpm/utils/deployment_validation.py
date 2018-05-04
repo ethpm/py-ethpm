@@ -1,3 +1,7 @@
+from typing import List
+
+from web3.main import Web3
+
 from ethpm.exceptions import ValidationError
 
 from ethpm.utils.chains import (
@@ -5,7 +9,7 @@ from ethpm.utils.chains import (
 )
 
 
-def validate_single_matching_uri(all_blockchain_uris, w3):
+def validate_single_matching_uri(all_blockchain_uris: List[str], w3: Web3) -> str:
 
     matching_uris = [
         uri

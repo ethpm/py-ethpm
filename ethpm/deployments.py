@@ -1,3 +1,11 @@
+from typing import (
+    Dict,
+    ItemsView,
+    List,
+)
+
+from web3.main import Web3
+
 from ethpm.exceptions import ValidationError
 
 from ethpm.utils.contract import (
@@ -10,22 +18,22 @@ class Deployments:
     Deployment object to access instances of
     deployed contracts belonging to a package.
     """
-    def __init__(self, deployment_data, contract_factories, w3):
+    def __init__(self, deployment_data: Dict, contract_factories: Dict, w3: Web3) -> None:
         self.deployment_data = deployment_data
         self.contract_factories = contract_factories
         self.w3 = w3
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Dict:
         return self.get(key)
 
-    def __contains__(self, key):
+    def __contains__(self, key: str) -> bool:
         return key in self.deployment_data
 
-    def get(self, key):
+    def get(self, key: str) -> Dict:
         self._validate_name_and_references(key)
         return self.deployment_data.get(key)
 
-    def items(self):
+    def items(self) -> ItemsView:
         item_dict = {
             name: self.get(name)
             for name
@@ -33,7 +41,7 @@ class Deployments:
         }
         return item_dict.items()
 
-    def values(self):
+    def values(self) -> List:
         values = [
             self.get(name)
             for name
