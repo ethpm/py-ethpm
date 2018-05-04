@@ -2,14 +2,14 @@
   "title": "Release Package Specification",
   "type": "object",
   "required": [
-    "spec_version",
+    "manifest_version",
     "package_name",
     "version"
   ],
   "version": "2",
   "additionalProperties": false,
   "properties": {
-    "spec_version": {
+    "manifest_version": {
       "type": "string",
       "title": "EthPM Specification Version",
       "default": "2",
@@ -38,7 +38,7 @@
               "type": "string"
             },
             {
-              "$ref": "IPFS-URI"
+              "$ref": "#/definitions/ContentURI"
             }
           ]
         }
@@ -48,7 +48,7 @@
       "title": "The contract types included in this release",
       "type": "object",
       "patternProperties": {
-        "[a-zA-Z][-a-zA-Z0-9_]*(?:\\[[-a-zA-Z0-9]{1,256}\\])$": {
+        "[a-zA-Z][-a-zA-Z0-9_]{0,255}(?:\\[[-a-zA-Z0-9]{1,256}\\])$": {
           "$ref": "#/definitions/ContractType"
         }
       }
@@ -60,7 +60,7 @@
         "^blockchain\\://[0-9a-zA-Z]{64}/block/[0-9a-zA-Z]{64}$": {
           "type": "object",
           "patternProperties": {
-            "^[a-zA-Z][a-zA-Z0-9_]*$": {
+            "^[a-zA-Z][a-zA-Z0-9_]{0,255}$": {
               "$ref": "#/definitions/ContractInstance"
             }
           }
@@ -72,7 +72,7 @@
       "type": "object",
       "patternProperties": {
         "^[a-z][-a-z0-9]{0,213}$": {
-          "$ref": "#/definitions/IPFS-URI"
+          "$ref": "#/definitions/ContentURI"
         }
       }
     }
@@ -121,15 +121,13 @@
         "contract_name": {
           "title": "The name for this contract type as found in the project source code.",
           "type": "string",
-          "pattern": "[a-zA-Z][a-zA-Z0-9_]*"
+          "pattern": "[a-zA-Z][a-zA-Z0-9_]{0,255}"
         },
         "bytecode": {
-          "title": "The unlinked '0x' prefixed bytecode for this contract type",
-          "type": "string"
+		  "$ref": "#/definitions/BytecodeObject"
         },
         "runtime_bytecode": {
-          "title": "The unlinked '0x' prefixed runtime portion of the bytecode for this contract type",
-          "type": "string"
+		  "$ref": "#/definitions/BytecodeObject"
         },
         "abi": {
           "title": "The ABI for this contract type",
@@ -154,7 +152,7 @@
         "contract_type": {
           "title": "The contract type of this contract instance",
           "type": "string",
-          "pattern": "^(?:[a-z][-a-z0-9]{0,213}\\:)?[a-zA-Z][-a-zA-Z0-9_]*(?:\\[[-a-zA-Z0-9]{1,256}\\])?$"
+          "pattern": "^(?:[a-z][-a-z0-9]{0,213}\\:)?[a-zA-Z][-a-zA-Z0-9_]{0,255}(?:\\[[-a-zA-Z0-9]{1,256}\\])?$"
         },
         "address": {
           "$ref": "#/definitions/Address"
@@ -166,8 +164,7 @@
           "$ref": "#/definitions/BlockHash"
         },
         "runtime_bytecode": {
-          "title": "The on-chain bytecode for this contract instance.",
-          "type": "string"
+		  "$ref": "#/definitions/BytecodeObject"
         },
         "compiler": {
           "$ref": "#/definitions/CompilerInformation"
@@ -181,6 +178,51 @@
         }
       }
     },
+	"BytecodeObject": {
+	  "title": "Contract Bytecode",
+	  "type": "object",
+	  "required": ["bytecode"],
+	  "properties": {
+		"bytecode": {
+		  "type": "string",
+		  "pattern": "^0x[0-9a-fA-Ffff]*$"
+		},
+		"link_references": {
+		  "type": "array",
+		  "items": {
+			"$ref": "#/definitions/LinkReference"
+		  }
+		},
+		"link_dependencies": {
+		  "type": "array",
+		  "items": {
+			"$ref": "#/definitions/LinkValue"
+		  }
+		}
+	  }
+	},
+	"LinkReference": {
+	  "title": "A defined location in some bytecode which requires linking",
+	  "type": "object",
+	  "required": [
+		"offset",
+		"length",
+		"name"
+	  ],
+	  "properties": {
+		"offset": {
+		  "type": "integer",
+		  "minimum": 0
+		},
+		"length": {
+		  "type": "integer",
+		  "minimum": 1
+		},
+		"name": {
+		  "$ref": "#/definitions/ContractInstanceName"
+		}
+	  }
+	},
     "LinkValue": {
       "title": "A value for an individual link reference in a contract's bytecode", 
       "type": "object",
@@ -207,12 +249,12 @@
     "ContractInstanceName": {
       "title": "The name of the deployed contract instance",
       "type": "string",
-      "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$"
+      "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,255}$"
     },
     "PackageContractInstanceName": {
       "title": "The path to a deployed contract instance somewhere down the dependency tree",
       "type": "string",
-      "pattern": "^([a-z][-a-z0-9]{0,213}\\:)+[a-zA-Z][a-zA-Z0-9_]*$"
+      "pattern": "^([a-z][-a-z0-9]{0,213}\\:)+[a-zA-Z][a-zA-Z0-9_]{0,255}$"
     },
     "CompilerInformation": {
       "title": "Information about the software that was used to compile a contract type or instance",
@@ -269,11 +311,10 @@
       "type": "string",
       "pattern": "^0x[0-9a-zA-Z]{64}$"
     },
-    "IPFS-URI": {
-      "title": "An IPFS URI",
+    "ContentURI": {
+      "title": "A content addressable URI",
       "type": "string",
-      "format": "uri",
-      "pattern": "^ipfs:/?/?.*$"
+      "format": "uri"
     }
   }
 }

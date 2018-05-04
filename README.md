@@ -89,7 +89,7 @@ connecting to their own IPFS node.
 
 The `Package` class should verify all of the following things.
 
-* Package json matches release-package.schema.
+* Package json matches EthPM V2 Manifest Specification
 * Included bytecode matches compilation output
 * Deployed bytecode matches compilation output
 
