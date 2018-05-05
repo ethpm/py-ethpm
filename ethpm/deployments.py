@@ -4,6 +4,7 @@ from typing import (
     List,
 )
 
+from web3.eth import Contract
 from web3.main import Web3
 
 from ethpm.exceptions import ValidationError
@@ -18,22 +19,25 @@ class Deployments:
     Deployment object to access instances of
     deployed contracts belonging to a package.
     """
-    def __init__(self, deployment_data: Dict, contract_factories: Dict, w3: Web3) -> None:
+    def __init__(self,
+                 deployment_data: Dict[str, Dict[str, str]],
+                 contract_factories: Dict[str, Contract],
+                 w3: Web3) -> None:
         self.deployment_data = deployment_data
         self.contract_factories = contract_factories
         self.w3 = w3
 
-    def __getitem__(self, key: str) -> Dict:
+    def __getitem__(self, key: str) -> Dict[str, str]:
         return self.get(key)
 
     def __contains__(self, key: str) -> bool:
         return key in self.deployment_data
 
-    def get(self, key: str) -> Dict:
+    def get(self, key: str) -> Dict[str, str]:
         self._validate_name_and_references(key)
         return self.deployment_data.get(key)
 
-    def items(self) -> ItemsView:
+    def items(self) -> ItemsView[str, Dict[str, str]]:
         item_dict = {
             name: self.get(name)
             for name
@@ -41,7 +45,7 @@ class Deployments:
         }
         return item_dict.items()
 
-    def values(self) -> List:
+    def values(self) -> List[Dict[str, str]]:
         values = [
             self.get(name)
             for name
@@ -49,7 +53,7 @@ class Deployments:
         ]
         return values
 
-    def get_contract_instance(self, contract_name):
+    def get_contract_instance(self, contract_name: str) -> None:
         """
         Fetches a contract instance belonging to deployment
         after validating contract name.
@@ -57,7 +61,7 @@ class Deployments:
         self._validate_name_and_references(contract_name)
         raise NotImplementedError("All checks passed, but get_contract_instance API not complete.")
 
-    def _validate_name_and_references(self, name):
+    def _validate_name_and_references(self, name: str) -> None:
         validate_contract_name(name)
 
         if name not in self.deployment_data:

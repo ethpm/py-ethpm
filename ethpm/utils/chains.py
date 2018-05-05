@@ -36,7 +36,7 @@ def is_BIP122_uri(value: str) -> bool:
     return bool(re.match(BIP122_URL_REGEX, value))
 
 
-def parse_BIP122_uri(blockchain_uri: str) -> Tuple:
+def parse_BIP122_uri(blockchain_uri: str) -> Tuple[str, str, str]:
     match = re.match(BIP122_URL_REGEX, blockchain_uri)
     if match is None:
         raise ValueError("Invalid URI format: '{0}'".format(blockchain_uri))

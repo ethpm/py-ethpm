@@ -1,6 +1,7 @@
 import json
 
 from typing import (
+    Any,
     Dict,
     IO,
 )
@@ -29,7 +30,7 @@ from ethpm.utils.package_validation import (
 )
 
 
-def _load_package_data_from_file(file_obj: IO[str]) -> Dict:
+def _load_package_data_from_file(file_obj: IO[str]) -> Dict[str, str]:
     """
     Utility function to load package objects
     from file objects passed to Package.from_file
@@ -48,7 +49,7 @@ def _load_package_data_from_file(file_obj: IO[str]) -> Dict:
 
 class Package(object):
 
-    def __init__(self, package_data: Dict, w3: Web3=None) -> None:
+    def __init__(self, package_data: Dict[str, Any], w3: Web3=None) -> None:
         """
         A package must be constructed with
         parsed package JSON.
@@ -95,7 +96,7 @@ class Package(object):
             return contract_factory
         raise ValidationError("Package does not have contract by name: {}.".format(name))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         name = self.name
         version = self.version
         return "<Package {0}=={1}>".format(name, version)
@@ -120,11 +121,11 @@ class Package(object):
         return cls(package_data)
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self.package_data['package_name']
 
     @property
-    def version(self):
+    def version(self) -> str:
         return self.package_data['version']
 
     #
