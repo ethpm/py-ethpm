@@ -11,6 +11,6 @@ if sys.version_info.major < 3:
 
 
 BASE_DIR = os.path.dirname(__file__)
-ASSETS_DIR = os.path.join(BASE_DIR, 'assets')  # type: str
+ASSETS_DIR: str = os.path.join(BASE_DIR, 'assets')
 
 from .package import Package  # noqa: F401
