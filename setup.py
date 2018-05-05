@@ -30,6 +30,7 @@ setup(
         "eth-utils==1.0.2",
         "flake8==3.5.0",
         "jsonschema==2.6.0",
+        "mypy<0.600",
         "pytest-watch>=4.1.0,<5",
         "py-evm==0.2.0a11",
         "rlp==0.6.0",

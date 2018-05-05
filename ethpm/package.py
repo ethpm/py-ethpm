@@ -1,5 +1,14 @@
 import json
 
+from typing import (
+    Any,
+    Dict,
+    IO,
+)
+
+from web3.eth import Contract
+from web3.main import Web3
+
 from ethpm.deployments import Deployments
 
 from ethpm.exceptions import ValidationError
@@ -21,7 +30,7 @@ from ethpm.utils.package_validation import (
 )
 
 
-def _load_package_data_from_file(file_obj):
+def _load_package_data_from_file(file_obj: IO[str]) -> Dict[str, str]:
     """
     Utility function to load package objects
     from file objects passed to Package.from_file
@@ -40,7 +49,7 @@ def _load_package_data_from_file(file_obj):
 
 class Package(object):
 
-    def __init__(self, package_data, w3=None):
+    def __init__(self, package_data: Dict[str, Any], w3: Web3=None) -> None:
         """
         A package must be constructed with
         parsed package JSON.
@@ -59,13 +68,13 @@ class Package(object):
 
         self.package_data = package_data
 
-    def set_default_w3(self, w3):
+    def set_default_w3(self, w3: Web3) -> None:
         """
         Set the default Web3 instance.
         """
         self.w3 = w3
 
-    def get_contract_type(self, name, w3=None):
+    def get_contract_type(self, name: str, w3: Web3=None) -> Contract:
         """
         API to generate a contract factory class.
         """
@@ -87,13 +96,13 @@ class Package(object):
             return contract_factory
         raise ValidationError("Package does not have contract by name: {}.".format(name))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         name = self.name
         version = self.version
         return "<Package {0}=={1}>".format(name, version)
 
     @classmethod
-    def from_file(cls, file_path_or_obj):
+    def from_file(cls, file_path_or_obj: str) -> 'Package':
         """
         Allows users to create a Package object
         from a filepath
@@ -112,18 +121,18 @@ class Package(object):
         return cls(package_data)
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self.package_data['package_name']
 
     @property
-    def version(self):
+    def version(self) -> str:
         return self.package_data['version']
 
     #
     # Deployments
     #
 
-    def get_deployments(self, w3=None):
+    def get_deployments(self, w3: Web3=None) -> 'Deployments':
         """
         API to retrieve instance of deployed contract dependency.
         """
