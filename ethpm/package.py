@@ -9,6 +9,8 @@ from typing import (
 from web3.eth import Contract
 from web3.main import Web3
 
+from eth_typing import ContractName
+
 from ethpm.deployments import Deployments
 
 from ethpm.exceptions import ValidationError
@@ -74,7 +76,7 @@ class Package(object):
         """
         self.w3 = w3
 
-    def get_contract_type(self, name: str, w3: Web3=None) -> Contract:
+    def get_contract_type(self, name: ContractName, w3: Web3=None) -> Contract:
         """
         API to generate a contract factory class.
         """

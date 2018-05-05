@@ -1,17 +1,18 @@
 import re
-
 from typing import Tuple
-
 from urllib import parse
-from cytoolz import curry
 
-from web3.main import Web3
+from cytoolz import curry
 
 from eth_utils import (
     add_0x_prefix,
     remove_0x_prefix,
     encode_hex,
 )
+
+from web3.main import Web3
+
+from eth_typing import URI
 
 
 def get_chain_id(web3: Web3) -> str:
@@ -32,11 +33,11 @@ BIP122_URL_REGEX = (
 )
 
 
-def is_BIP122_uri(value: str) -> bool:
+def is_BIP122_uri(value: URI) -> bool:
     return bool(re.match(BIP122_URL_REGEX, value))
 
 
-def parse_BIP122_uri(blockchain_uri: str) -> Tuple[str, str, str]:
+def parse_BIP122_uri(blockchain_uri: URI) -> Tuple[str, str, str]:
     match = re.match(BIP122_URL_REGEX, blockchain_uri)
     if match is None:
         raise ValueError("Invalid URI format: '{0}'".format(blockchain_uri))
@@ -48,7 +49,7 @@ def parse_BIP122_uri(blockchain_uri: str) -> Tuple[str, str, str]:
     )
 
 
-def is_BIP122_block_uri(value: str) -> bool:
+def is_BIP122_block_uri(value: URI) -> bool:
     if not is_BIP122_uri(value):
         return False
     _, resource_type, _ = parse_BIP122_uri(value)
@@ -56,7 +57,7 @@ def is_BIP122_block_uri(value: str) -> bool:
 
 
 @curry
-def check_if_chain_matches_chain_uri(web3: Web3, blockchain_uri: str) -> bool:
+def check_if_chain_matches_chain_uri(web3: Web3, blockchain_uri: URI) -> bool:
     chain_id, resource_type, resource_hash = parse_BIP122_uri(blockchain_uri)
     genesis_block = web3.eth.getBlock('earliest')
 
@@ -81,7 +82,7 @@ def is_block_or_transaction_hash(value: str) -> bool:
     return bool(re.match(BLOCK_OR_TRANSACTION_HASH_REGEX, value))
 
 
-def create_BIP122_uri(chain_id: str, resource_type: str, resource_identifier: str) -> str:
+def create_BIP122_uri(chain_id: str, resource_type: str, resource_identifier: str) -> URI:
     """
     See: https://github.com/bitcoin/bips/blob/master/bip-0122.mediawiki
     """
@@ -101,5 +102,5 @@ def create_BIP122_uri(chain_id: str, resource_type: str, resource_identifier: st
     ])
 
 
-def create_block_uri(chain_id: str, block_identifier: str) -> str:
+def create_block_uri(chain_id: str, block_identifier: str) -> URI:
     return create_BIP122_uri(chain_id, 'block', remove_0x_prefix(block_identifier))
