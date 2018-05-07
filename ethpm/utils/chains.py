@@ -12,7 +12,7 @@ from eth_utils import (
 
 from web3.main import Web3
 
-from eth_typing import URI
+from ethpm.typing import URI
 
 
 def get_chain_id(web3: Web3) -> str:

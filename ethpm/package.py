@@ -9,11 +9,11 @@ from typing import (
 from web3.eth import Contract
 from web3.main import Web3
 
-from eth_typing import ContractName
-
 from ethpm.deployments import Deployments
 
 from ethpm.exceptions import ValidationError
+
+from ethpm.typing import ContractName
 
 from ethpm.utils.contract import (
     generate_contract_factory_kwargs,
