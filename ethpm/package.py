@@ -13,6 +13,8 @@ from ethpm.deployments import Deployments
 
 from ethpm.exceptions import ValidationError
 
+from ethpm.typing import ContractName
+
 from ethpm.utils.contract import (
     generate_contract_factory_kwargs,
     validate_contract_name,
@@ -74,7 +76,7 @@ class Package(object):
         """
         self.w3 = w3
 
-    def get_contract_type(self, name: str, w3: Web3=None) -> Contract:
+    def get_contract_type(self, name: ContractName, w3: Web3=None) -> Contract:
         """
         API to generate a contract factory class.
         """
