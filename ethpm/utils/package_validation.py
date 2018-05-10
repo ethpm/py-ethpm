@@ -9,7 +9,7 @@ from typing import (
 
 from jsonschema import (
     validate,
-    ValidationError as jsonValidationError
+    ValidationError as jsonValidationError,
 )
 
 from ethpm import ASSETS_DIR

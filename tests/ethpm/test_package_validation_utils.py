@@ -22,6 +22,11 @@ def test_validate_package_validates(valid_package):
     assert validate_package_against_schema(valid_package) is None
 
 
+def test_validate_package_against_all_packages(all_packages):
+    for pkg in all_packages:
+        assert validate_package_against_schema(pkg) is None
+
+
 def test_validate_package_invalidates(invalid_package):
     with pytest.raises(ValidationError):
         validate_package_against_schema(invalid_package)
