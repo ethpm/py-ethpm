@@ -14,12 +14,12 @@ from ethpm.utils.contract import (
     "contract_data",
     (
         {"abi": ""},
-        {"bytecode": ""},
-        {"runtime_bytecode": "", "other": ""},
+        {"bytecode": {"bytecode": ""}},
+        {"runtime_bytecode": {"bytecode": ""}, "other": ""},
         {
             "abi": "",
-            "bytecode": "",
-            "runtime_bytecode": ""
+            "bytecode": {"bytecode": ""},
+            "runtime_bytecode": {"bytecode": ""}
         }
     )
 )
@@ -48,8 +48,8 @@ def test_validate_contract_name_invalidates(name):
     "contract_data",
     (
         {"abi": ""},
-        {"bytecode": ""},
-        {"abi": "", "bytecode": ""},
+        {"bytecode": {"bytecode": ""}},
+        {"abi": "", "bytecode": {"bytecode": ""}},
     )
 )
 def test_generate_contract_factory_kwargs(contract_data):

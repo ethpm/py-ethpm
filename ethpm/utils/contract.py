@@ -46,15 +46,15 @@ def validate_w3_instance(w3: Web3) -> None:
 
 @to_dict
 def generate_contract_factory_kwargs(
-        contract_data: Dict[str, str]) -> Generator[Tuple[str, Any], None, None]:
+        contract_data: Dict[str, Any]) -> Generator[Tuple[str, Any], None, None]:
     """
     Build a dictionary of kwargs to be passed into contract factory.
     """
     if "abi" in contract_data:
         yield "abi", contract_data["abi"]
     if "bytecode" in contract_data:
-        bytecode = to_bytes(text=contract_data["bytecode"])
+        bytecode = to_bytes(text=contract_data["bytecode"]["bytecode"])
         yield "bytecode", encode_hex(bytecode)
     if "runtime_bytecode" in contract_data:
-        runtime_bytecode = to_bytes(text=contract_data["bytecode"])
+        runtime_bytecode = to_bytes(text=contract_data["runtime_bytecode"]["bytecode"])
         yield "bytecode_runtime", encode_hex(runtime_bytecode)

@@ -17,6 +17,18 @@ from ethpm.utils.chains import (
 )
 
 
+PACKAGE_NAMES = [
+    'escrow',
+    'owned',
+    'piper-coin',
+    'safe-math-lib',
+    'standard-token',
+    'transferable',
+    'wallet-with-send',
+    'wallet',
+]
+
+
 @pytest.fixture()
 def w3():
     eth_tester = EthereumTester(MockBackend())
@@ -28,6 +40,15 @@ def w3():
 def valid_package():
     with open("ethpm/assets/v2-packages/safe-math-lib/1.0.0.json") as file_obj:
         return json.load(file_obj)
+
+
+@pytest.fixture
+def all_packages():
+    all_packages = []
+    for pkg in PACKAGE_NAMES:
+        with open("ethpm/assets/v2-packages/%s/1.0.0.json" % pkg) as file_obj:
+            all_packages.append(json.load(file_obj))
+    return all_packages
 
 
 @pytest.fixture()
