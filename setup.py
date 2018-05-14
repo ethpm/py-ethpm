@@ -13,6 +13,30 @@ DIR = os.path.dirname(os.path.abspath(__file__))
 
 readme = open(os.path.join(DIR, 'README.md')).read()
 
+extras_require={
+    'test': [
+        'pytest>=3.2.1',
+        'tox>=1.8.0',
+    ],
+    'lint': [
+        'flake8==3.5.0',
+        'mypy<0.600',
+    ],
+    'doc': [
+        'Sphinx>=1.5.5,<2.0.0',
+        'sphinx_rtd_theme>=0.1.9',
+    ],
+    'dev': [
+        'pytest-watch>=4.1.0,<5',
+    ],
+}
+
+extras_require['dev'] = (
+    extras_require['dev']
+    + extras_require['test']
+    + extras_require['lint']
+    + extras_require['doc']
+)
 
 setup(
     name='ethpm',
@@ -21,27 +45,26 @@ setup(
     long_description_markdown_filename='README.md',
     author='Piper Merriam',
     author_email='pipermerriam@gmail.com',
-    url='https://github.com/pipermerriam/ethereum-erc190',
+    url='https://github.com/ethpm/py-ethpm',
     include_package_data=True,
     install_requires=[
-        "cytoolz==0.9.0",
-        "eth-keys==0.2.0b3",
-        "eth-tester==0.1.0b24",
-        "eth-utils==1.0.2",
-        "flake8==3.5.0",
-        "jsonschema==2.6.0",
-        "mypy<0.600",
-        "pytest-watch>=4.1.0,<5",
-        "py-evm==0.2.0a11",
-        "rlp==0.6.0",
-        "web3==4.2.0",
+        'cytoolz==0.9.0',
+        'eth-keys==0.2.0b3',
+        'eth-tester==0.1.0b24',
+        'eth-utils==1.0.2',
+        'jsonschema==2.6.0',
+        'py-evm==0.2.0a11',
+        'rlp==0.6.0',
+        'web3==4.2.0',
     ],
     setup_requires=['setuptools-markdown'],
+    python_requires='>=3.5, <4',
+    extras_require=extras_require,
     py_modules=['ethpm'],
-    license="MIT",
+    license='MIT',
     zip_safe=False,
     keywords='ethereum',
-    packages=find_packages(exclude=["tests", "tests.*"]),
+    packages=find_packages(exclude=['tests', 'tests.*']),
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
