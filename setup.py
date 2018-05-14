@@ -34,6 +34,8 @@ setup(
         "pytest-watch>=4.1.0,<5",
         "py-evm==0.2.0a11",
         "rlp==0.6.0",
+        "Sphinx>=1.5.5,<2.0.0",
+        "sphinx_rtd_theme>=0.1.9",
         "web3==4.2.0",
     ],
     setup_requires=['setuptools-markdown'],

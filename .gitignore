@@ -43,6 +43,8 @@ output/*/index.html
 
 # Sphinx
 docs/_build
+docs/_static
+docs/_templates
 docs/modules.rst
 docs/web3.rst
 docs/web3.providers.rst
