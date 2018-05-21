@@ -24,6 +24,11 @@ from ethpm.utils.contract import (
 from ethpm.utils.deployment_validation import (
     validate_single_matching_uri,
 )
+from ethpm.utils.ipfs import (
+    extract_ipfs_path_from_uri,
+    fetch_ipfs_package,
+    is_ipfs_uri,
+)
 from ethpm.utils.package_validation import (
     check_for_build_dependencies,
     validate_package_against_schema,
@@ -116,8 +121,27 @@ class Package(object):
             package_data = _load_package_data_from_file(file_path_or_obj)
         else:
             raise TypeError(
-                "The Package.from_filemethod takes either a filesystem path or a file-like object. "
+                "The Package.from_file method takes either a filesystem path or a file-like object."
                 "Got {0} instead.".format(type(file_path_or_obj))
+            )
+
+        return cls(package_data)
+
+    @classmethod
+    def from_ipfs(cls, ipfs_uri: str) -> 'Package':
+        """
+        Allows users to create a Package object from
+        an IPFS uri.
+        TODO: Defaults to Infura gateway, needs extension
+        to support other gateways and local nodes
+        """
+        if is_ipfs_uri(ipfs_uri):
+            ipfs_path = extract_ipfs_path_from_uri(ipfs_uri)
+            package_data = fetch_ipfs_package(ipfs_path)
+        else:
+            raise TypeError(
+                "The Package.from_ipfs method only accepts a valid IPFS uri."
+                "{0} is not a valid IPFS uri.".format(ipfs_uri)
             )
 
         return cls(package_data)
