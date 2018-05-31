@@ -2,11 +2,6 @@ import copy
 import json
 import pytest
 
-from eth_tester import (
-    EthereumTester,
-    MockBackend,
-)
-
 from web3 import Web3
 
 from web3.providers.eth_tester import EthereumTesterProvider
@@ -31,8 +26,8 @@ PACKAGE_NAMES = [
 
 @pytest.fixture()
 def w3():
-    eth_tester = EthereumTester(MockBackend())
-    w3 = Web3(EthereumTesterProvider(eth_tester))
+    w3 = Web3(EthereumTesterProvider())
+    w3.eth.defaultAccount = w3.eth.accounts[0]
     return w3
 
 

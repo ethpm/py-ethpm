@@ -16,6 +16,7 @@ from ethpm.exceptions import ValidationError
 from ethpm.typing import ContractName
 
 from ethpm.utils.contract import (
+    compile_contracts,
     generate_contract_factory_kwargs,
     validate_contract_name,
     validate_minimal_contract_data_present,
@@ -94,6 +95,14 @@ class Package(object):
             contract_data = self.package_data['contract_types'][name]
             validate_minimal_contract_data_present(contract_data)
             contract_kwargs = generate_contract_factory_kwargs(contract_data)
+            # compile contracts to get bin for contract factory
+            if 'bytecode' not in contract_kwargs:
+                bytecode = compile_contracts(
+                    name,
+                    self.package_data['package_name'],
+                    self.package_data['sources'].keys()
+                )
+                contract_kwargs['bytecode'] = bytecode
             contract_factory = current_w3.eth.contract(**contract_kwargs)
             return contract_factory
         raise ValidationError("Package does not have contract by name: {}.".format(name))
@@ -104,7 +113,7 @@ class Package(object):
         return "<Package {0}=={1}>".format(name, version)
 
     @classmethod
-    def from_file(cls, file_path_or_obj: str) -> 'Package':
+    def from_file(cls, file_path_or_obj: str, w3: Web3) -> 'Package':
         """
         Allows users to create a Package object
         from a filepath
@@ -120,7 +129,7 @@ class Package(object):
                 "Got {0} instead.".format(type(file_path_or_obj))
             )
 
-        return cls(package_data)
+        return cls(package_data, w3)
 
     @property
     def name(self) -> str:

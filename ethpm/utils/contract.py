@@ -4,18 +4,22 @@ from typing import (
     Any,
     Dict,
     Generator,
+    List,
     Tuple,
 )
-
-from ethpm.exceptions import ValidationError
-
-from web3 import Web3
 
 from eth_utils import (
     to_bytes,
     to_dict,
-    encode_hex
+    encode_hex,
 )
+
+from solc import compile_files
+
+from web3 import Web3
+
+from ethpm import V2_PACKAGES
+from ethpm.exceptions import ValidationError
 
 
 def validate_minimal_contract_data_present(contract_data: Dict[str, str]) -> None:
@@ -58,3 +62,18 @@ def generate_contract_factory_kwargs(
     if "runtime_bytecode" in contract_data:
         runtime_bytecode = to_bytes(text=contract_data["runtime_bytecode"]["bytecode"])
         yield "bytecode_runtime", encode_hex(runtime_bytecode)
+
+
+def compile_contracts(contract_name: str, alias: str, paths: List[str]) -> str:
+    '''
+    Compile multiple contracts to bytecode.
+    '''
+    bin_id = '{0}.sol:{0}'.format(contract_name)
+    contract_paths = [
+        "{dir}/{alias}{path}".format(dir=V2_PACKAGES, alias=alias, path=path[1:])
+        for path in paths
+    ]
+    compiled_source = compile_files(contract_paths)
+    compiled_source_bin = compiled_source[
+        "{dir}/{alias}/contracts/{id}".format(dir=V2_PACKAGES, alias=alias, id=bin_id)]['bin']
+    return compiled_source_bin
