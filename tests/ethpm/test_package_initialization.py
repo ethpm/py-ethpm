@@ -68,7 +68,7 @@ def test_init_from_invalid_argument_type():
         Package("not a package")
 
 
-def test_from_file_fails_with_missing_filepath(tmpdir):
+def test_from_file_fails_with_missing_filepath(tmpdir, w3):
     path = os.path.join(
         str(tmpdir.mkdir('invalid')),
         'package.json',
@@ -76,21 +76,21 @@ def test_from_file_fails_with_missing_filepath(tmpdir):
 
     assert not os.path.exists(path)
     with pytest.raises(FileNotFoundError):
-        Package.from_file(path)
+        Package.from_file(path, w3)
 
 
-def test_from_file_fails_with_non_json(non_json_package):
+def test_from_file_fails_with_non_json(non_json_package, w3):
     with pytest.raises(json.JSONDecodeError):
-        Package.from_file(non_json_package)
+        Package.from_file(non_json_package, w3)
 
 
-def test_from_file_fails_with_invalid_package(invalid_package_from_path):
+def test_from_file_fails_with_invalid_package(invalid_package_from_path, w3):
     with pytest.raises(ValidationError):
-        Package.from_file(invalid_package_from_path)
+        Package.from_file(invalid_package_from_path, w3)
 
 
-def test_from_file_succeeds_with_valid_package(valid_package_from_path):
-    assert Package.from_file(valid_package_from_path)
+def test_from_file_succeeds_with_valid_package(valid_package_from_path, w3):
+    assert Package.from_file(valid_package_from_path, w3)
 
 
 def test_from_file_raises_type_error_with_invalid_param_type():
