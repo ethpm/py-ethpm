@@ -15,16 +15,16 @@ readme = open(os.path.join(DIR, 'README.md')).read()
 
 extras_require={
     'test': [
-        'pytest>=3.2.1',
-        'tox>=1.8.0',
+        'pytest>=3.2.1,<4',
+        'tox>=1.8.0,<2',
     ],
     'lint': [
-        'flake8==3.5.0',
+        'flake8>=3.5.0,<4',
         'mypy<0.600',
     ],
     'doc': [
-        'Sphinx>=1.5.5,<2.0.0',
-        'sphinx_rtd_theme>=0.1.9',
+        'Sphinx>=1.5.5,<2',
+        'sphinx_rtd_theme>=0.1.9,<2',
     ],
     'dev': [
         'pytest-watch>=4.1.0,<5',
@@ -50,14 +50,14 @@ setup(
     install_requires=[
         "toolz>=0.9.0,<1.0.0;implementation_name=='pypy'",
         "cytoolz>=0.9.0,<1.0.0;implementation_name=='cpython'",
-        'eth-keys>=0.2.0b3',
-        'eth-tester<0.1.0b25,>=0.1.0b24',
-        'eth-utils>=1.0.2',
-        'jsonschema>=2.6.0',
+        'eth-keys>=0.2.0b3,<1',
+        'eth-tester>=0.1.0b24,<0.1.0b25',
+        'eth-utils>=1.0.2,<2',
+        'jsonschema>=2.6.0,<3',
         'py-evm==0.2.0a16',
-        'py-solc>=2.1.0',
-        'rlp<2.0.0,>=1.0.1',
-        'web3>=4.2.1',
+        'py-solc>=2.1.0,<3',
+        'rlp>=1.0.1,<2',
+        'web3>=4.2.1,<5',
     ],
     setup_requires=['setuptools-markdown'],
     python_requires='>=3.5, <4',
