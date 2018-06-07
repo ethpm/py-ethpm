@@ -31,48 +31,62 @@ def w3():
     return w3
 
 
+# safe-math-lib currently used as default manifest for testing
+# should be extended to all_manifest_types asap
 @pytest.fixture
-def valid_manifest():
+def safe_math_manifest():
     with open("ethpm/assets/v2-packages/safe-math-lib/1.0.0.json") as file_obj:
         return json.load(file_obj)
 
 
+# standalone = no `build_dependencies` which aren't fully supported yet
 @pytest.fixture
-def all_manifest_types():
-    all_manifests = []
+def all_standalone_manifests():
+    manifests = []
     for pkg in PACKAGE_NAMES:
         with open("ethpm/assets/v2-packages/%s/1.0.0.json" % pkg) as file_obj:
-            all_manifests.append(json.load(file_obj))
-    return all_manifests
+            manifest = json.load(file_obj)
+            if "build_dependencies" not in manifest:
+                manifests.append(manifest)
+    return manifests
+
+
+@pytest.fixture
+def all_manifest_types():
+    manifests = []
+    for pkg in PACKAGE_NAMES:
+        with open("ethpm/assets/v2-packages/%s/1.0.0.json" % pkg) as file_obj:
+            manifests.append(json.load(file_obj))
+    return manifests
 
 
 @pytest.fixture()
-def invalid_manifest(valid_manifest):
-    valid_manifest['manifest_version'] = 1
-    return valid_manifest
+def invalid_manifest(safe_math_manifest):
+    safe_math_manifest['manifest_version'] = 1
+    return safe_math_manifest
 
 
 @pytest.fixture
-def manifest_with_no_deployments(valid_manifest):
-    manifest = copy.deepcopy(valid_manifest)
+def manifest_with_no_deployments(safe_math_manifest):
+    manifest = copy.deepcopy(safe_math_manifest)
     manifest.pop("deployments")
     return manifest
 
 
 @pytest.fixture
-def manifest_with_empty_deployments(tmpdir, valid_manifest):
-    manifest = copy.deepcopy(valid_manifest)
+def manifest_with_empty_deployments(tmpdir, safe_math_manifest):
+    manifest = copy.deepcopy(safe_math_manifest)
     manifest["deployments"] = {}
     return manifest
 
 
 @pytest.fixture
-def manifest_with_matching_deployment(w3, tmpdir, valid_manifest):
+def manifest_with_matching_deployment(w3, tmpdir, safe_math_manifest):
     w3.testing.mine(5)
     chain_id = get_chain_id(w3)
     block = w3.eth.getBlock("earliest")
     block_uri = create_block_uri(w3.toHex(chain_id), w3.toHex(block.hash))
-    manifest = copy.deepcopy(valid_manifest)
+    manifest = copy.deepcopy(safe_math_manifest)
     manifest["deployments"] =  {}
     manifest["deployments"][block_uri] = {
       "SafeMathLib": {
@@ -86,12 +100,12 @@ def manifest_with_matching_deployment(w3, tmpdir, valid_manifest):
 
 
 @pytest.fixture
-def manifest_with_no_matching_deployments(w3, tmpdir, valid_manifest):
+def manifest_with_no_matching_deployments(w3, tmpdir, safe_math_manifest):
     w3.testing.mine(5)
     incorrect_chain_id = (b'\x00' * 31 + b'\x01')
     block = w3.eth.getBlock("earliest")
     block_uri = create_block_uri(w3.toHex(incorrect_chain_id), w3.toHex(block.hash))
-    manifest = copy.deepcopy(valid_manifest)
+    manifest = copy.deepcopy(safe_math_manifest)
     manifest["deployments"][block_uri] = {
       "SafeMathLib": {
         "contract_type": "SafeMathLib",
@@ -104,7 +118,7 @@ def manifest_with_no_matching_deployments(w3, tmpdir, valid_manifest):
 
 
 @pytest.fixture
-def manifest_with_multiple_matches(w3, tmpdir, valid_manifest):
+def manifest_with_multiple_matches(w3, tmpdir, safe_math_manifest):
     w3.testing.mine(5)
     chain_id = get_chain_id(w3)
     block = w3.eth.getBlock("latest")
@@ -112,7 +126,7 @@ def manifest_with_multiple_matches(w3, tmpdir, valid_manifest):
     w3.testing.mine(1)
     second_block = w3.eth.getBlock("latest")
     second_block_uri = create_block_uri(w3.toHex(chain_id), w3.toHex(second_block.hash))
-    manifest = copy.deepcopy(valid_manifest)
+    manifest = copy.deepcopy(safe_math_manifest)
     manifest['deployments'][block_uri] = {
         "SafeMathLib": {
             "contract_type": "SafeMathLib",
@@ -133,8 +147,8 @@ def manifest_with_multiple_matches(w3, tmpdir, valid_manifest):
 
 
 @pytest.fixture
-def manifest_with_conflicting_deployments(tmpdir, valid_manifest):
-    manifest = copy.deepcopy(valid_manifest)
+def manifest_with_conflicting_deployments(tmpdir, safe_math_manifest):
+    manifest = copy.deepcopy(safe_math_manifest)
     manifest["deployments"]["blockchain://41941023680923e0fe4d74a34bdac8141f2540e3ae90623718e47d66d1ca4a2d/block/1e96de11320c83cca02e8b9caf3e489497e8e432befe5379f2f08599f8aecede"] = {
         "WrongNameLib": {
             "contract_type": "WrongNameLib",

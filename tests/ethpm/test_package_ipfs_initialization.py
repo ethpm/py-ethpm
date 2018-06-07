@@ -10,9 +10,9 @@ VALID_IPFS_PKG = 'ipfs://QmeD2s7KaBUoGYTP1eutHBmBkMMMoycdfiyGMx2DKrWXyV'
 # mock out http req to IPFS gateway
 # `fetch_ipfs_package` returns local 'safe-math-lib` pkg
 @pytest.fixture(autouse=True)
-def mock_request(monkeypatch, valid_manifest):
+def mock_request(monkeypatch, safe_math_manifest):
     def mock_fetch(x):
-        return valid_manifest
+        return safe_math_manifest
     monkeypatch.setattr(ethpm.package, 'fetch_ipfs_package', mock_fetch)
 
 
