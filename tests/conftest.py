@@ -32,49 +32,49 @@ def w3():
 
 
 @pytest.fixture
-def valid_package():
+def valid_manifest():
     with open("ethpm/assets/v2-packages/safe-math-lib/1.0.0.json") as file_obj:
         return json.load(file_obj)
 
 
 @pytest.fixture
-def all_packages():
-    all_packages = []
+def all_manifest_types():
+    all_manifests = []
     for pkg in PACKAGE_NAMES:
         with open("ethpm/assets/v2-packages/%s/1.0.0.json" % pkg) as file_obj:
-            all_packages.append(json.load(file_obj))
-    return all_packages
+            all_manifests.append(json.load(file_obj))
+    return all_manifests
 
 
 @pytest.fixture()
-def invalid_package(valid_package):
-    valid_package['manifest_version'] = 1
-    return valid_package
+def invalid_manifest(valid_manifest):
+    valid_manifest['manifest_version'] = 1
+    return valid_manifest
 
 
 @pytest.fixture
-def package_with_no_deployments(valid_package):
-    package = copy.deepcopy(valid_package)
-    package.pop("deployments")
-    return package
+def manifest_with_no_deployments(valid_manifest):
+    manifest = copy.deepcopy(valid_manifest)
+    manifest.pop("deployments")
+    return manifest
 
 
 @pytest.fixture
-def package_with_empty_deployments(tmpdir, valid_package):
-    package = copy.deepcopy(valid_package)
-    package["deployments"] = {}
-    return package
+def manifest_with_empty_deployments(tmpdir, valid_manifest):
+    manifest = copy.deepcopy(valid_manifest)
+    manifest["deployments"] = {}
+    return manifest
 
 
 @pytest.fixture
-def package_with_matching_deployment(w3, tmpdir, valid_package):
+def manifest_with_matching_deployment(w3, tmpdir, valid_manifest):
     w3.testing.mine(5)
     chain_id = get_chain_id(w3)
     block = w3.eth.getBlock("earliest")
     block_uri = create_block_uri(w3.toHex(chain_id), w3.toHex(block.hash))
-    package = copy.deepcopy(valid_package)
-    package["deployments"] =  {}
-    package["deployments"][block_uri] = {
+    manifest = copy.deepcopy(valid_manifest)
+    manifest["deployments"] =  {}
+    manifest["deployments"][block_uri] = {
       "SafeMathLib": {
         "contract_type": "SafeMathLib",
         "address": "0x8d2c532d7d211816a2807a411f947b211569b68c",
@@ -82,17 +82,17 @@ def package_with_matching_deployment(w3, tmpdir, valid_package):
         "block": "0x420cb2b2bd634ef42f9082e1ee87a8d4aeeaf506ea5cdeddaa8ff7cbf911810c"
       }
     }
-    return package
+    return manifest
 
 
 @pytest.fixture
-def package_with_no_matching_deployments(w3, tmpdir, valid_package):
+def manifest_with_no_matching_deployments(w3, tmpdir, valid_manifest):
     w3.testing.mine(5)
     incorrect_chain_id = (b'\x00' * 31 + b'\x01')
     block = w3.eth.getBlock("earliest")
     block_uri = create_block_uri(w3.toHex(incorrect_chain_id), w3.toHex(block.hash))
-    package = copy.deepcopy(valid_package)
-    package["deployments"][block_uri] = {
+    manifest = copy.deepcopy(valid_manifest)
+    manifest["deployments"][block_uri] = {
       "SafeMathLib": {
         "contract_type": "SafeMathLib",
         "address": "0x8d2c532d7d211816a2807a411f947b211569b68c",
@@ -100,11 +100,11 @@ def package_with_no_matching_deployments(w3, tmpdir, valid_package):
         "block": "0x420cb2b2bd634ef42f9082e1ee87a8d4aeeaf506ea5cdeddaa8ff7cbf911810c"
       }
     }
-    return package
+    return manifest
 
 
 @pytest.fixture
-def package_with_multiple_matches(w3, tmpdir, valid_package):
+def manifest_with_multiple_matches(w3, tmpdir, valid_manifest):
     w3.testing.mine(5)
     chain_id = get_chain_id(w3)
     block = w3.eth.getBlock("latest")
@@ -112,8 +112,8 @@ def package_with_multiple_matches(w3, tmpdir, valid_package):
     w3.testing.mine(1)
     second_block = w3.eth.getBlock("latest")
     second_block_uri = create_block_uri(w3.toHex(chain_id), w3.toHex(second_block.hash))
-    package = copy.deepcopy(valid_package)
-    package['deployments'][block_uri] = {
+    manifest = copy.deepcopy(valid_manifest)
+    manifest['deployments'][block_uri] = {
         "SafeMathLib": {
             "contract_type": "SafeMathLib",
             "address": "0x8d2c532d7d211816a2807a411f947b211569b68c",
@@ -121,7 +121,7 @@ def package_with_multiple_matches(w3, tmpdir, valid_package):
             "block": "0x420cb2b2bd634ef42f9082e1ee87a8d4aeeaf506ea5cdeddaa8ff7cbf911810c"
         }
     }
-    package['deployments'][second_block_uri] = {
+    manifest['deployments'][second_block_uri] = {
         "SafeMathLib": {
             "contract_type": "SafeMathLib",
             "address": "0x8d2c532d7d211816a2807a411f947b211569b68c",
@@ -129,13 +129,13 @@ def package_with_multiple_matches(w3, tmpdir, valid_package):
             "block": "0x420cb2b2bd634ef42f9082e1ee87a8d4aeeaf506ea5cdeddaa8ff7cbf911810c"
         }
     }
-    return package
+    return manifest
 
 
 @pytest.fixture
-def package_with_conflicting_deployments(tmpdir, valid_package):
-    package = copy.deepcopy(valid_package)
-    package["deployments"]["blockchain://41941023680923e0fe4d74a34bdac8141f2540e3ae90623718e47d66d1ca4a2d/block/1e96de11320c83cca02e8b9caf3e489497e8e432befe5379f2f08599f8aecede"] = {
+def manifest_with_conflicting_deployments(tmpdir, valid_manifest):
+    manifest = copy.deepcopy(valid_manifest)
+    manifest["deployments"]["blockchain://41941023680923e0fe4d74a34bdac8141f2540e3ae90623718e47d66d1ca4a2d/block/1e96de11320c83cca02e8b9caf3e489497e8e432befe5379f2f08599f8aecede"] = {
         "WrongNameLib": {
             "contract_type": "WrongNameLib",
             "address": "0x8d2c532d7d211816a2807a411f947b211569b68c",
@@ -143,4 +143,4 @@ def package_with_conflicting_deployments(tmpdir, valid_package):
             "block": "0x420cb2b2bd634ef42f9082e1ee87a8d4aeeaf506ea5cdeddaa8ff7cbf911810c"
         }
     }
-    return package
+    return manifest

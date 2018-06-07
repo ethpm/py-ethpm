@@ -8,8 +8,8 @@ from ethpm.exceptions import ValidationError
 
 
 @pytest.fixture
-def matching_package(package_with_matching_deployment):
-    return Package(package_with_matching_deployment)
+def matching_package(manifest_with_matching_deployment):
+    return Package(manifest_with_matching_deployment)
 
 
 @pytest.mark.parametrize("notw3", ("notW3", 123, set()))
@@ -23,26 +23,26 @@ def test_get_deployments_without_w3_arg_or_default_raises_exception(matching_pac
         matching_package.get_deployments()
 
 
-def test_get_deployments_with_empty_deployment_raise_exception(w3, package_with_empty_deployments):
-    package = Package(package_with_empty_deployments)
+def test_get_deployments_with_empty_deployment_raise_exception(w3, manifest_with_empty_deployments):
+    package = Package(manifest_with_empty_deployments)
     with pytest.raises(ValidationError):
         package.get_deployments(w3)
 
 
-def test_get_deployments_with_no_deployments_raises_exception(w3, package_with_no_deployments):
-    package = Package(package_with_no_deployments)
+def test_get_deployments_with_no_deployments_raises_exception(w3, manifest_with_no_deployments):
+    package = Package(manifest_with_no_deployments)
     with pytest.raises(ValidationError):
         package.get_deployments(w3)
 
 
-def test_get_deployments_with_no_match_raises_exception(w3, package_with_no_matching_deployments):
-    package = Package(package_with_no_matching_deployments)
+def test_get_deployments_with_no_match_raises_exception(w3, manifest_with_no_matching_deployments):
+    package = Package(manifest_with_no_matching_deployments)
     with pytest.raises(ValidationError):
         package.get_deployments(w3)
 
 
-def test_get_deployments_with_multiple_matches_raises_exception(w3, package_with_multiple_matches):
-    package = Package(package_with_multiple_matches)
+def test_get_deployments_with_multiple_matches_raises_exception(w3, manifest_with_multiple_matches):
+    package = Package(manifest_with_multiple_matches)
     with pytest.raises(ValidationError):
         package.get_deployments(w3)
 
