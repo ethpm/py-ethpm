@@ -17,7 +17,7 @@ from ethpm import ASSETS_DIR
 from ethpm.exceptions import ValidationError
 
 
-MANIFEST_SCHEMA_PATH = os.path.join(ASSETS_DIR, 'package.schema.v2.json')
+MANIFEST_SCHEMA_PATH = os.path.join(ASSETS_DIR, 'manifest.schema.v2.json')
 
 
 def _load_schema_data() -> Dict[str, Any]:
@@ -28,7 +28,7 @@ def _load_schema_data() -> Dict[str, Any]:
 def validate_manifest_against_schema(manifest: Dict[str, Any]) -> None:
     """
     Load and validate manifest against schema
-    located at RELEASE_PACKAGE_SCHEMA_PATH.
+    located at MANIFEST_SCHEMA_PATH.
     """
     schema_data = _load_schema_data()
     try:

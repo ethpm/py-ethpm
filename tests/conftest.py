@@ -6,6 +6,8 @@ from web3 import Web3
 
 from web3.providers.eth_tester import EthereumTesterProvider
 
+from ethpm import Package
+
 from ethpm.utils.chains import (
     get_chain_id,
     create_block_uri,
@@ -31,6 +33,16 @@ def w3():
     return w3
 
 
+@pytest.fixture()
+def all_manifests():
+    manifests = []
+    for pkg in PACKAGE_NAMES:
+        with open("ethpm/assets/v2-packages/%s/1.0.0.json" % pkg) as file_obj:
+            manifest = json.load(file_obj)
+            manifests.append(manifest)
+    return manifests
+
+
 # safe-math-lib currently used as default manifest for testing
 # should be extended to all_manifest_types asap
 @pytest.fixture
@@ -41,23 +53,9 @@ def safe_math_manifest():
 
 # standalone = no `build_dependencies` which aren't fully supported yet
 @pytest.fixture
-def all_standalone_manifests():
-    manifests = []
-    for pkg in PACKAGE_NAMES:
-        with open("ethpm/assets/v2-packages/%s/1.0.0.json" % pkg) as file_obj:
-            manifest = json.load(file_obj)
-            if "build_dependencies" not in manifest:
-                manifests.append(manifest)
-    return manifests
-
-
-@pytest.fixture
-def all_manifest_types():
-    manifests = []
-    for pkg in PACKAGE_NAMES:
-        with open("ethpm/assets/v2-packages/%s/1.0.0.json" % pkg) as file_obj:
-            manifests.append(json.load(file_obj))
-    return manifests
+def all_standalone_manifests(all_manifests):
+    standalone_manifests = [mnfst for mnfst in all_manifests if "build_dependencies" not in mnfst]
+    return standalone_manifests
 
 
 @pytest.fixture()

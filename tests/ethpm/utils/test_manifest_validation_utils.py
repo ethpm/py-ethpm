@@ -18,8 +18,8 @@ def test_validate_manifest_exists_invalidates():
         validate_manifest_exists("DNE")
 
 
-def test_validate_manifest_against_all_manifest_types(all_manifest_types):
-    for pkg in all_manifest_types:
+def test_validate_manifest_against_all_manifest_types(all_manifests):
+    for pkg in all_manifests:
         assert validate_manifest_against_schema(pkg) is None
 
 

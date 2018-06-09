@@ -56,16 +56,7 @@ def test_get_contract_type_throws_if_name_isnt_present(safe_math_package, w3):
         assert safe_math_package.get_contract_type("DoesNotExist", w3)
 
 
-def test_package_object_has_name_property(safe_math_manifest):
-    current_package = Package(safe_math_manifest)
-    assert current_package.name == "safe-math-lib"
-
-
-def test_package_object_has_version_property(safe_math_manifest):
-    current_package = Package(safe_math_manifest)
-    assert current_package.version == "1.0.0"
-
-
-def test_package_has_custom_str_repr(safe_math_manifest):
-    current_package = Package(safe_math_manifest)
-    assert current_package.__repr__() == "<Package safe-math-lib==1.0.0>"
+def test_package_object_properties(safe_math_package):
+    assert safe_math_package.name == "safe-math-lib"
+    assert safe_math_package.version == "1.0.0"
+    assert safe_math_package.__repr__() == "<Package safe-math-lib==1.0.0>"
