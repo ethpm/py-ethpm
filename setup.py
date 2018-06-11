@@ -41,7 +41,7 @@ extras_require['dev'] = (
 setup(
     name='eth-pm',
     # *IMPORTANT*: Don't manually change the version here. Use the 'bumpversion' utility.
-    version='0.1.0-alpha.12',
+    version='0.1.0-alpha.13',
     description="""Python abstraction for ERC190 packages.""",
     long_description_markdown_filename='README.md',
     author='Piper Merriam',
@@ -57,7 +57,7 @@ setup(
         'eth-tester>=0.1.0b24,<0.1.0b25',
         'eth-utils>=1.0.2,<2',
         'jsonschema>=2.6.0,<3',
-        'py-evm==0.2.0a16',
+        'py-evm==0.2.0a18',
         'py-solc>=2.1.0,<3',
         'rlp>=1.0.1,<2',
         'web3>=4.2.1,<5',
