@@ -109,3 +109,8 @@ The `Package` class should provide access to the full dependency tree.
 * Load and validate packages from disk.
 * Access package data.
 * Access contract factories.
+** [EthPM-Spec](https://github.com/ethpm/ethpm-spec) is referenced inside this repo as a submodule.**
+* If you clone this repository, you should run this command to fetch the contents of the submodule
+```sh
+git submodule init
+```

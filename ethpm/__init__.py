@@ -1,6 +1,7 @@
-import os
 import sys
 import warnings
+
+from pathlib import Path
 
 if sys.version_info.major < 3:
     warn_msg = ("Python 2 support will end during the first quarter of 2018"
@@ -10,8 +11,9 @@ if sys.version_info.major < 3:
     warnings.warn(warn_msg, DeprecationWarning)
 
 
-BASE_DIR = os.path.dirname(__file__)
-ASSETS_DIR = os.path.join(BASE_DIR, 'assets')  # type: str
-V2_PACKAGES = os.path.join(ASSETS_DIR, 'v2-packages')
+BASE_DIR = Path('.')
+ETHPM_SPEC_DIR = BASE_DIR.parent / 'ethpm-spec'
+SPEC_DIR = ETHPM_SPEC_DIR / 'spec'  # type: Path
+V2_PACKAGES = ETHPM_SPEC_DIR / 'examples'
 
 from .package import Package  # noqa: F401
