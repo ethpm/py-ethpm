@@ -18,7 +18,7 @@ from ethpm.typing import ContractName
 from ethpm.utils.contract import (
     generate_contract_factory_kwargs,
     validate_contract_name,
-    validate_minimal_contract_data_present,
+    validate_minimal_contract_factory_data,
     validate_w3_instance,
 )
 from ethpm.utils.deployment_validation import (
@@ -96,7 +96,7 @@ class Package(object):
 
         if name in self.package_data['contract_types']:
             contract_data = self.package_data['contract_types'][name]
-            validate_minimal_contract_data_present(contract_data)
+            validate_minimal_contract_factory_data(contract_data)
             contract_kwargs = generate_contract_factory_kwargs(contract_data)
             contract_factory = current_w3.eth.contract(**contract_kwargs)
             return contract_factory
