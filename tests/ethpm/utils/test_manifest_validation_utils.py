@@ -1,5 +1,7 @@
 import pytest
 
+from ethpm import V2_PACKAGES_DIR
+
 from ethpm.exceptions import ValidationError
 
 from ethpm.utils.manifest_validation import (
@@ -10,7 +12,7 @@ from ethpm.utils.manifest_validation import (
 
 
 def test_validate_manifest_exists_validates():
-    assert validate_manifest_exists("./v2-packages/safe-math-lib/1.0.0.json") is None
+    assert validate_manifest_exists(str(V2_PACKAGES_DIR / 'safe-math-lib' / '1.0.0.json')) is None
 
 
 def test_validate_manifest_exists_invalidates():

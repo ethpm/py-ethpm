@@ -6,7 +6,7 @@ from web3 import Web3
 
 from web3.providers.eth_tester import EthereumTesterProvider
 
-from ethpm import Package
+from ethpm import V2_PACKAGES_DIR
 
 from ethpm.utils.chains import (
     get_chain_id,
@@ -26,6 +26,7 @@ PACKAGE_NAMES = [
 ]
 
 
+
 @pytest.fixture()
 def w3():
     w3 = Web3(EthereumTesterProvider())
@@ -37,7 +38,7 @@ def w3():
 def all_manifests():
     manifests = []
     for pkg in PACKAGE_NAMES:
-        with open("ethpm/assets/v2-packages/%s/1.0.0.json" % pkg) as file_obj:
+        with open(str(V2_PACKAGES_DIR / pkg / '1.0.0.json')) as file_obj:
             manifest = json.load(file_obj)
             manifests.append(manifest)
     return manifests
@@ -47,7 +48,7 @@ def all_manifests():
 # should be extended to all_manifest_types asap
 @pytest.fixture
 def safe_math_manifest():
-    with open("ethpm/assets/v2-packages/safe-math-lib/1.0.0.json") as file_obj:
+    with open(str(V2_PACKAGES_DIR / 'safe-math-lib' / '1.0.0.json')) as file_obj:
         return json.load(file_obj)
 
 

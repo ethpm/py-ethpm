@@ -10,6 +10,9 @@ common: &common
   steps:
     - checkout
     - run:
+        name: install submodules
+        command: git submodule update --init
+    - run:
         name: merge pull request base
         command: |
           if [[ -n "${CIRCLE_PR_NUMBER}" ]]; then
