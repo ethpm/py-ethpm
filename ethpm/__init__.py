@@ -3,6 +3,7 @@ import warnings
 
 from pathlib import Path
 
+
 if sys.version_info.major < 3:
     warn_msg = ("Python 2 support will end during the first quarter of 2018"
                 "Please upgrade to Python 3"
@@ -11,9 +12,9 @@ if sys.version_info.major < 3:
     warnings.warn(warn_msg, DeprecationWarning)
 
 
-BASE_DIR = Path('.')
-ETHPM_SPEC_DIR = BASE_DIR.parent / 'ethpm-spec'
+ETHPM_DIR = Path(__file__).parent
+ETHPM_SPEC_DIR = ETHPM_DIR.parent / 'ethpm-spec'
 SPEC_DIR = ETHPM_SPEC_DIR / 'spec'  # type: Path
-V2_PACKAGES = ETHPM_SPEC_DIR / 'examples'
+V2_PACKAGES_DIR = ETHPM_SPEC_DIR / 'examples'
 
 from .package import Package  # noqa: F401

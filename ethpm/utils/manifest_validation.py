@@ -12,12 +12,15 @@ from jsonschema import (
     ValidationError as jsonValidationError,
 )
 
-from ethpm import ASSETS_DIR
+from ethpm import (
+    SPEC_DIR,
+    V2_PACKAGES_DIR,
+)
 
 from ethpm.exceptions import ValidationError
 
 
-MANIFEST_SCHEMA_PATH = os.path.join(ASSETS_DIR, 'manifest.schema.v2.json')
+MANIFEST_SCHEMA_PATH = str(SPEC_DIR / 'package.spec.json')
 
 
 def _load_schema_data() -> Dict[str, Any]:
@@ -77,8 +80,10 @@ def check_for_build_dependencies(valid_manifest: Dict[str, Any]) -> None:
 
 def validate_manifest_exists(manifest_id: str) -> None:
     """
-    Validate that manifest with manifest_id exists in ASSETS_DIR
+    Validate that manifest with manifest_id exists in V2_PACKAGES_DIR
     """
-    manifest_path = os.path.join(ASSETS_DIR, manifest_id)
+    manifest_path = str(V2_PACKAGES_DIR / manifest_id)
     if not os.path.exists(manifest_path):
-        raise ValidationError("Manifest not found in ASSETS_DIR with id: {0}".format(manifest_id))
+        raise ValidationError(
+            "Manifest not found in V2_PACKAGES_DIR with id: {0}".format(manifest_id)
+        )

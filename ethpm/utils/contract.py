@@ -18,7 +18,7 @@ from solc import compile_files
 
 from web3 import Web3
 
-from ethpm import V2_PACKAGES
+from ethpm import V2_PACKAGES_DIR
 from ethpm.exceptions import ValidationError
 
 
@@ -70,10 +70,10 @@ def compile_contracts(contract_name: str, alias: str, paths: List[str]) -> str:
     '''
     bin_id = '{0}.sol:{0}'.format(contract_name)
     contract_paths = [
-        "{dir}/{alias}{path}".format(dir=V2_PACKAGES, alias=alias, path=path[1:])
+        str(V2_PACKAGES_DIR / alias / path[1:])
         for path in paths
     ]
     compiled_source = compile_files(contract_paths)
-    compiled_source_bin = compiled_source[
-        "{dir}/{alias}/contracts/{id}".format(dir=V2_PACKAGES, alias=alias, id=bin_id)]['bin']
+    bin_lookup = str(V2_PACKAGES_DIR / alias / bin_id)
+    compiled_source_bin = compiled_source[bin_lookup]['bin']
     return compiled_source_bin
