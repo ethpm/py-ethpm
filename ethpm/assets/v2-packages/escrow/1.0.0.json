@@ -112,7 +112,7 @@
   },
   "deployments": {
     "blockchain://41941023680923e0fe4d74a34bdac8141f2540e3ae90623718e47d66d1ca4a2d/block/e76cf1f29a4689f836d941d7ffbad4e4b32035a441a509dc53150c2165f8e90d": {
-      "SafeMathLib": {
+      "SafeSendLib": {
         "contract_type": "SafeSendLib",
         "address": "0x80d7f7a33e551455a909e1b914c4fd4e6d0074cc",
         "transaction": "0x74561167f360eaa20ea67bd4b4bf99164aabb36b2287061e86137bfa0d35d5fb",

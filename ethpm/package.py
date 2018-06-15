@@ -30,10 +30,10 @@ from ethpm.utils.ipfs import (
     fetch_ipfs_package,
     is_ipfs_uri,
 )
-from ethpm.utils.package_validation import (
+from ethpm.utils.manifest_validation import (
     check_for_build_dependencies,
-    validate_package_against_schema,
-    validate_package_deployments,
+    validate_manifest_against_schema,
+    validate_manifest_deployments,
     validate_deployments_are_present,
 )
 
@@ -57,24 +57,23 @@ def _load_package_data_from_file(file_obj: IO[str]) -> Dict[str, str]:
 
 class Package(object):
 
-    def __init__(self, package_data: Dict[str, Any], w3: Web3=None) -> None:
+    def __init__(self, manifest: Dict[str, Any], w3: Web3=None) -> None:
         """
-        A package must be constructed with
-        parsed package JSON.
+        A package must be constructed with a valid manifest.
         """
         self.w3 = w3
 
-        if not isinstance(package_data, dict):
+        if not isinstance(manifest, dict):
             raise TypeError(
                 "Package object must be initialized with a dictionary. "
-                "Got {0}".format(type(package_data))
+                "Got {0}".format(type(manifest))
             )
 
-        validate_package_against_schema(package_data)
-        validate_package_deployments(package_data)
-        check_for_build_dependencies(package_data)
+        validate_manifest_against_schema(manifest)
+        validate_manifest_deployments(manifest)
+        check_for_build_dependencies(manifest)
 
-        self.package_data = package_data
+        self.package_data = manifest
 
     def set_default_w3(self, w3: Web3) -> None:
         """

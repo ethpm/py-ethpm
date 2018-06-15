@@ -18,8 +18,8 @@ DEPLOYMENT_DATA = {
 
 
 @pytest.fixture
-def contract_factory(package_with_matching_deployment):
-    p = Package(package_with_matching_deployment)
+def contract_factory(manifest_with_matching_deployment):
+    p = Package(manifest_with_matching_deployment)
     return p.get_contract_type("SafeMathLib")
 
 
