@@ -1,9 +1,6 @@
-import json
-
 from typing import (
     Any,
     Dict,
-    IO,
 )
 
 from web3.eth import Contract
@@ -24,6 +21,9 @@ from ethpm.utils.contract import (
 from ethpm.utils.deployment_validation import (
     validate_single_matching_uri,
 )
+from ethpm.utils.filesystem import (
+    load_package_data_from_file,
+)
 from ethpm.utils.ipfs import (
     extract_ipfs_path_from_uri,
     fetch_ipfs_package,
@@ -35,23 +35,6 @@ from ethpm.utils.manifest_validation import (
     validate_manifest_deployments,
     validate_deployments_are_present,
 )
-
-
-def _load_package_data_from_file(file_obj: IO[str]) -> Dict[str, str]:
-    """
-    Utility function to load package objects
-    from file objects passed to Package.from_file
-    """
-    try:
-        package_data = json.load(file_obj)
-    except json.JSONDecodeError as err:
-        raise json.JSONDecodeError(
-            "Failed to load package data. File is not a valid JSON document.",
-            err.doc,
-            err.pos,
-        )
-
-    return package_data
 
 
 class Package(object):
@@ -115,9 +98,9 @@ class Package(object):
         """
         if isinstance(file_path_or_obj, str):
             with open(file_path_or_obj) as file_obj:
-                package_data = _load_package_data_from_file(file_obj)
+                package_data = load_package_data_from_file(file_obj)
         elif hasattr(file_path_or_obj, 'read') and callable(file_path_or_obj.read):
-            package_data = _load_package_data_from_file(file_path_or_obj)
+            package_data = load_package_data_from_file(file_path_or_obj)
         else:
             raise TypeError(
                 "The Package.from_file method takes either a filesystem path or a file-like object."
