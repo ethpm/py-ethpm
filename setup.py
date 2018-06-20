@@ -57,6 +57,7 @@ setup(
         'py-evm==0.2.0a18',
         'py-solc>=2.1.0,<3',
         'rlp>=1.0.1,<2',
+        'semver>=2.8.0,<3',
         'web3>=4.2.1,<5',
     ],
     setup_requires=['setuptools-markdown'],

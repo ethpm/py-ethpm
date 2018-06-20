@@ -114,3 +114,20 @@ The `Package` class should provide access to the full dependency tree.
 ```sh
 git submodule init
 ```
+
+
+## Registry URI 
+
+The URI to lookup a package from a registry should follow the following format. (subject to change as the Registry Contract Standard makes it's way through the EIP process)
+
+```
+scheme://authority/package-name/version
+```
+
+* URI must be a string type
+* `scheme`: `ercxxx` 
+* `authority`: Must be a valid ENS domain or a valid hex address pointing towards a registry contract.
+* `package-name`: Must conform to the package-name as specified in the [EthPM-Spec](http://ethpm-spec.readthedocs.io/en/latest/package-spec.html#package-name).
+* `version`: Must be a valid semver string as specified [here](https://semver.org/).
+
+i.e. `ercxxx://packages.zeppelinos.eth/owned/1.0.0`
