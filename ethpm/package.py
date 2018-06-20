@@ -12,6 +12,8 @@ from ethpm.exceptions import ValidationError
 
 from ethpm.typing import ContractName
 
+from ethpm.validation import validate_registry_uri
+
 from ethpm.utils.contract import (
     generate_contract_factory_kwargs,
     validate_contract_name,
@@ -35,6 +37,8 @@ from ethpm.utils.manifest_validation import (
     validate_manifest_deployments,
     validate_deployments_are_present,
 )
+from ethpm.utils.registry import lookup_manifest_uri_located_at_registry_uri
+from ethpm.utils.uri import get_manifest_from_content_addressed_uri
 
 
 class Package(object):
@@ -112,8 +116,7 @@ class Package(object):
     @classmethod
     def from_ipfs(cls, ipfs_uri: str) -> 'Package':
         """
-        Allows users to create a Package object from
-        an IPFS uri.
+        Instantiate a Package object from an IPFS uri.
         TODO: Defaults to Infura gateway, needs extension
         to support other gateways and local nodes
         """
@@ -127,6 +130,18 @@ class Package(object):
             )
 
         return cls(package_data)
+
+    @classmethod
+    def from_registry(cls, registry_uri: str, w3: Web3) -> 'Package':
+        """
+        Instantiate a Package object from a valid Registry URI.
+        --
+        Requires a web3 object connected to the chain the registry lives on.
+        """
+        validate_registry_uri(registry_uri)
+        manifest_uri = lookup_manifest_uri_located_at_registry_uri(registry_uri, w3)
+        manifest_data = get_manifest_from_content_addressed_uri(manifest_uri)
+        return cls(manifest_data, w3)
 
     @property
     def name(self) -> str:
