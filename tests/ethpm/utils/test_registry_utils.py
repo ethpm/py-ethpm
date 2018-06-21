@@ -14,10 +14,8 @@ from ethpm.utils.registry import (
         ('ercXXX://packages.zeppelinos.eth/erc20/1.0.0/', True),
         ('ercXXX://zeppelinos.eth/erc20/1.0.0', True),
         ('ercXXX://zeppelinos.eth/erc20/1.0.0/', True),
-        ('ercXXX://d3cda913deb6f67967b99d67acdfa1712c293601/erc20/1.0.0', True),
-        ('ercXXX://d3cda913deb6f67967b99d67acdfa1712c293601/erc20/1.0.0/', True),
-        ('ercXXX://0xd3cda913deb6f67967b99d67acdfa1712c293601/erc20/1.0.0', True),
-        ('ercXXX://0xd3cda913deb6f67967b99d67acdfa1712c293601/erc20/1.0.0/', True),
+        ('ercXXX://0xd3CdA913deB6f67967B99D67aCDFa1712C293601/erc20/1.0.0', True),
+        ('ercXXX://0xd3CdA913deB6f67967B99D67aCDFa1712C293601/erc20/1.0.0/', True),
     )
 )
 def test_is_registry_uri_validates(uri, expected):
@@ -31,7 +29,7 @@ def test_is_registry_uri_validates(uri, expected):
         ('ercXXX://packages.zeppelinos.com/erc20/1.0.0'),
         ('ercXXX://package.manager.zeppelinos.eth/erc20/1.0.0'),
         ('ercXXX://packageszeppelinoseth/erc20/1.0.0'),
-        ('ercXXX://0x12345/erc20/1.0.0'),
+        ('ercXXX://0xd3cda913deb6f67967b99d67acdfa1712c293601/erc20/1.0.0'),
         # invalid package name
         ('ercXXX://packages.zeppelinos.eth//'),
         ('ercXXX://packages.zeppelinos.eth///'),
@@ -40,9 +38,6 @@ def test_is_registry_uri_validates(uri, expected):
         # invalid versions
         ('ercXXX://packages.zeppelinos.eth/erc20/'),
         ('ercXXX://packages.zeppelinos.eth/erc20//'),
-        ('ercXXX://packages.zeppelinos.eth/erc20/v1.0.0'),
-        ('ercXXX://packages.zeppelinos.eth/erc20/v1.0.0/'),
-        ('ercXXX://packages.zeppelinos.eth/erc20/version_one/'),
         # malformed
         ('ercXXX:packages.zeppelinos.eth/erc20/1.0.0'),
         ('ercXXX:packages.zeppelinos.eth/erc20/1.0.0/'),

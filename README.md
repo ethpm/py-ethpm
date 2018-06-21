@@ -126,8 +126,8 @@ scheme://authority/package-name/version
 
 * URI must be a string type
 * `scheme`: `ercxxx` 
-* `authority`: Must be a valid ENS domain or a valid hex address pointing towards a registry contract.
+* `authority`: Must be a valid ENS domain or a valid checksum address pointing towards a registry contract.
 * `package-name`: Must conform to the package-name as specified in the [EthPM-Spec](http://ethpm-spec.readthedocs.io/en/latest/package-spec.html#package-name).
-* `version`: Must be a valid semver string as specified [here](https://semver.org/).
+* `version`: The URI escaped version string.
 
 i.e. `ercxxx://packages.zeppelinos.eth/owned/1.0.0`
