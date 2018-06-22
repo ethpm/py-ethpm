@@ -23,6 +23,7 @@ venv*
 
 # Installer logs
 pip-log.txt
+.pypirc
 
 # Unit test / coverage reports
 .coverage

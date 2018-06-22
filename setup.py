@@ -39,8 +39,9 @@ extras_require['dev'] = (
 )
 
 setup(
-    name='ethpm',
-    version='0.1.0',
+    name='eth-pm',
+    # *IMPORTANT*: Don't manually change the version here. Use the 'bumpversion' utility.
+    version='0.1.0-alpha.17',
     description="""Python abstraction for ERC190 packages.""",
     long_description_markdown_filename='README.md',
     author='Piper Merriam',
@@ -50,6 +51,7 @@ setup(
     install_requires=[
         "toolz>=0.9.0,<1.0.0;implementation_name=='pypy'",
         "cytoolz>=0.9.0,<1.0.0;implementation_name=='cpython'",
+        'bumpversion>=0.5.3,<1',
         'eth-keys>=0.2.0b3,<1',
         'eth-tester==0.1.0b26',
         'eth-utils>=1.0.2,<2',

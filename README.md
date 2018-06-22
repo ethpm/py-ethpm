@@ -109,12 +109,15 @@ The `Package` class should provide access to the full dependency tree.
 * Load and validate packages from disk.
 * Access package data.
 * Access contract factories.
-** [EthPM-Spec](https://github.com/ethpm/ethpm-spec) is referenced inside this repo as a submodule.**
+
+
+## EthPM-Spec
+
+* [EthPM-Spec](https://github.com/ethpm/ethpm-spec) is referenced inside this repo as a submodule.**
 * If you clone this repository, you should run this command to fetch the contents of the submodule
 ```sh
 git submodule init
 ```
-
 
 ## Registry URI 
 
@@ -131,3 +134,26 @@ scheme://authority/package-name?version=x.x.x
 * `version`: The URI escaped version string, *should* conform to the [semver](http://semver.org/) version numbering specification.
 
 i.e. `ercxxx://packages.zeppelinos.eth/owned?version=1.0.0`
+
+
+## Release setup
+For Debian-like systems:
+
+```sh
+apt install pandoc
+```
+
+To release a new version:
+
+```sh
+make release bump=$$VERSION_PART_TO_BUMP$$
+```
+
+## How to bumpversion
+The version format for this repo is `{major}.{minor}.{patch}` for stable, and `{major}.{minor}.{patch}-{stage}.{devnum}` for unstable (`stage` can be alpha or beta).
+
+To issue the next version in line, specify which part to bump, like `make release bump=minor` or `make release bump=devnum`.
+
+If you are in a beta version, `make release bump=stage` will switch to a stable.
+
+To issue an unstable version when the current version is stable, specify the new version explicitly, like `make release bump="--new-version 4.0.0-alpha.1 devnum"`
