@@ -1,13 +1,15 @@
 import pytest
+
 from solc import compile_source
 
 import ethpm
 
-from ethpm import Package
+from ethpm import (
+    ASSETS_DIR,
+    Package,
+)
 
 from ethpm.exceptions import UriNotSupportedError
-
-from ethpm.constants import REGISTRY_SOURCE
 
 
 # mock out http req to IPFS gateway
@@ -22,7 +24,9 @@ def mock_request(monkeypatch, owned_manifest):
 @pytest.fixture()
 def w3_with_registry(w3):
     # compile registry contract
-    compiled_sol = compile_source(REGISTRY_SOURCE)
+    registry_source = ASSETS_DIR / 'Registry.sol'
+    reg_text = registry_source.read_text()
+    compiled_sol = compile_source(reg_text)
     contract_interface = compiled_sol['<stdin>:Registry']
     # deploy registry contract
     Registry = w3.eth.contract(abi=contract_interface['abi'], bytecode=contract_interface['bin'])
