@@ -2,7 +2,9 @@ import pytest
 
 from ethpm.package import Package
 
-from ethpm.exceptions import ValidationError
+from ethpm.exceptions import (
+    InsufficientAssetsError,
+)
 
 
 @pytest.fixture()
@@ -51,8 +53,15 @@ def test_get_contract_type_without_default_web3(safe_math_package):
         assert safe_math_package.get_contract_type("SafeMathLib")
 
 
+def test_get_contract_type_with_missing_contract_types(safe_math_package, w3):
+    safe_math_package.set_default_w3(w3)
+    safe_math_package.package_data.pop('contract_types', None)
+    with pytest.raises(InsufficientAssetsError):
+        assert safe_math_package.get_contract_type("SafeMathLib")
+
+
 def test_get_contract_type_throws_if_name_isnt_present(safe_math_package, w3):
-    with pytest.raises(ValidationError):
+    with pytest.raises(InsufficientAssetsError):
         assert safe_math_package.get_contract_type("DoesNotExist", w3)
 
 

@@ -8,7 +8,9 @@ from web3.main import Web3
 
 from ethpm.deployments import Deployments
 
-from ethpm.exceptions import ValidationError
+from ethpm.exceptions import (
+    InsufficientAssetsError,
+)
 
 from ethpm.typing import ContractName
 
@@ -77,13 +79,18 @@ class Package(object):
         validate_contract_name(name)
         validate_w3_instance(current_w3)
 
-        if name in self.package_data['contract_types']:
+        try:
             contract_data = self.package_data['contract_types'][name]
             validate_minimal_contract_factory_data(contract_data)
-            contract_kwargs = generate_contract_factory_kwargs(contract_data)
-            contract_factory = current_w3.eth.contract(**contract_kwargs)
-            return contract_factory
-        raise ValidationError("Package does not have contract by name: {}.".format(name))
+        except KeyError:
+            raise InsufficientAssetsError(
+                "This package has insufficient package data to generate"
+                "a contract_factory for contract: {0}.".format(name)
+            )
+
+        contract_kwargs = generate_contract_factory_kwargs(contract_data)
+        contract_factory = current_w3.eth.contract(**contract_kwargs)
+        return contract_factory
 
     def __repr__(self) -> str:
         name = self.name
