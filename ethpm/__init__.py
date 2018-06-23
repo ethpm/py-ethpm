@@ -16,5 +16,6 @@ ETHPM_DIR = Path(__file__).parent
 ETHPM_SPEC_DIR = ETHPM_DIR.parent / 'ethpm-spec'
 SPEC_DIR = ETHPM_SPEC_DIR / 'spec'  # type: Path
 V2_PACKAGES_DIR = ETHPM_SPEC_DIR / 'examples'
+ASSETS_DIR = ETHPM_DIR / 'assets'
 
 from .package import Package  # noqa: F401

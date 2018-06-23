@@ -1,0 +1,66 @@
+[
+        {
+                "constant": true,
+                "inputs": [
+                        {
+                                "name": "_name",
+                                "type": "bytes32"
+                        }
+                ],
+                "name": "lookupPackage",
+                "outputs": [
+                        {
+                                "name": "",
+                                "type": "string"
+                        }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+        },
+        {
+                "constant": true,
+                "inputs": [
+                        {
+                                "name": "",
+                                "type": "bytes32"
+                        }
+                ],
+                "name": "index",
+                "outputs": [
+                        {
+                                "name": "uri",
+                                "type": "string"
+                        },
+                        {
+                                "name": "version",
+                                "type": "string"
+                        }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+        },
+        {
+                "constant": false,
+                "inputs": [
+                        {
+                                "name": "_name",
+                                "type": "bytes32"
+                        },
+                        {
+                                "name": "_version",
+                                "type": "string"
+                        },
+                        {
+                                "name": "_uri",
+                                "type": "string"
+                        }
+                ],
+                "name": "registerPackage",
+                "outputs": [],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+        }
+]

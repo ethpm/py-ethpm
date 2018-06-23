@@ -52,6 +52,11 @@ def safe_math_manifest():
         return json.load(file_obj)
 
 
+@pytest.fixture
+def owned_manifest():
+    with open(str(V2_PACKAGES_DIR / 'owned' / '1.0.0.json')) as file_obj:
+        return json.load(file_obj)
+
 # standalone = no `build_dependencies` which aren't fully supported yet
 @pytest.fixture
 def all_standalone_manifests(all_manifests):

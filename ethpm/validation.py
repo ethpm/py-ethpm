@@ -60,5 +60,6 @@ def validate_registry_uri_version(query: str) -> None:
     """
     Raise an exception if the version param is malformed.
     """
-    if 'version=' != query[:8]:
+    query_dict = parse.parse_qs(query, keep_blank_values=True)
+    if 'version' not in query_dict:
         raise UriNotSupportedError('{0} is not a correctly formatted version param.'.format(query))
