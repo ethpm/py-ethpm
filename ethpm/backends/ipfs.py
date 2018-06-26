@@ -1,12 +1,18 @@
-import json
+from eth_utils import (
+    to_bytes,
+)
 import requests
 
-from abc import abstractmethod
-
-from ethpm import V2_PACKAGES_DIR
-
-from ethpm.backends.base import BaseURIBackend
-
+from ethpm import (
+    V2_PACKAGES_DIR,
+)
+from ethpm.backends.base import (
+    BaseURIBackend,
+)
+from ethpm.constants import (
+    INFURA_GATEWAY_PREFIX,
+    IPFS_GATEWAY_PREFIX,
+)
 from ethpm.utils.ipfs import (
     extract_ipfs_path_from_uri,
     is_ipfs_uri,
@@ -14,67 +20,82 @@ from ethpm.utils.ipfs import (
 
 
 class BaseIPFSBackend(BaseURIBackend):
-    @abstractmethod
-    def fetch_ipfs_uri(self, uri: str) -> str:  # or maybe bytes?
-        """
-        Return the file contents stored at the URI.
-        """
-        pass
-
-
-    @abstractmethod
-    def can_handle_uri(self, uri: str) -> bool: 
+    """
+    Base class for all URIs with an IPFS scheme.
+    """
+    def can_handle_uri(self, uri: str) -> bool:
         """
         Return a bool indicating whether or not this backend
         is capable of serving the content at the URI.
         """
-        return False
+        return is_ipfs_uri(uri)
 
 
 class IPFSOverHTTPBackend(BaseIPFSBackend):
-
-    @property
-    def base_uri(self):
-        raise AttributeError('Base URI needs to be set by subclass')
-
-    def fetch_ipfs_uri(self, uri):  # , uri):
+    """
+    Base class for all IPFS URIs served over an http connection.
+    """
+    def fetch_uri_contents(self, uri: str) -> bytes:
         ipfs_hash = extract_ipfs_path_from_uri(uri)
         gateway_uri = self.base_uri + ipfs_hash
         response = requests.get(gateway_uri)
+        response.raise_for_status()
         return response.content
-    
-    def can_handle_uri(self, uri: str) -> bool:
-        if not is_ipfs_uri(uri):
-            return False
-        return True
-
-
-IPFS_GATEWAY_PREFIX = 'https://gateway.ipfs.io/ipfs/'
-INFURA_GATEWAY_PREFIX = 'https://ipfs.infura.io/ipfs/'
 
 
 class IPFSGatewayBackend(IPFSOverHTTPBackend):
+    """
+    Backend class for all IPFS URIs served over the IPFS gateway.
+    """
     @property
-    def base_uri(self):
+    def base_uri(self) -> str:
         return IPFS_GATEWAY_PREFIX
 
 
 class InfuraIPFSBackend(IPFSOverHTTPBackend):
+    """
+    Backend class for all IPFS URIs served over the Infura IFPS gateway.
+    """
     @property
-    def base_uri(self):
+    def base_uri(self) -> str:
         return INFURA_GATEWAY_PREFIX
 
 
-# returns locally stored manifes
 class DummyIPFSBackend(BaseIPFSBackend):
-    def fetch_ipfs_uri(self):
-        with open(str(V2_PACKAGES_DIR / 'owned' / '1.0.0.json')) as file_obj:
-            return json.load(file_obj)
+    """
+    Backend class to serve IPFS URIs without having to make an HTTP request.
+    Used primarily for testing purposes, returns a locally stored manifest or contract.
+    ---
+    `ipfs_uri` can either be:
+    - Valid IPFS URI -> safe-math-lib manifest (ALWAYS)
+    - Path to manifest/contract in V2_PACKAGES_DIR -> defined manifest/contract
+    """
+    def fetch_uri_contents(self, ipfs_uri: str) -> bytes:
+        if is_ipfs_uri(ipfs_uri):
+            with open(str(V2_PACKAGES_DIR / 'safe-math-lib' / '1.0.0.json')) as file_obj:
+                contents = file_obj.read()
+        else:
+            with open(str(V2_PACKAGES_DIR / ipfs_uri)) as file_obj:
+                contents = file_obj.read()
+        return to_bytes(text=contents)
 
-    def can_handle_uri(self):
+    def can_handle_uri(self, uri: str) -> bool:
+        if is_ipfs_uri(uri):
+            return True
+        path = V2_PACKAGES_DIR / uri
+        return path.exists()
+
+    def base_uri(self) -> str:
         pass
 
 
-# knows how to connect to a locally running IPFS node
 class LocalIPFSBackend(BaseIPFSBackend):
-    pass
+    """
+    Backend class for all IPFS URIs served through a direct connection to an IPFS node.
+    TODO - implement
+    """
+    def can_handle_uri(self, ipfs_uri: str) -> bool:
+        return False
+
+    def fetch_uri_contents(self, ipfs_uri: str) -> bytes:
+        pass

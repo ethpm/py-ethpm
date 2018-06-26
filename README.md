@@ -119,6 +119,7 @@ The `Package` class should provide access to the full dependency tree.
 git submodule init
 ```
 
+
 ## Registry URI 
 
 The URI to lookup a package from a registry should follow the following format. (subject to change as the Registry Contract Standard makes it's way through the EIP process)
@@ -134,6 +135,15 @@ scheme://authority/package-name?version=x.x.x
 * `version`: The URI escaped version string, *should* conform to the [semver](http://semver.org/) version numbering specification.
 
 i.e. `ercxxx://packages.zeppelinos.eth/owned?version=1.0.0`
+
+
+## URI Backend Class
+* URI Backend Class defaults to `ethpm.backends.ipfs.IFPSGatewayBackend`
+* URI Backend Class is configurable via the environment variable `ETHPM_URI_BACKEND_CLASS` set to a dotted module path
+* `DummyIPFSBackend` is used to avoid http requests within testing
+	* Can accept both a ...
+		* Valid IPFS URI -> `safe-math-lib` manifest
+		* Path to existing manifest/contract in `V2_PACKAGES_DIR` -> defined manifest/contract 
 
 
 ## Release setup

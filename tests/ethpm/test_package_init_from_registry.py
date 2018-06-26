@@ -41,7 +41,8 @@ def w3_with_registry(w3):
     return w3, address, registry
 
 
-def test_package_init_from_registry(w3_with_registry):
+def test_package_init_from_registry(w3_with_registry, monkeypatch):
+    monkeypatch.setenv('ETHPM_URI_BACKEND_CLASS', 'ethpm.backends.ipfs.IPFSGatewayBackend')
     w3, address, registry = w3_with_registry
     valid_registry_uri = "ercXXX://%s/owned?version=1.0.0" % address
     pkg = Package.from_registry(valid_registry_uri, w3)
