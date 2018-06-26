@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 from ethpm import Package
@@ -10,6 +12,7 @@ def test_package_from_uri_with_valid_uri(dummy_ipfs_backend, w3):
     package = Package.from_uri(VALID_IPFS_PKG, w3)
     assert package.name == "safe-math-lib"
     assert isinstance(package, Package)
+    os.environ.pop('URI_BACKEND_CLASS')
 
 
 @pytest.mark.parametrize(

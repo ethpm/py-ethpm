@@ -39,6 +39,7 @@ def extract_ipfs_path_from_uri(value: str) -> str:
         return parse_result.path.strip("/")
 
 
+
 def is_ipfs_uri(value: str) -> bool:
     """
     Return a bool indicating whether or not the value is a valid IPFS URI.
