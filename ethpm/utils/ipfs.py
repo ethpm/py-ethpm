@@ -12,18 +12,16 @@ def fetch_ipfs_package(hash: str) -> Dict[str, Any]:
     response.raise_for_status()
     return response.json()
 
-
 def extract_ipfs_path_from_uri(value: str) -> str:
     parse_result = parse.urlparse(value)
 
     if parse_result.netloc:
         if parse_result.path:
-            return "".join((parse_result.netloc, parse_result.path))
+            return ''.join((parse_result.netloc, parse_result.path.rstrip('/')))
         else:
             return parse_result.netloc
     else:
-        return parse_result.path.lstrip("/")
-
+        return parse_result.path.strip('/')
 
 def is_ipfs_uri(value: str) -> bool:
     parse_result = parse.urlparse(value)
