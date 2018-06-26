@@ -8,6 +8,7 @@ from ethpm.backends.ipfs import DummyIPFSBackend, InfuraIPFSBackend, IPFSGateway
 from ethpm.constants import INFURA_GATEWAY_PREFIX, IPFS_GATEWAY_PREFIX
 
 
+
 @pytest.mark.parametrize(
     "base_uri,backend",
     (

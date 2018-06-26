@@ -13,7 +13,6 @@ class BaseIPFSBackend(BaseURIBackend):
     """
     Base class for all URIs with an IPFS scheme.
     """
-
     def can_handle_uri(self, uri: str) -> bool:
         """
         Return a bool indicating whether or not this backend
@@ -46,7 +45,6 @@ class IPFSGatewayBackend(IPFSOverHTTPBackend):
     """
     Backend class for all IPFS URIs served over the IPFS gateway.
     """
-
     @property
     def base_uri(self) -> str:
         return IPFS_GATEWAY_PREFIX
@@ -56,7 +54,6 @@ class InfuraIPFSBackend(IPFSOverHTTPBackend):
     """
     Backend class for all IPFS URIs served over the Infura IFPS gateway.
     """
-
     @property
     def base_uri(self) -> str:
         return INFURA_GATEWAY_PREFIX
