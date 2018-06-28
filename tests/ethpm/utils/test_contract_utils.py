@@ -4,11 +4,10 @@ from ethpm.exceptions import (
     InsufficientAssetsError,
     ValidationError,
 )
-
 from ethpm.utils.contract import (
-    validate_minimal_contract_factory_data,
-    validate_contract_name,
     generate_contract_factory_kwargs,
+    validate_contract_name,
+    validate_minimal_contract_factory_data,
     validate_w3_instance,
 )
 

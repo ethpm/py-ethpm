@@ -1,9 +1,12 @@
-from typing import List
+from typing import (
+    List,
+)
 
-from web3.main import Web3
+from web3 import Web3
 
-from ethpm.exceptions import ValidationError
-
+from ethpm.exceptions import (
+    ValidationError,
+)
 from ethpm.utils.chains import (
     check_if_chain_matches_chain_uri,
 )

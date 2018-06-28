@@ -1,13 +1,15 @@
 import pytest
 
-from ethpm import V2_PACKAGES_DIR
-
-from ethpm.exceptions import ValidationError
-
+from ethpm import (
+    V2_PACKAGES_DIR,
+)
+from ethpm.exceptions import (
+    ValidationError,
+)
 from ethpm.utils.manifest_validation import (
-    validate_manifest_exists,
     validate_manifest_against_schema,
     validate_manifest_deployments,
+    validate_manifest_exists,
 )
 
 

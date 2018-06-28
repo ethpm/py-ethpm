@@ -1,16 +1,19 @@
 import re
+from urllib import (
+    parse,
+)
 
-from urllib import parse
-
-from eth_utils import is_checksum_address
+from eth_utils import (
+    is_checksum_address,
+)
 
 from ethpm.constants import (
     PACKAGE_NAME_REGEX,
     REGISTRY_URI_SCHEME,
 )
-
-from ethpm.exceptions import UriNotSupportedError
-
+from ethpm.exceptions import (
+    UriNotSupportedError,
+)
 from ethpm.utils.registry import (
     is_ens_domain,
 )

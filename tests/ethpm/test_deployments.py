@@ -1,11 +1,14 @@
 import pytest
 
-from ethpm import Package
-
-from ethpm.exceptions import ValidationError
-
-from ethpm.deployments import Deployments
-
+from ethpm import (
+    Package,
+)
+from ethpm.deployments import (
+    Deployments,
+)
+from ethpm.exceptions import (
+    ValidationError,
+)
 
 DEPLOYMENT_DATA = {
       "SafeMathLib": {

@@ -1,5 +1,4 @@
 import re
-
 from typing import (
     Any,
     Dict,
@@ -9,16 +8,18 @@ from typing import (
 )
 
 from eth_utils import (
+    encode_hex,
     to_bytes,
     to_dict,
-    encode_hex,
 )
-
-from solc import compile_files
-
+from solc import (
+    compile_files,
+)
 from web3 import Web3
 
-from ethpm import V2_PACKAGES_DIR
+from ethpm import (
+    V2_PACKAGES_DIR,
+)
 from ethpm.exceptions import (
     InsufficientAssetsError,
     ValidationError,

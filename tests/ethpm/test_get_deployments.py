@@ -1,10 +1,14 @@
 import pytest
 
-from ethpm import Package
-
-from ethpm.deployments import Deployments
-
-from ethpm.exceptions import ValidationError
+from ethpm import (
+    Package,
+)
+from ethpm.deployments import (
+    Deployments,
+)
+from ethpm.exceptions import (
+    ValidationError,
+)
 
 
 @pytest.fixture

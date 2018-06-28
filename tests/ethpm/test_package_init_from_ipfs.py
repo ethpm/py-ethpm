@@ -1,8 +1,9 @@
 import pytest
 
 import ethpm
-
-from ethpm import Package
+from ethpm import (
+    Package,
+)
 
 VALID_IPFS_PKG = 'ipfs://QmeD2s7KaBUoGYTP1eutHBmBkMMMoycdfiyGMx2DKrWXyV'
 

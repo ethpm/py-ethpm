@@ -1,18 +1,19 @@
 import copy
 import json
+
 import pytest
-
 from web3 import Web3
-
-from web3.providers.eth_tester import EthereumTesterProvider
-
-from ethpm import V2_PACKAGES_DIR
-
-from ethpm.utils.chains import (
-    get_chain_id,
-    create_block_uri,
+from web3.providers.eth_tester import (
+    EthereumTesterProvider,
 )
 
+from ethpm import (
+    V2_PACKAGES_DIR,
+)
+from ethpm.utils.chains import (
+    create_block_uri,
+    get_chain_id,
+)
 
 PACKAGE_NAMES = [
     'escrow',

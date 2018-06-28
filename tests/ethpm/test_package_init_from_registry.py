@@ -1,15 +1,16 @@
 import pytest
-
-from solc import compile_source
+from solc import (
+    compile_source,
+)
 
 import ethpm
-
 from ethpm import (
     ASSETS_DIR,
     Package,
 )
-
-from ethpm.exceptions import UriNotSupportedError
+from ethpm.exceptions import (
+    UriNotSupportedError,
+)
 
 
 # mock out http req to IPFS gateway
