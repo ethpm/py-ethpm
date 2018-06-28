@@ -1,5 +1,4 @@
 import pytest
-
 from solc import (
     compile_source,
 )

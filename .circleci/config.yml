@@ -72,12 +72,12 @@ jobs:
       - image: circleci/python:3.6
         environment:
           TOXENV: py36
-  flake8:
+  lint:
     <<: *common
     docker:
       - image: circleci/python:3.6
         environment:
-          TOXENV: flake8
+          TOXENV: lint
   
 workflows:
   version: 2
@@ -86,4 +86,4 @@ workflows:
       - doctest
       - py35
       - py36
-      - flake8
+      - lint

@@ -1,7 +1,7 @@
 import copy
 import json
-import pytest
 
+import pytest
 from web3 import Web3
 from web3.providers.eth_tester import (
     EthereumTesterProvider,
