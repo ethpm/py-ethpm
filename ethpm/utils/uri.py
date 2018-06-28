@@ -1,23 +1,14 @@
-from typing import (
-    Any,
-    Dict,
-)
-from urllib import (
-    parse,
-)
+from typing import Any, Dict
+from urllib import parse
 
-from ethpm.exceptions import (
-    UriNotSupportedError,
-)
-from ethpm.utils.ipfs import (
-    fetch_ipfs_package,
-)
+from ethpm.exceptions import UriNotSupportedError
+from ethpm.utils.ipfs import fetch_ipfs_package
 
-IPFS_SCHEME = 'ipfs'
+IPFS_SCHEME = "ipfs"
 
-INTERNET_SCHEMES = ['http', 'https']
+INTERNET_SCHEMES = ["http", "https"]
 
-SWARM_SCHEMES = ['bzz', 'bzz-immutable', 'bzz-raw']
+SWARM_SCHEMES = ["bzz", "bzz-immutable", "bzz-raw"]
 
 
 def get_manifest_from_content_addressed_uri(uri: str) -> Dict[str, Any]:
@@ -33,9 +24,9 @@ def get_manifest_from_content_addressed_uri(uri: str) -> Dict[str, Any]:
         return manifest_data
 
     if scheme in INTERNET_SCHEMES:
-        raise UriNotSupportedError('Internet URIs are not yet supported.')
+        raise UriNotSupportedError("Internet URIs are not yet supported.")
 
     if scheme in SWARM_SCHEMES:
-        raise UriNotSupportedError('Swarm URIs are not yet supported.')
+        raise UriNotSupportedError("Swarm URIs are not yet supported.")
 
-    raise UriNotSupportedError('The URI scheme:{0} is not supported.'.format(scheme))
+    raise UriNotSupportedError("The URI scheme:{0} is not supported.".format(scheme))

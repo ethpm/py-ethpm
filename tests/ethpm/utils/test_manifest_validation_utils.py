@@ -1,11 +1,7 @@
 import pytest
 
-from ethpm import (
-    V2_PACKAGES_DIR,
-)
-from ethpm.exceptions import (
-    ValidationError,
-)
+from ethpm import V2_PACKAGES_DIR
+from ethpm.exceptions import ValidationError
 from ethpm.utils.manifest_validation import (
     validate_manifest_against_schema,
     validate_manifest_deployments,
@@ -14,7 +10,10 @@ from ethpm.utils.manifest_validation import (
 
 
 def test_validate_manifest_exists_validates():
-    assert validate_manifest_exists(str(V2_PACKAGES_DIR / 'safe-math-lib' / '1.0.0.json')) is None
+    assert (
+        validate_manifest_exists(str(V2_PACKAGES_DIR / "safe-math-lib" / "1.0.0.json"))
+        is None
+    )
 
 
 def test_validate_manifest_exists_invalidates():
@@ -32,7 +31,9 @@ def test_validate_manifest_invalidates(invalid_manifest):
         validate_manifest_against_schema(invalid_manifest)
 
 
-def test_validate_deployed_contracts_present_validates(manifest_with_conflicting_deployments):
+def test_validate_deployed_contracts_present_validates(
+    manifest_with_conflicting_deployments
+):
     with pytest.raises(ValidationError):
         validate_manifest_deployments(manifest_with_conflicting_deployments)
 

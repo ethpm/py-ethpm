@@ -1,11 +1,7 @@
 import pytest
 
-from ethpm.exceptions import (
-    InsufficientAssetsError,
-)
-from ethpm.package import (
-    Package,
-)
+from ethpm.exceptions import InsufficientAssetsError
+from ethpm.package import Package
 
 
 @pytest.fixture()
@@ -28,19 +24,19 @@ def test_set_default_web3(all_standalone_manifests, w3):
 
 def test_get_contract_factory_with_unique_web3(safe_math_package, w3):
     contract_factory = safe_math_package.get_contract_factory("SafeMathLib", w3)
-    assert hasattr(contract_factory, 'address')
-    assert hasattr(contract_factory, 'abi')
-    assert hasattr(contract_factory, 'bytecode')
-    assert hasattr(contract_factory, 'bytecode_runtime')
+    assert hasattr(contract_factory, "address")
+    assert hasattr(contract_factory, "abi")
+    assert hasattr(contract_factory, "bytecode")
+    assert hasattr(contract_factory, "bytecode_runtime")
 
 
 def test_get_contract_factory_with_default_web3(safe_math_package, w3):
     safe_math_package.set_default_w3(w3)
     contract_factory = safe_math_package.get_contract_factory("SafeMathLib")
-    assert hasattr(contract_factory, 'address')
-    assert hasattr(contract_factory, 'abi')
-    assert hasattr(contract_factory, 'bytecode')
-    assert hasattr(contract_factory, 'bytecode_runtime')
+    assert hasattr(contract_factory, "address")
+    assert hasattr(contract_factory, "abi")
+    assert hasattr(contract_factory, "bytecode")
+    assert hasattr(contract_factory, "bytecode_runtime")
 
 
 @pytest.mark.parametrize("invalid_w3", ({"invalid": "w3"}))
@@ -56,7 +52,7 @@ def test_get_contract_factory_without_default_web3(safe_math_package):
 
 def test_get_contract_factory_with_missing_contract_types(safe_math_package, w3):
     safe_math_package.set_default_w3(w3)
-    safe_math_package.package_data.pop('contract_types', None)
+    safe_math_package.package_data.pop("contract_types", None)
     with pytest.raises(InsufficientAssetsError):
         assert safe_math_package.get_contract_factory("SafeMathLib")
 

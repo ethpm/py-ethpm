@@ -1,8 +1,5 @@
 import json
-from typing import (
-    IO,
-    Dict,
-)
+from typing import IO, Dict
 
 
 def load_package_data_from_file(file_obj: IO[str]) -> Dict[str, str]:

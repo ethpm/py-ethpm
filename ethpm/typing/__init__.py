@@ -1,4 +1,1 @@
-from .misc import (  # noqa: F401
-    ContractName,
-    URI,
-)
+from .misc import ContractName, URI  # noqa: F401

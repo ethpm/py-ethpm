@@ -3,7 +3,7 @@
 * parse and validate packages
 * given a web3 instance provide access to contract factory classes
 * given a web3 instance provide access to all of the deployed contract instances for the chain that web3 is connected to.
-* validate package bytecode matches compilation output.
+* validate package bytecode matches compilation output
 * validate deployed bytecode matches compilation output
 * access to packages dependencies
 * construct new packages 
