@@ -1,8 +1,11 @@
 import pytest
 
-from ethpm.exceptions import UriNotSupportedError
-
-from ethpm.utils.uri import get_manifest_from_content_addressed_uri
+from ethpm.exceptions import (
+    UriNotSupportedError,
+)
+from ethpm.utils.uri import (
+    get_manifest_from_content_addressed_uri,
+)
 
 
 @pytest.mark.parametrize(

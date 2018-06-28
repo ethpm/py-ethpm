@@ -1,8 +1,7 @@
 import json
-
 from typing import (
-    Dict,
     IO,
+    Dict,
 )
 
 

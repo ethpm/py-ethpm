@@ -1,17 +1,20 @@
 import json
-
 from typing import (
     Any,
     Dict,
 )
+from urllib import (
+    parse,
+)
 
-from urllib import parse
+from eth_utils import (
+    to_bytes,
+)
+from web3 import Web3
 
-from eth_utils import to_bytes
-
-from web3.main import Web3
-
-from ethpm import ASSETS_DIR
+from ethpm import (
+    ASSETS_DIR,
+)
 
 
 def is_ens_domain(authority: str) -> bool:

@@ -1,9 +1,10 @@
 import pytest
 
-from ethpm.package import Package
-
 from ethpm.exceptions import (
     InsufficientAssetsError,
+)
+from ethpm.package import (
+    Package,
 )
 
 

@@ -1,5 +1,6 @@
-from typing import NewType
-
+from typing import (
+    NewType,
+)
 
 ContractName = NewType('ContractName', str)
 

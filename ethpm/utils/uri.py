@@ -2,11 +2,13 @@ from typing import (
     Any,
     Dict,
 )
+from urllib import (
+    parse,
+)
 
-from urllib import parse
-
-from ethpm.exceptions import UriNotSupportedError
-
+from ethpm.exceptions import (
+    UriNotSupportedError,
+)
 from ethpm.utils.ipfs import (
     fetch_ipfs_package,
 )

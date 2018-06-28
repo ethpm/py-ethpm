@@ -3,19 +3,22 @@ from typing import (
     Dict,
 )
 
-from web3.eth import Contract
-from web3.main import Web3
+from web3.eth import (
+    Contract,
+)
+from web3.main import (
+    Web3,
+)
 
-from ethpm.deployments import Deployments
-
+from ethpm.deployments import (
+    Deployments,
+)
 from ethpm.exceptions import (
     InsufficientAssetsError,
 )
-
-from ethpm.typing import ContractName
-
-from ethpm.validation import validate_registry_uri
-
+from ethpm.typing import (
+    ContractName,
+)
 from ethpm.utils.contract import (
     generate_contract_factory_kwargs,
     validate_contract_name,
@@ -35,12 +38,19 @@ from ethpm.utils.ipfs import (
 )
 from ethpm.utils.manifest_validation import (
     check_for_build_dependencies,
+    validate_deployments_are_present,
     validate_manifest_against_schema,
     validate_manifest_deployments,
-    validate_deployments_are_present,
 )
-from ethpm.utils.registry import lookup_manifest_uri_located_at_registry_uri
-from ethpm.utils.uri import get_manifest_from_content_addressed_uri
+from ethpm.utils.registry import (
+    lookup_manifest_uri_located_at_registry_uri,
+)
+from ethpm.utils.uri import (
+    get_manifest_from_content_addressed_uri,
+)
+from ethpm.validation import (
+    validate_registry_uri,
+)
 
 
 class Package(object):

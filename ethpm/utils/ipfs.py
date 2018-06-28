@@ -1,12 +1,12 @@
-import requests
-
 from typing import (
     Any,
     Dict,
 )
+from urllib import (
+    parse,
+)
 
-from urllib import parse
-
+import requests
 
 INFURA_IPFS_URI_PREFIX = "https://ipfs.infura.io/ipfs/"
 

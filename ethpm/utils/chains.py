@@ -1,18 +1,24 @@
 import re
-from typing import Tuple
-from urllib import parse
-
-from cytoolz import curry
-
-from eth_utils import (
-    add_0x_prefix,
-    remove_0x_prefix,
-    encode_hex,
+from typing import (
+    Tuple,
+)
+from urllib import (
+    parse,
 )
 
-from web3.main import Web3
+from cytoolz import (
+    curry,
+)
+from eth_utils import (
+    add_0x_prefix,
+    encode_hex,
+    remove_0x_prefix,
+)
+from web3 import Web3
 
-from ethpm.typing import URI
+from ethpm.typing import (
+    URI,
+)
 
 
 def get_chain_id(web3: Web3) -> str:

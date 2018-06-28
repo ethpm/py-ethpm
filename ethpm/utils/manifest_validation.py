@@ -1,24 +1,23 @@
 import itertools
 import json
 import os
-
 from typing import (
     Any,
     Dict,
 )
 
 from jsonschema import (
-    validate,
     ValidationError as jsonValidationError,
+    validate,
 )
 
 from ethpm import (
     SPEC_DIR,
     V2_PACKAGES_DIR,
 )
-
-from ethpm.exceptions import ValidationError
-
+from ethpm.exceptions import (
+    ValidationError,
+)
 
 MANIFEST_SCHEMA_PATH = str(SPEC_DIR / 'package.spec.json')
 

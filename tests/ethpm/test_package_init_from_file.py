@@ -1,11 +1,14 @@
 import contextlib
-import os
 import json
+import os
 import pytest
 
-from ethpm import Package
-
-from ethpm.exceptions import ValidationError
+from ethpm import (
+    Package,
+)
+from ethpm.exceptions import (
+    ValidationError,
+)
 
 
 @contextlib.contextmanager

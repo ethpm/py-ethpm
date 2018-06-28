@@ -1,8 +1,8 @@
 import pytest
 
-from ethpm.exceptions import UriNotSupportedError
-
-
+from ethpm.exceptions import (
+    UriNotSupportedError,
+)
 from ethpm.validation import (
     validate_registry_uri,
 )
