@@ -40,7 +40,7 @@ extras_require['dev'] = (
 )
 
 setup(
-    name='eth-pm',
+    name='ethpm',
     # *IMPORTANT*: Don't manually change the version here. Use the 'bumpversion' utility.
     version='0.1.0-alpha.17',
     description="""Python abstraction for ERC190 packages.""",
