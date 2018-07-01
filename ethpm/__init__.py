@@ -14,8 +14,8 @@ if sys.version_info.major < 3:
 
 ETHPM_DIR = Path(__file__).parent
 ASSETS_DIR = ETHPM_DIR / 'assets'
+SPEC_DIR = ASSETS_DIR / 'spec'  # type: Path
 ETHPM_SPEC_DIR = ETHPM_DIR.parent / 'ethpm-spec'
-SPEC_DIR = ETHPM_SPEC_DIR / 'spec'  # type: Path
 V2_PACKAGES_DIR = ETHPM_SPEC_DIR / 'examples'
 
 from .package import Package  # noqa: F401
