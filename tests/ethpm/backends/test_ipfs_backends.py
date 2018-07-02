@@ -4,9 +4,13 @@ from eth_utils import to_text
 import pytest
 import requests_mock
 
-from ethpm.backends.ipfs import DummyIPFSBackend, InfuraIPFSBackend, IPFSGatewayBackend
+from ethpm.backends.ipfs import (
+    DummyIPFSBackend,
+    InfuraIPFSBackend,
+    IPFSGatewayBackend,
+    LocalIPFSBackend,
+)
 from ethpm.constants import INFURA_GATEWAY_PREFIX, IPFS_GATEWAY_PREFIX
-
 
 
 @pytest.mark.parametrize(
@@ -26,6 +30,15 @@ def test_ipfs_and_infura_gateway_backends_fetch_uri_contents(
         contents = backend.fetch_uri_contents(uri)
         contents_dict = json.loads(to_text(contents))
         assert contents_dict["package_name"] == "safe-math-lib"
+
+
+def test_local_ipfs_backend():
+    uri = "ipfs://Qme4otpS88NV8yQi8TfTP89EsQC5bko3F5N1yhRoi6cwGV"
+    backend = LocalIPFSBackend("localhost", "8080")
+    with requests_mock.Mocker() as m:
+        m.get(requests_mock.ANY, text="pragma")
+        contents = backend.fetch_uri_contents(uri)
+        assert contents.startswith(b"pragma")
 
 
 @pytest.mark.parametrize(

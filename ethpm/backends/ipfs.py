@@ -1,11 +1,13 @@
 from abc import abstractmethod
 
 from eth_utils import to_bytes
+import ipfsapi
 import requests
 
 from ethpm import V2_PACKAGES_DIR
 from ethpm.backends.base import BaseURIBackend
 from ethpm.constants import INFURA_GATEWAY_PREFIX, IPFS_GATEWAY_PREFIX
+from ethpm.exceptions import IPFSConnectionError
 from ethpm.utils.ipfs import extract_ipfs_path_from_uri, is_ipfs_uri
 
 
@@ -13,6 +15,7 @@ class BaseIPFSBackend(BaseURIBackend):
     """
     Base class for all URIs with an IPFS scheme.
     """
+
     def can_handle_uri(self, uri: str) -> bool:
         """
         Return a bool indicating whether or not this backend
@@ -45,6 +48,7 @@ class IPFSGatewayBackend(IPFSOverHTTPBackend):
     """
     Backend class for all IPFS URIs served over the IPFS gateway.
     """
+
     @property
     def base_uri(self) -> str:
         return IPFS_GATEWAY_PREFIX
@@ -54,6 +58,7 @@ class InfuraIPFSBackend(IPFSOverHTTPBackend):
     """
     Backend class for all IPFS URIs served over the Infura IFPS gateway.
     """
+
     @property
     def base_uri(self) -> str:
         return INFURA_GATEWAY_PREFIX
@@ -90,11 +95,23 @@ class DummyIPFSBackend(BaseIPFSBackend):
 class LocalIPFSBackend(BaseIPFSBackend):
     """
     Backend class for all IPFS URIs served through a direct connection to an IPFS node.
-    TODO - implement
+    Default IPFS port = 5001
+    Default IPFS Gateway port = 8080 (read-only)
     """
 
-    def can_handle_uri(self, ipfs_uri: str) -> bool:
-        return False
+    def __init__(self, host: str, port: int) -> None:
+        self.host = host
+        self.port = port
 
     def fetch_uri_contents(self, ipfs_uri: str) -> bytes:
-        pass
+        try:
+            client = ipfsapi.Client(self.host, self.port)
+        except ipfsapi.exceptions.ConnectionError:
+            raise IPFSConnectionError(
+                "Cannot connect to local IPFS daemon running at host:{0}, port:{1}.".format(
+                    self.host, self.port
+                )
+            )
+        ipfs_hash = extract_ipfs_path_from_uri(ipfs_uri)
+        contents = client.cat(ipfs_hash)
+        return contents

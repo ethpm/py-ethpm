@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 from ethpm.exceptions import UriNotSupportedError
