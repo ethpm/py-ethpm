@@ -1,6 +1,3 @@
-import json
-import os
-
 import pytest
 from solc import compile_source
 

@@ -105,6 +105,12 @@ def get_factory(get_manifest, escrow_manifest, w3):
 
 
 @pytest.fixture
+def owned_contract():
+    with open(str(V2_PACKAGES_DIR / "owned" / "contracts" / "Owned.sol")) as file_obj:
+        return file_obj.read()
+
+
+@pytest.fixture
 def invalid_manifest(safe_math_manifest):
     safe_math_manifest["manifest_version"] = 1
     return safe_math_manifest

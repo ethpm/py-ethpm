@@ -1,7 +1,4 @@
-from abc import (
-    ABC,
-    abstractmethod,
-)
+from abc import ABC, abstractmethod
 
 
 class BaseURIBackend(ABC):
@@ -25,8 +22,9 @@ class BaseURIBackend(ABC):
         """
         Return a bool indicating whether this backend class can
         translate the given URI to a corresponding content-addressed URI.
+        i.e. a registry URI pointing to another content-addressed URI onchain
         """
-        raise NotImplementedError("Must be implemented by subclass.")
+        pass
 
     @abstractmethod
     def fetch_uri_contents(self, uri: str) -> bytes:
