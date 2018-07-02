@@ -7,3 +7,4 @@ recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 
 include ethpm/assets/*
+include ethpm/assets/spec/*
