@@ -2,15 +2,11 @@ import os
 
 from typing import Type
 
-from ethpm.backends.base import (
-    BaseURIBackend,
-)
-from ethpm.utils.module_loading import (
-    import_string,
-)
+from ethpm.backends.base import BaseURIBackend
+from ethpm.utils.module_loading import import_string
 
 
-DEFAULT_URI_BACKEND = 'ethpm.backends.ipfs.IPFSGatewayBackend'
+DEFAULT_URI_BACKEND = "ethpm.backends.ipfs.IPFSGatewayBackend"
 
 
 def get_uri_backend(import_path: str = None) -> BaseURIBackend:
@@ -23,8 +19,5 @@ def get_uri_backend(import_path: str = None) -> BaseURIBackend:
 
 def get_uri_backend_class(import_path: str = None) -> Type[BaseURIBackend]:
     if import_path is None:
-        import_path = os.environ.get(
-            'ETHPM_URI_BACKEND_CLASS',
-            DEFAULT_URI_BACKEND,
-        )
+        import_path = os.environ.get("ETHPM_URI_BACKEND_CLASS", DEFAULT_URI_BACKEND)
     return import_string(import_path)

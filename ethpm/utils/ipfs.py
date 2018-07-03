@@ -1,4 +1,3 @@
-from typing import Any, Dict
 from urllib import parse
 
 INFURA_IPFS_URI_PREFIX = "https://ipfs.infura.io/ipfs/"
@@ -13,11 +12,11 @@ def extract_ipfs_path_from_uri(value: str) -> str:
 
     if parse_result.netloc:
         if parse_result.path:
-            return ''.join((parse_result.netloc, parse_result.path.rstrip('/')))
+            return "".join((parse_result.netloc, parse_result.path.rstrip("/")))
         else:
             return parse_result.netloc
     else:
-        return parse_result.path.strip('/')
+        return parse_result.path.strip("/")
 
 
 def is_ipfs_uri(value: str) -> bool:

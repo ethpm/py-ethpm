@@ -1,8 +1,11 @@
+import json
 from typing import Any, Dict
 from urllib import parse
 
+from eth_utils import to_text
+
+from ethpm.backends import get_uri_backend
 from ethpm.exceptions import UriNotSupportedError
-from ethpm.utils.ipfs import fetch_ipfs_package
 
 IPFS_SCHEME = "ipfs"
 
@@ -27,8 +30,7 @@ def get_manifest_from_content_addressed_uri(uri: str) -> Dict[str, Any]:
         else:
             raise TypeError(
                 "The URI Backend: {0} cannot handle the given URI: {1}.".format(
-                    type(uri_backend).__name__,
-                    uri,
+                    type(uri_backend).__name__, uri
                 )
             )
 

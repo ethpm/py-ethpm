@@ -7,8 +7,12 @@ from ethpm.utils.uri import get_manifest_from_content_addressed_uri
 @pytest.mark.parametrize(
     "uri,source", (("ipfs://QmbeVyFLSuEUxiXKwSsEjef6icpdTdA4kGG9BcrJXKNKUW", "ipfs"),)
 )
-def test_get_manifest_from_content_addressed_uris_for_supported_schemes(uri, source, monkeypatch):
-    monkeypatch.setenv('ETHPM_URI_BACKEND_CLASS', 'ethpm.backends.ipfs.DummyIPFSBackend')
+def test_get_manifest_from_content_addressed_uris_for_supported_schemes(
+    uri, source, monkeypatch
+):
+    monkeypatch.setenv(
+        "ETHPM_URI_BACKEND_CLASS", "ethpm.backends.ipfs.DummyIPFSBackend"
+    )
     manifest = get_manifest_from_content_addressed_uri(uri)
     assert "version" in manifest
     assert "package_name" in manifest

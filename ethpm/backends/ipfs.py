@@ -1,28 +1,19 @@
-from eth_utils import (
-    to_bytes,
-)
+from abc import abstractmethod
+
+from eth_utils import to_bytes
 import requests
 
-from ethpm import (
-    V2_PACKAGES_DIR,
-)
-from ethpm.backends.base import (
-    BaseURIBackend,
-)
-from ethpm.constants import (
-    INFURA_GATEWAY_PREFIX,
-    IPFS_GATEWAY_PREFIX,
-)
-from ethpm.utils.ipfs import (
-    extract_ipfs_path_from_uri,
-    is_ipfs_uri,
-)
+from ethpm import V2_PACKAGES_DIR
+from ethpm.backends.base import BaseURIBackend
+from ethpm.constants import INFURA_GATEWAY_PREFIX, IPFS_GATEWAY_PREFIX
+from ethpm.utils.ipfs import extract_ipfs_path_from_uri, is_ipfs_uri
 
 
 class BaseIPFSBackend(BaseURIBackend):
     """
     Base class for all URIs with an IPFS scheme.
     """
+
     def can_handle_uri(self, uri: str) -> bool:
         """
         Return a bool indicating whether or not this backend
@@ -34,7 +25,10 @@ class BaseIPFSBackend(BaseURIBackend):
 class IPFSOverHTTPBackend(BaseIPFSBackend):
     """
     Base class for all IPFS URIs served over an http connection.
+
+    All subclasses must implement: base_uri
     """
+
     def fetch_uri_contents(self, uri: str) -> bytes:
         ipfs_hash = extract_ipfs_path_from_uri(uri)
         gateway_uri = self.base_uri + ipfs_hash
@@ -42,11 +36,17 @@ class IPFSOverHTTPBackend(BaseIPFSBackend):
         response.raise_for_status()
         return response.content
 
+    @property
+    @abstractmethod
+    def base_uri(self) -> str:
+        pass
+
 
 class IPFSGatewayBackend(IPFSOverHTTPBackend):
     """
     Backend class for all IPFS URIs served over the IPFS gateway.
     """
+
     @property
     def base_uri(self) -> str:
         return IPFS_GATEWAY_PREFIX
@@ -56,6 +56,7 @@ class InfuraIPFSBackend(IPFSOverHTTPBackend):
     """
     Backend class for all IPFS URIs served over the Infura IFPS gateway.
     """
+
     @property
     def base_uri(self) -> str:
         return INFURA_GATEWAY_PREFIX
@@ -70,9 +71,12 @@ class DummyIPFSBackend(BaseIPFSBackend):
     - Valid IPFS URI -> safe-math-lib manifest (ALWAYS)
     - Path to manifest/contract in V2_PACKAGES_DIR -> defined manifest/contract
     """
+
     def fetch_uri_contents(self, ipfs_uri: str) -> bytes:
         if is_ipfs_uri(ipfs_uri):
-            with open(str(V2_PACKAGES_DIR / 'safe-math-lib' / '1.0.0.json')) as file_obj:
+            with open(
+                str(V2_PACKAGES_DIR / "safe-math-lib" / "1.0.0.json")
+            ) as file_obj:
                 contents = file_obj.read()
         else:
             with open(str(V2_PACKAGES_DIR / ipfs_uri)) as file_obj:
@@ -85,15 +89,13 @@ class DummyIPFSBackend(BaseIPFSBackend):
         path = V2_PACKAGES_DIR / uri
         return path.exists()
 
-    def base_uri(self) -> str:
-        pass
-
 
 class LocalIPFSBackend(BaseIPFSBackend):
     """
     Backend class for all IPFS URIs served through a direct connection to an IPFS node.
     TODO - implement
     """
+
     def can_handle_uri(self, ipfs_uri: str) -> bool:
         return False
 

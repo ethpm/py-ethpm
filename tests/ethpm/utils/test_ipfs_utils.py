@@ -20,15 +20,15 @@ from ethpm.utils.ipfs import extract_ipfs_path_from_uri, is_ipfs_uri
         ),
         (
             "ipfs:QmTKB75Y73zhNbD3Y73xeXGjYrZHmaXXNxoZqGCagu7r8u/",
-            "QmTKB75Y73zhNbD3Y73xeXGjYrZHmaXXNxoZqGCagu7r8u/",
+            "QmTKB75Y73zhNbD3Y73xeXGjYrZHmaXXNxoZqGCagu7r8u",
         ),
         (
             "ipfs:/QmTKB75Y73zhNbD3Y73xeXGjYrZHmaXXNxoZqGCagu7r8u/",
-            "QmTKB75Y73zhNbD3Y73xeXGjYrZHmaXXNxoZqGCagu7r8u/",
+            "QmTKB75Y73zhNbD3Y73xeXGjYrZHmaXXNxoZqGCagu7r8u",
         ),
         (
             "ipfs://QmTKB75Y73zhNbD3Y73xeXGjYrZHmaXXNxoZqGCagu7r8u/",
-            "QmTKB75Y73zhNbD3Y73xeXGjYrZHmaXXNxoZqGCagu7r8u/",
+            "QmTKB75Y73zhNbD3Y73xeXGjYrZHmaXXNxoZqGCagu7r8u",
         ),
         (
             "ipfs:QmTKB75Y73zhNbD3Y73xeXGjYrZHmaXXNxoZqGCagu7r8u/readme",
@@ -44,15 +44,15 @@ from ethpm.utils.ipfs import extract_ipfs_path_from_uri, is_ipfs_uri
         ),
         (
             "ipfs:QmTKB75Y73zhNbD3Y73xeXGjYrZHmaXXNxoZqGCagu7r8u/readme/",
-            "QmTKB75Y73zhNbD3Y73xeXGjYrZHmaXXNxoZqGCagu7r8u/readme/",
+            "QmTKB75Y73zhNbD3Y73xeXGjYrZHmaXXNxoZqGCagu7r8u/readme",
         ),
         (
             "ipfs:/QmTKB75Y73zhNbD3Y73xeXGjYrZHmaXXNxoZqGCagu7r8u/readme/",
-            "QmTKB75Y73zhNbD3Y73xeXGjYrZHmaXXNxoZqGCagu7r8u/readme/",
+            "QmTKB75Y73zhNbD3Y73xeXGjYrZHmaXXNxoZqGCagu7r8u/readme",
         ),
         (
             "ipfs://QmTKB75Y73zhNbD3Y73xeXGjYrZHmaXXNxoZqGCagu7r8u/readme/",
-            "QmTKB75Y73zhNbD3Y73xeXGjYrZHmaXXNxoZqGCagu7r8u/readme/",
+            "QmTKB75Y73zhNbD3Y73xeXGjYrZHmaXXNxoZqGCagu7r8u/readme",
         ),
     ),
 )

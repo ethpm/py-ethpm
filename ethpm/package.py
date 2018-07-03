@@ -1,11 +1,11 @@
+import json
 from typing import Any, Dict
 
-from eth_utils import (
-    to_text,
-)
+from eth_utils import to_text
 from web3 import Web3
 from web3.eth import Contract
 
+from ethpm.backends import get_uri_backend
 from ethpm.deployments import Deployments
 from ethpm.exceptions import InsufficientAssetsError
 from ethpm.typing import ContractName
@@ -17,7 +17,6 @@ from ethpm.utils.contract import (
 )
 from ethpm.utils.deployment_validation import validate_single_matching_uri
 from ethpm.utils.filesystem import load_package_data_from_file
-from ethpm.utils.ipfs import extract_ipfs_path_from_uri, fetch_ipfs_package, is_ipfs_uri
 from ethpm.utils.manifest_validation import (
     check_for_build_dependencies,
     validate_deployments_are_present,
@@ -117,8 +116,7 @@ class Package(object):
         else:
             raise TypeError(
                 "The URI Backend: {0} cannot handle the given URI: {1}.".format(
-                    type(uri_backend).__name__,
-                    ipfs_uri,
+                    type(uri_backend).__name__, ipfs_uri
                 )
             )
 
