@@ -77,7 +77,7 @@ class Package(object):
         """
         self.w3 = w3
 
-    def get_contract_type(self, name: ContractName, w3: Web3=None) -> Contract:
+    def get_contract_factory(self, name: ContractName, w3: Web3=None) -> Contract:
         """
         API to generate a contract factory class.
         """
@@ -185,7 +185,7 @@ class Package(object):
 
         deployments = self.package_data["deployments"][matching_uri]
         all_contract_factories = {
-            deployment_data['contract_type']: self.get_contract_type(
+            deployment_data['contract_type']: self.get_contract_factory(
                 deployment_data['contract_type'],
                 w3
             )
