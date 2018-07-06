@@ -1,155 +1,102 @@
-# ETHPM
+# Py-EthPM
 
-* parse and validate packages
-* given a web3 instance provide access to contract factory classes
-* given a web3 instance provide access to all of the deployed contract instances for the chain that web3 is connected to.
-* validate package bytecode matches compilation output
-* validate deployed bytecode matches compilation output
-* access to packages dependencies
-* construct new packages 
+[![Join the chat at https://gitter.im/ethpm/lobby](https://badges.gitter.im/ethpm/lobby.py.svg)](https://gitter.im/ethpm/lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![CircleCI](https://circleci.com/gh/ethpm/py-ethpm.svg?style=svg)](https://circleci.com/gh/ethpm/py-ethpm)
+[![PyPI version](https://badge.fury.io/py/ethpm.svg)](https://badge.fury.io/py/ethpm)
 
+A Python implementation of the [Ethereum Package Manager Specification](http://ethpm.github.io/ethpm-spec/package-spec.html).
 
-## Web3
+Read more in the documentation on [ReadTheDocs](https://py-ethpm.readthedocs.io/en/latest/).
 
-The `Package` object will function much like the `Contract` class provided by `web3`.  Rather than instantiating the base class provided by `ethpm`, you will instead use a `classmethod` which generates a new `Package` class for a given package.
+WARNING
 
-```python
-OwnedPackage = BasePackage.factory('/path/to/owned-v1.0.0.json')
-```
+`Py-EthPM` is currently in public alpha. *Keep in mind*:
+- It is expected to have bugs and is not meant to be used in production
+- Things may be ridiculously slow or not work at all
 
-Then, the `OwnedPackage` can be instantiated with any `web3` intance.
-
-```python
-owned_package = OwnedPackage(web3)
-```
-
-A `Package` class can only be directly constructed from the parsed package JSON. It can also be initialized with the package's URI or the local filesystem path to a package by using `Package.from_file(path)`.
-
-
-## Contract Factories
-
-Contract factories should be accessible from the package class but you must
-also provide a web3 instance.
-
-```python
-Owned = OwnedPackage.get_contract_factory(web3, 'owned')
-```
-
-From a package instance, they are also available as properties.
-
-```python
-Owned = owned_package.contract_factories.owned
-```
-
-In cases where a contract uses a library, the contract factory will have
-unlinked bytecode.  The `ethpm` package ships with its own subclass of
-`web3.contract.Contract` with a few extra methods and properties related to
-bytecode linking
-
-
-```python
->>> math = owned_package.contract_factories.math
->>> math.has_linkable_bytecode
-True
->>> math.is_bytecode_linked
-False
->>> linked_math = math.link_bytecode({'MathLib': '0x1234...'})
->>> linked_math.is_bytecode_linked
-True
-```
-
-> Note: the actual format of the link data is not clear since library names
-> aren't a one-size-fits all solution.  We need the ability to specify specific
-> link references in the code.
-
-
-## Deployed Contracts
-
-Deployed contracts are only available from package instances.  The package
-instance will filter the `deployments` based on the chain that `web3` is
-connected to.
-
-Accessing deployments is done with property access
-
-```python
-package.deployed_contracts.Greeter
-```
-
-
-## IPFS
-
-We'll need a pluggable backend system for IPFS access.  A built-in default one
-that defaults to using infura should be enough to get off the ground.
-
-Lower priority but important will be ensuring that a user can configure
-connecting to their own IPFS node.
-
-
-## Verifying Things
-
-The `Package` class should verify all of the following things.
-
-* Package json matches EthPM V2 Manifest Specification
-* Included bytecode matches compilation output
-* Deployed bytecode matches compilation output
-
-    
-## Dependencies
-
-The `Package` class should provide access to the full dependency tree.
-
-```python
->>> owned_package.build_dependencies['zeppelin']
-<ZeppelinPackage>
-```
-    
-
-## Testing Strategy
-
-* Load and validate packages from disk.
-* Access package data.
-* Access contract factories.
-
-
-## EthPM-Spec
-
-* [EthPM-Spec](https://github.com/ethpm/ethpm-spec) is referenced inside this repo as a submodule.**
-* If you clone this repository, you should run this command to fetch the contents of the submodule
+## Quickstart
 ```sh
-git submodule init
+pip install ethpm
 ```
 
+## Developer Setup
 
-## Registry URI 
+If you would like to hack on Py-EthPM, please check out the
+[Ethereum Development Tactical Manual](https://github.com/pipermerriam/ethereum-dev-tactical-manual)
+for information on how we do:
 
-The URI to lookup a package from a registry should follow the following format. (subject to change as the Registry Contract Standard makes it's way through the EIP process)
+- Testing
+- Pull Requests
+- Code Style
+- Documentation
 
+### Developer Environment Setup
+
+You can set up your dev environment with:
+
+```sh
+git clone git@github.com:ethpm/py-ethpm.git
+cd py-ethpm
+virtualenv -p python3 venv
+. venv/bin/activate
+pip install -e .[dev]
 ```
-scheme://authority/package-name?version=x.x.x
+
+### Testing Setup
+
+During development, you might like to have tests run on every file save.
+
+Show flake8 errors on file change:
+
+```sh
+# Test flake8
+when-changed -v -s -r -1 py-ethpm/ tests/ -c "clear; flake8 py-ethpm tests && echo 'flake8 success' || echo 'error'"
 ```
 
-* URI must be a string type
-* `scheme`: `ercxxx` 
-* `authority`: Must be a valid ENS domain or a valid checksum address pointing towards a registry contract.
-* `package-name`: Must conform to the package-name as specified in the [EthPM-Spec](http://ethpm-spec.readthedocs.io/en/latest/package-spec.html#package-name).
-* `version`: The URI escaped version string, *should* conform to the [semver](http://semver.org/) version numbering specification.
+Run multi-process tests in one command, but without color:
 
-i.e. `ercxxx://packages.zeppelinos.eth/owned?version=1.0.0`
+```sh
+# in the project root:
+pytest --numprocesses=4 --looponfail --maxfail=1
+# the same thing, succinctly:
+pytest -n 4 -f --maxfail=1
+```
 
+Run in one thread, with color and desktop notifications:
 
-## URI Backend Class
-* URI Backend Class defaults to `ethpm.backends.ipfs.IFPSGatewayBackend`
-* URI Backend Class is configurable via the environment variable `ETHPM_URI_BACKEND_CLASS` set to a dotted module path
-* `DummyIPFSBackend` is used to avoid http requests within testing
-	* Can accept both a ...
-		* Valid IPFS URI -> `safe-math-lib` manifest
-		* Path to existing manifest/contract in `V2_PACKAGES_DIR` -> defined manifest/contract 
+```sh
+cd venv
+ptw --onfail "notify-send -t 5000 'Test failure ⚠⚠⚠⚠⚠' 'python 3 test on <REPO_NAME> failed'" ../tests ../<MODULE_NAME>
+```
 
+#### How to Execute the Tests?
 
-## Release setup
+1. [Setup your development environment](https://github.com/ethpm/py-ethpm/#developer-setup).
+
+2. Execute `tox` for the tests
+
+There are multiple [components](https://github.com/ethpm/py-ethpm/blob/master/.circleci/.config.yml#L56) of the tests. You can run test to against specific component. For example:
+
+```sh
+# Run Tests for the Core component (for Python 3.5):
+tox -e py35
+
+# Run Tests for the Core component (for Python 3.6):
+tox -e py36
+```
+
+If for some reason it is not working, add `--recreate` params.
+
+`tox` is good for testing against the full set of build targets. But if you want to run the tests individually, `py.test` is better for development workflow. For example, to run only the tests in one file:
+
+```sh
+pytest tests/ethpm/utils/test_uri_utils.py
+```
+
+### Release setup
+
 For Debian-like systems:
-
-```sh
+```
 apt install pandoc
 ```
 
@@ -159,11 +106,15 @@ To release a new version:
 make release bump=$$VERSION_PART_TO_BUMP$$
 ```
 
-## How to bumpversion
-The version format for this repo is `{major}.{minor}.{patch}` for stable, and `{major}.{minor}.{patch}-{stage}.{devnum}` for unstable (`stage` can be alpha or beta).
+#### How to bumpversion
 
-To issue the next version in line, specify which part to bump, like `make release bump=minor` or `make release bump=devnum`.
+The version format for this repo is `{major}.{minor}.{patch}` for stable, and
+`{major}.{minor}.{patch}-{stage}.{devnum}` for unstable (`stage` can be alpha or beta).
+
+To issue the next version in line, specify which part to bump,
+like `make release bump=minor` or `make release bump=devnum`.
 
 If you are in a beta version, `make release bump=stage` will switch to a stable.
 
-To issue an unstable version when the current version is stable, specify the new version explicitly, like `make release bump="--new-version 4.0.0-alpha.1 devnum"`
+To issue an unstable version when the current version is stable, specify the
+new version explicitly, like `make release bump="--new-version 4.0.0-alpha.1 devnum"`

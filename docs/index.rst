@@ -11,6 +11,9 @@ Welcome to Py-EthPM's documentation!
    :caption: Contents:
 
    overview.rst
+   package.rst
+   uri_backends.rst
+
 
 
 Indices and tables
