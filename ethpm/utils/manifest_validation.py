@@ -1,25 +1,14 @@
 import itertools
 import json
 import os
-from typing import (
-    Any,
-    Dict,
-)
+from typing import Any, Dict
 
-from jsonschema import (
-    ValidationError as jsonValidationError,
-    validate,
-)
+from jsonschema import ValidationError as jsonValidationError, validate
 
-from ethpm import (
-    SPEC_DIR,
-    V2_PACKAGES_DIR,
-)
-from ethpm.exceptions import (
-    ValidationError,
-)
+from ethpm import SPEC_DIR, V2_PACKAGES_DIR
+from ethpm.exceptions import ValidationError
 
-MANIFEST_SCHEMA_PATH = str(SPEC_DIR / 'package.spec.json')
+MANIFEST_SCHEMA_PATH = str(SPEC_DIR / "package.spec.json")
 
 
 def _load_schema_data() -> Dict[str, Any]:
@@ -56,16 +45,18 @@ def validate_manifest_deployments(manifest: Dict[str, Any]) -> None:
     if set(("contract_types", "deployments")).issubset(manifest):
         all_contract_types = list(manifest["contract_types"].keys())
         all_deployments = list(manifest["deployments"].values())
-        all_deployment_names = set(itertools.chain.from_iterable(
-            deployment
-            for deployment
-            in all_deployments
-        ))
+        all_deployment_names = set(
+            itertools.chain.from_iterable(deployment for deployment in all_deployments)
+        )
 
-        missing_contract_types = set(all_deployment_names).difference(all_contract_types)
+        missing_contract_types = set(all_deployment_names).difference(
+            all_contract_types
+        )
         if missing_contract_types:
             raise ValidationError(
-                    "Manifest missing references to contracts: {0}.".format(missing_contract_types)
+                "Manifest missing references to contracts: {0}.".format(
+                    missing_contract_types
+                )
             )
 
 
@@ -73,8 +64,10 @@ def check_for_build_dependencies(valid_manifest: Dict[str, Any]) -> None:
     """
     Catch packages that rely on other packages
     """
-    if valid_manifest.get('build_dependencies'):
-        raise NotImplementedError("Handling of build dependencies has not yet been implemented")
+    if valid_manifest.get("build_dependencies"):
+        raise NotImplementedError(
+            "Handling of build dependencies has not yet been implemented"
+        )
 
 
 def validate_manifest_exists(manifest_id: str) -> None:

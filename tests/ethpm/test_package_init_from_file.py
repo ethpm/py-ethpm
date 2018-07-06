@@ -4,17 +4,13 @@ import os
 
 import pytest
 
-from ethpm import (
-    Package,
-)
-from ethpm.exceptions import (
-    ValidationError,
-)
+from ethpm import Package
+from ethpm.exceptions import ValidationError
 
 
 @contextlib.contextmanager
 def _generate_fixture_param(tmpdir, as_file_path, file_content):
-    temp_manifest = tmpdir.mkdir('invalid').join('manifest.json')
+    temp_manifest = tmpdir.mkdir("invalid").join("manifest.json")
     temp_manifest.write(file_content)
 
     if as_file_path:
@@ -26,29 +22,33 @@ def _generate_fixture_param(tmpdir, as_file_path, file_content):
 
 @pytest.fixture(params=[True, False])
 def valid_manifest_from_path(tmpdir, request):
-    valid_manifest = json.dumps({
-        "package_name": "foo",
-        "manifest_version": "2",
-        "version": "1.0.0",
-    })
+    valid_manifest = json.dumps(
+        {"package_name": "foo", "manifest_version": "2", "version": "1.0.0"}
+    )
     with _generate_fixture_param(tmpdir, request.param, valid_manifest) as file_obj:
         yield file_obj
 
 
 @pytest.fixture(params=[True, False])
 def invalid_manifest_from_path(tmpdir, request):
-    invalid_manifest = json.dumps({
-        "package_name": "foo",
-        "manifest_version": "not a valid version",
-        "version": "1.0.0",
-    })
-    with _generate_fixture_param(tmpdir, request.param, invalid_manifest) as file_obj_or_path:
+    invalid_manifest = json.dumps(
+        {
+            "package_name": "foo",
+            "manifest_version": "not a valid version",
+            "version": "1.0.0",
+        }
+    )
+    with _generate_fixture_param(
+        tmpdir, request.param, invalid_manifest
+    ) as file_obj_or_path:
         yield file_obj_or_path
 
 
 @pytest.fixture(params=[True, False])
 def non_json_manifest(tmpdir, request):
-    with _generate_fixture_param(tmpdir, request.param, 'This is invalid json') as file_obj_or_path:
+    with _generate_fixture_param(
+        tmpdir, request.param, "This is invalid json"
+    ) as file_obj_or_path:
         yield file_obj_or_path
 
 
@@ -80,10 +80,7 @@ def test_init_from_invalid_argument_type():
 
 
 def test_from_file_fails_with_missing_filepath(tmpdir, w3):
-    path = os.path.join(
-        str(tmpdir.mkdir('invalid')),
-        'manifest.json',
-    )
+    path = os.path.join(str(tmpdir.mkdir("invalid")), "manifest.json")
 
     assert not os.path.exists(path)
     with pytest.raises(FileNotFoundError):

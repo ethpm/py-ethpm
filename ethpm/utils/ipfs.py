@@ -1,10 +1,5 @@
-from typing import (
-    Any,
-    Dict,
-)
-from urllib import (
-    parse,
-)
+from typing import Any, Dict
+from urllib import parse
 
 import requests
 
@@ -23,16 +18,16 @@ def extract_ipfs_path_from_uri(value: str) -> str:
 
     if parse_result.netloc:
         if parse_result.path:
-            return ''.join((parse_result.netloc, parse_result.path))
+            return "".join((parse_result.netloc, parse_result.path))
         else:
             return parse_result.netloc
     else:
-        return parse_result.path.lstrip('/')
+        return parse_result.path.lstrip("/")
 
 
 def is_ipfs_uri(value: str) -> bool:
     parse_result = parse.urlparse(value)
-    if parse_result.scheme != 'ipfs':
+    if parse_result.scheme != "ipfs":
         return False
     if not parse_result.netloc and not parse_result.path:
         return False

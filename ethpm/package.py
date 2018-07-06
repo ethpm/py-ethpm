@@ -1,59 +1,33 @@
-from typing import (
-    Any,
-    Dict,
-)
+from typing import Any, Dict
 
 from web3 import Web3
-from web3.eth import (
-    Contract,
-)
+from web3.eth import Contract
 
-from ethpm.deployments import (
-    Deployments,
-)
-from ethpm.exceptions import (
-    InsufficientAssetsError,
-)
-from ethpm.typing import (
-    ContractName,
-)
+from ethpm.deployments import Deployments
+from ethpm.exceptions import InsufficientAssetsError
+from ethpm.typing import ContractName
 from ethpm.utils.contract import (
     generate_contract_factory_kwargs,
     validate_contract_name,
     validate_minimal_contract_factory_data,
     validate_w3_instance,
 )
-from ethpm.utils.deployment_validation import (
-    validate_single_matching_uri,
-)
-from ethpm.utils.filesystem import (
-    load_package_data_from_file,
-)
-from ethpm.utils.ipfs import (
-    extract_ipfs_path_from_uri,
-    fetch_ipfs_package,
-    is_ipfs_uri,
-)
+from ethpm.utils.deployment_validation import validate_single_matching_uri
+from ethpm.utils.filesystem import load_package_data_from_file
+from ethpm.utils.ipfs import extract_ipfs_path_from_uri, fetch_ipfs_package, is_ipfs_uri
 from ethpm.utils.manifest_validation import (
     check_for_build_dependencies,
     validate_deployments_are_present,
     validate_manifest_against_schema,
     validate_manifest_deployments,
 )
-from ethpm.utils.registry import (
-    lookup_manifest_uri_located_at_registry_uri,
-)
-from ethpm.utils.uri import (
-    get_manifest_from_content_addressed_uri,
-)
-from ethpm.validation import (
-    validate_registry_uri,
-)
+from ethpm.utils.registry import lookup_manifest_uri_located_at_registry_uri
+from ethpm.utils.uri import get_manifest_from_content_addressed_uri
+from ethpm.validation import validate_registry_uri
 
 
 class Package(object):
-
-    def __init__(self, manifest: Dict[str, Any], w3: Web3=None) -> None:
+    def __init__(self, manifest: Dict[str, Any], w3: Web3 = None) -> None:
         """
         A package must be constructed with a valid manifest.
         """
@@ -77,7 +51,7 @@ class Package(object):
         """
         self.w3 = w3
 
-    def get_contract_factory(self, name: ContractName, w3: Web3=None) -> Contract:
+    def get_contract_factory(self, name: ContractName, w3: Web3 = None) -> Contract:
         """
         API to generate a contract factory class.
         """
@@ -92,7 +66,7 @@ class Package(object):
         validate_w3_instance(current_w3)
 
         try:
-            contract_data = self.package_data['contract_types'][name]
+            contract_data = self.package_data["contract_types"][name]
             validate_minimal_contract_factory_data(contract_data)
         except KeyError:
             raise InsufficientAssetsError(
@@ -110,7 +84,7 @@ class Package(object):
         return "<Package {0}=={1}>".format(name, version)
 
     @classmethod
-    def from_file(cls, file_path_or_obj: str, w3: Web3) -> 'Package':
+    def from_file(cls, file_path_or_obj: str, w3: Web3) -> "Package":
         """
         Allows users to create a Package object
         from a filepath
@@ -118,7 +92,7 @@ class Package(object):
         if isinstance(file_path_or_obj, str):
             with open(file_path_or_obj) as file_obj:
                 package_data = load_package_data_from_file(file_obj)
-        elif hasattr(file_path_or_obj, 'read') and callable(file_path_or_obj.read):
+        elif hasattr(file_path_or_obj, "read") and callable(file_path_or_obj.read):
             package_data = load_package_data_from_file(file_path_or_obj)
         else:
             raise TypeError(
@@ -129,7 +103,7 @@ class Package(object):
         return cls(package_data, w3)
 
     @classmethod
-    def from_ipfs(cls, ipfs_uri: str) -> 'Package':
+    def from_ipfs(cls, ipfs_uri: str) -> "Package":
         """
         Instantiate a Package object from an IPFS uri.
         TODO: Defaults to Infura gateway, needs extension
@@ -147,7 +121,7 @@ class Package(object):
         return cls(package_data)
 
     @classmethod
-    def from_registry(cls, registry_uri: str, w3: Web3) -> 'Package':
+    def from_registry(cls, registry_uri: str, w3: Web3) -> "Package":
         """
         Instantiate a Package object from a valid Registry URI.
         --
@@ -160,17 +134,17 @@ class Package(object):
 
     @property
     def name(self) -> str:
-        return self.package_data['package_name']
+        return self.package_data["package_name"]
 
     @property
     def version(self) -> str:
-        return self.package_data['version']
+        return self.package_data["version"]
 
     #
     # Deployments
     #
 
-    def get_deployments(self, w3: Web3=None) -> 'Deployments':
+    def get_deployments(self, w3: Web3 = None) -> "Deployments":
         """
         API to retrieve instance of deployed contract dependency.
         """
@@ -185,12 +159,10 @@ class Package(object):
 
         deployments = self.package_data["deployments"][matching_uri]
         all_contract_factories = {
-            deployment_data['contract_type']: self.get_contract_factory(
-                deployment_data['contract_type'],
-                w3
+            deployment_data["contract_type"]: self.get_contract_factory(
+                deployment_data["contract_type"], w3
             )
-            for deployment_data
-            in deployments.values()
+            for deployment_data in deployments.values()
         }
 
         return Deployments(deployments, all_contract_factories, w3)

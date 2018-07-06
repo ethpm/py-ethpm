@@ -1,7 +1,5 @@
-from typing import (
-    NewType,
-)
+from typing import NewType
 
-ContractName = NewType('ContractName', str)
+ContractName = NewType("ContractName", str)
 
-URI = NewType('URI', str)
+URI = NewType("URI", str)

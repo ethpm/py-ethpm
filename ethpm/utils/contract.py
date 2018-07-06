@@ -1,29 +1,12 @@
 import re
-from typing import (
-    Any,
-    Dict,
-    Generator,
-    List,
-    Tuple,
-)
+from typing import Any, Dict, Generator, List, Tuple
 
-from eth_utils import (
-    encode_hex,
-    to_bytes,
-    to_dict,
-)
-from solc import (
-    compile_files,
-)
+from eth_utils import encode_hex, to_bytes, to_dict
+from solc import compile_files
 from web3 import Web3
 
-from ethpm import (
-    V2_PACKAGES_DIR,
-)
-from ethpm.exceptions import (
-    InsufficientAssetsError,
-    ValidationError,
-)
+from ethpm import V2_PACKAGES_DIR
+from ethpm.exceptions import InsufficientAssetsError, ValidationError
 
 
 def validate_minimal_contract_factory_data(contract_data: Dict[str, str]) -> None:
@@ -53,7 +36,8 @@ def validate_w3_instance(w3: Web3) -> None:
 
 @to_dict
 def generate_contract_factory_kwargs(
-        contract_data: Dict[str, Any]) -> Generator[Tuple[str, Any], None, None]:
+    contract_data: Dict[str, Any]
+) -> Generator[Tuple[str, Any], None, None]:
     """
     Build a dictionary of kwargs to be passed into contract factory.
     """
@@ -68,15 +52,12 @@ def generate_contract_factory_kwargs(
 
 
 def compile_contracts(contract_name: str, alias: str, paths: List[str]) -> str:
-    '''
+    """
     Compile multiple contracts to bytecode.
-    '''
-    bin_id = '{0}.sol:{0}'.format(contract_name)
-    contract_paths = [
-        str(V2_PACKAGES_DIR / alias / path[1:])
-        for path in paths
-    ]
+    """
+    bin_id = "{0}.sol:{0}".format(contract_name)
+    contract_paths = [str(V2_PACKAGES_DIR / alias / path[1:]) for path in paths]
     compiled_source = compile_files(contract_paths)
     bin_lookup = str(V2_PACKAGES_DIR / alias / bin_id)
-    compiled_source_bin = compiled_source[bin_lookup]['bin']
+    compiled_source_bin = compiled_source[bin_lookup]["bin"]
     return compiled_source_bin

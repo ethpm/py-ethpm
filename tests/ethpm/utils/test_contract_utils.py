@@ -1,9 +1,6 @@
 import pytest
 
-from ethpm.exceptions import (
-    InsufficientAssetsError,
-    ValidationError,
-)
+from ethpm.exceptions import InsufficientAssetsError, ValidationError
 from ethpm.utils.contract import (
     generate_contract_factory_kwargs,
     validate_contract_name,
@@ -15,16 +12,13 @@ from ethpm.utils.contract import (
 @pytest.mark.parametrize(
     "contract_data",
     (
-        {
-            "abi": "",
-            "deployment_bytecode": ""
-        },
+        {"abi": "", "deployment_bytecode": ""},
         {
             "abi": "",
             "deployment_bytecode": {"bytecode": ""},
-            "runtime_bytecode": {"bytecode": ""}
-        }
-    )
+            "runtime_bytecode": {"bytecode": ""},
+        },
+    ),
 )
 def test_validate_minimal_contract_factory_data_validates(contract_data):
     assert validate_minimal_contract_factory_data(contract_data) is None
@@ -36,14 +30,14 @@ def test_validate_minimal_contract_factory_data_validates(contract_data):
         {"abi": ""},
         {"deployment_bytecode": {"bytecode": ""}},
         {"runtime_bytecode": {"bytecode": ""}, "other": ""},
-    )
+    ),
 )
 def test_validate_minimal_contract_factory_data_invalidates(contract_data):
     with pytest.raises(InsufficientAssetsError):
         validate_minimal_contract_factory_data(contract_data)
 
 
-@pytest.mark.parametrize("name", ("A1", "A-1", "A_1", "X"*256))
+@pytest.mark.parametrize("name", ("A1", "A-1", "A_1", "X" * 256))
 def test_validate_contract_name_validates(name):
     assert validate_contract_name(name) is None
 
@@ -60,7 +54,7 @@ def test_validate_contract_name_invalidates(name):
         {"abi": ""},
         {"bytecode": {"bytecode": ""}},
         {"abi": "", "bytecode": {"bytecode": ""}},
-    )
+    ),
 )
 def test_generate_contract_factory_kwargs(contract_data):
     contract_factory = generate_contract_factory_kwargs(contract_data)
