@@ -52,14 +52,19 @@ def test_validate_contract_name_invalidates(name):
     "contract_data",
     (
         {"abi": ""},
-        {"bytecode": {"bytecode": ""}},
-        {"abi": "", "bytecode": {"bytecode": ""}},
+        {"deployment_bytecode": {"bytecode": ""}},
+        {"abi": "", "runtime_bytecode": {"bytecode": ""}},
     ),
 )
 def test_generate_contract_factory_kwargs(contract_data):
     contract_factory = generate_contract_factory_kwargs(contract_data)
     for key in contract_data.keys():
-        assert key in contract_factory
+        if key == "deployment_bytecode":
+            assert "bytecode" in contract_factory
+        elif key == "runtime_bytecode":
+            assert "bytecode_runtime" in contract_factory
+        else:
+            assert key in contract_factory
 
 
 def test_validate_w3_instance_validates(w3):

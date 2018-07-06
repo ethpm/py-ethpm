@@ -43,8 +43,8 @@ def generate_contract_factory_kwargs(
     """
     if "abi" in contract_data:
         yield "abi", contract_data["abi"]
-    if "bytecode" in contract_data:
-        bytecode = to_bytes(text=contract_data["bytecode"]["bytecode"])
+    if "deployment_bytecode" in contract_data:
+        bytecode = to_bytes(text=contract_data["deployment_bytecode"]["bytecode"])
         yield "bytecode", encode_hex(bytecode)
     if "runtime_bytecode" in contract_data:
         runtime_bytecode = to_bytes(text=contract_data["runtime_bytecode"]["bytecode"])
