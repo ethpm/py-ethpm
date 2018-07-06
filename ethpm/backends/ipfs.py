@@ -1,13 +1,12 @@
 from abc import abstractmethod
 
 from eth_utils import to_bytes
-import ipfsapi
+from ipfsapi import Client
 import requests
 
 from ethpm import V2_PACKAGES_DIR
 from ethpm.backends.base import BaseURIBackend
 from ethpm.constants import INFURA_GATEWAY_PREFIX, IPFS_GATEWAY_PREFIX
-from ethpm.exceptions import IPFSConnectionError
 from ethpm.utils.ipfs import extract_ipfs_path_from_uri, is_ipfs_uri
 
 
@@ -99,19 +98,10 @@ class LocalIPFSBackend(BaseIPFSBackend):
     Default IPFS Gateway port = 8080 (read-only)
     """
 
-    def __init__(self, host: str, port: int) -> None:
-        self.host = host
-        self.port = port
+    def __init__(self, client: Client) -> None:
+        self.client = client
 
     def fetch_uri_contents(self, ipfs_uri: str) -> bytes:
-        try:
-            client = ipfsapi.Client(self.host, self.port)
-        except ipfsapi.exceptions.ConnectionError:
-            raise IPFSConnectionError(
-                "Cannot connect to local IPFS daemon running at host:{0}, port:{1}.".format(
-                    self.host, self.port
-                )
-            )
         ipfs_hash = extract_ipfs_path_from_uri(ipfs_uri)
-        contents = client.cat(ipfs_hash)
+        contents = self.client.cat(ipfs_hash)
         return contents

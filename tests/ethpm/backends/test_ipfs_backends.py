@@ -1,6 +1,7 @@
 import json
 
 from eth_utils import to_text
+import ipfsapi
 import pytest
 import requests_mock
 
@@ -32,13 +33,17 @@ def test_ipfs_and_infura_gateway_backends_fetch_uri_contents(
         assert contents_dict["package_name"] == "safe-math-lib"
 
 
-def test_local_ipfs_backend():
+def test_local_ipfs_backend(monkeypatch):
     uri = "ipfs://Qme4otpS88NV8yQi8TfTP89EsQC5bko3F5N1yhRoi6cwGV"
-    backend = LocalIPFSBackend("localhost", "8080")
-    with requests_mock.Mocker() as m:
-        m.get(requests_mock.ANY, text="pragma")
-        contents = backend.fetch_uri_contents(uri)
-        assert contents.startswith(b"pragma")
+    ipfs_client = ipfsapi.Client("localhost", "8080")
+
+    def mockreturn(path):
+        return b"pragma"
+
+    monkeypatch.setattr(ipfs_client, "cat", mockreturn)
+    backend = LocalIPFSBackend(ipfs_client)
+    contents = backend.fetch_uri_contents(uri)
+    assert contents.startswith(b"pragma")
 
 
 @pytest.mark.parametrize(
