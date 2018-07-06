@@ -1,8 +1,11 @@
+import json
 from typing import Any, Dict
 from urllib import parse
 
+from eth_utils import to_text
+
+from ethpm.backends import get_uri_backend
 from ethpm.exceptions import UriNotSupportedError
-from ethpm.utils.ipfs import fetch_ipfs_package
 
 IPFS_SCHEME = "ipfs"
 
@@ -17,11 +20,19 @@ def get_manifest_from_content_addressed_uri(uri: str) -> Dict[str, Any]:
     """
     parse_result = parse.urlparse(uri)
     scheme = parse_result.scheme
+    uri_backend = get_uri_backend()
 
     if scheme == IPFS_SCHEME:
-        ipfs_hash = parse_result.netloc
-        manifest_data = fetch_ipfs_package(ipfs_hash)
-        return manifest_data
+        if uri_backend.can_handle_uri(uri):
+            raw_manifest_data = uri_backend.fetch_uri_contents(uri)
+            manifest_data = to_text(raw_manifest_data)
+            return json.loads(manifest_data)
+        else:
+            raise TypeError(
+                "The URI Backend: {0} cannot handle the given URI: {1}.".format(
+                    type(uri_backend).__name__, uri
+                )
+            )
 
     if scheme in INTERNET_SCHEMES:
         raise UriNotSupportedError("Internet URIs are not yet supported.")

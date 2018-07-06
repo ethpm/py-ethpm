@@ -1,19 +1,8 @@
 import pytest
 from solc import compile_source
 
-import ethpm
 from ethpm import ASSETS_DIR, Package
 from ethpm.exceptions import UriNotSupportedError
-
-
-# mock out http req to IPFS gateway
-# `fetch_ipfs_package` returns local 'owned' pkg
-@pytest.fixture(autouse=True)
-def mock_request(monkeypatch, owned_manifest):
-    def mock_fetch(x):
-        return owned_manifest
-
-    monkeypatch.setattr(ethpm.utils.uri, "fetch_ipfs_package", mock_fetch)
 
 
 @pytest.fixture()
@@ -41,12 +30,15 @@ def w3_with_registry(w3):
     return w3, address, registry
 
 
-def test_package_init_from_registry(w3_with_registry):
+def test_package_init_from_registry(w3_with_registry, monkeypatch):
+    monkeypatch.setenv(
+        "ETHPM_URI_BACKEND_CLASS", "ethpm.backends.ipfs.DummyIPFSBackend"
+    )
     w3, address, registry = w3_with_registry
     valid_registry_uri = "ercXXX://%s/owned?version=1.0.0" % address
     pkg = Package.from_registry(valid_registry_uri, w3)
     assert isinstance(pkg, Package)
-    assert pkg.name == "owned"
+    assert pkg.name == "safe-math-lib"
 
 
 @pytest.mark.parametrize(

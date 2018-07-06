@@ -1,8 +1,11 @@
+import json
 from typing import Any, Dict
 
+from eth_utils import to_text
 from web3 import Web3
 from web3.eth import Contract
 
+from ethpm.backends import get_uri_backend
 from ethpm.deployments import Deployments
 from ethpm.exceptions import InsufficientAssetsError
 from ethpm.typing import ContractName
@@ -14,7 +17,6 @@ from ethpm.utils.contract import (
 )
 from ethpm.utils.deployment_validation import validate_single_matching_uri
 from ethpm.utils.filesystem import load_package_data_from_file
-from ethpm.utils.ipfs import extract_ipfs_path_from_uri, fetch_ipfs_package, is_ipfs_uri
 from ethpm.utils.manifest_validation import (
     check_for_build_dependencies,
     validate_deployments_are_present,
@@ -105,17 +107,17 @@ class Package(object):
     @classmethod
     def from_ipfs(cls, ipfs_uri: str) -> "Package":
         """
-        Instantiate a Package object from an IPFS uri.
-        TODO: Defaults to Infura gateway, needs extension
-        to support other gateways and local nodes
+        Instantiate and return a Package object from an IPFS URI pointing to a manifest.
         """
-        if is_ipfs_uri(ipfs_uri):
-            ipfs_path = extract_ipfs_path_from_uri(ipfs_uri)
-            package_data = fetch_ipfs_package(ipfs_path)
+        uri_backend = get_uri_backend()
+        if uri_backend.can_handle_uri(ipfs_uri):
+            raw_package_data = uri_backend.fetch_uri_contents(ipfs_uri)
+            package_data = json.loads(to_text(raw_package_data))
         else:
             raise TypeError(
-                "The Package.from_ipfs method only accepts a valid IPFS uri."
-                "{0} is not a valid IPFS uri.".format(ipfs_uri)
+                "The URI Backend: {0} cannot handle the given URI: {1}.".format(
+                    type(uri_backend).__name__, ipfs_uri
+                )
             )
 
         return cls(package_data)
