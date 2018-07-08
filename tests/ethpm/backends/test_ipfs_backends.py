@@ -1,7 +1,6 @@
 import json
 
 from eth_utils import to_text
-import ipfsapi
 import pytest
 import requests_mock
 
@@ -12,6 +11,15 @@ from ethpm.backends.ipfs import (
     LocalIPFSBackend,
 )
 from ethpm.constants import INFURA_GATEWAY_PREFIX, IPFS_GATEWAY_PREFIX
+
+
+@pytest.fixture
+def fake_client():
+    class FakeClient:
+        def cat(self, ipfs_hash):
+            return ipfs_hash
+
+    return FakeClient()
 
 
 @pytest.mark.parametrize(
@@ -33,17 +41,12 @@ def test_ipfs_and_infura_gateway_backends_fetch_uri_contents(
         assert contents_dict["package_name"] == "safe-math-lib"
 
 
-def test_local_ipfs_backend(monkeypatch):
+def test_local_ipfs_backend(monkeypatch, fake_client):
+    # do we need any kind of test against an actually running node? even if commented out?
     uri = "ipfs://Qme4otpS88NV8yQi8TfTP89EsQC5bko3F5N1yhRoi6cwGV"
-    ipfs_client = ipfsapi.Client("localhost", "8080")
-
-    def mockreturn(path):
-        return b"pragma"
-
-    monkeypatch.setattr(ipfs_client, "cat", mockreturn)
-    backend = LocalIPFSBackend(ipfs_client)
+    backend = LocalIPFSBackend(fake_client)
     contents = backend.fetch_uri_contents(uri)
-    assert contents.startswith(b"pragma")
+    assert contents.startswith("Qm")
 
 
 @pytest.mark.parametrize(
