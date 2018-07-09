@@ -1,7 +1,7 @@
 import re
 from typing import Any, Dict, Generator, List, Tuple
 
-from eth_utils import encode_hex, to_bytes, to_dict
+from eth_utils import to_dict
 from solc import compile_files
 from web3 import Web3
 
@@ -44,11 +44,9 @@ def generate_contract_factory_kwargs(
     if "abi" in contract_data:
         yield "abi", contract_data["abi"]
     if "deployment_bytecode" in contract_data:
-        bytecode = to_bytes(text=contract_data["deployment_bytecode"]["bytecode"])
-        yield "bytecode", encode_hex(bytecode)
+        yield "bytecode", contract_data["deployment_bytecode"]["bytecode"]
     if "runtime_bytecode" in contract_data:
-        runtime_bytecode = to_bytes(text=contract_data["runtime_bytecode"]["bytecode"])
-        yield "bytecode_runtime", encode_hex(runtime_bytecode)
+        yield "bytecode_runtime", contract_data["runtime_bytecode"]["bytecode"]
 
 
 def compile_contracts(contract_name: str, alias: str, paths: List[str]) -> str:
