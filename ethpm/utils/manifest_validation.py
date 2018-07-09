@@ -24,9 +24,10 @@ def validate_manifest_against_schema(manifest: Dict[str, Any]) -> None:
     schema_data = _load_schema_data()
     try:
         validate(manifest, schema_data)
-    except jsonValidationError:
+    except jsonValidationError as e:
         raise ValidationError(
-            "Manifest:{0} invalid for schema:{1}".format(manifest, MANIFEST_SCHEMA_PATH)
+            "Manifest invalid for schema version {0}. "
+            "Reason: {1}".format(schema_data["version"], e.message)
         )
 
 
