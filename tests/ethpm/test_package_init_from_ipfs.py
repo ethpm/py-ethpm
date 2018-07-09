@@ -7,7 +7,7 @@ VALID_IPFS_PKG = "ipfs://QmeD2s7KaBUoGYTP1eutHBmBkMMMoycdfiyGMx2DKrWXyV"
 
 def test_package_from_ipfs_with_valid_uri(monkeypatch):
     monkeypatch.setenv(
-        "ETHPM_URI_BACKEND_CLASS", "ethpm.backends.ipfs.DummyIPFSBackend"
+        "ETHPM_IPFS_BACKEND_CLASS", "ethpm.backends.ipfs.DummyIPFSBackend"
     )
     package = Package.from_ipfs(VALID_IPFS_PKG)
     assert package.name == "safe-math-lib"

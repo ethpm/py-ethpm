@@ -29,11 +29,3 @@ class UriNotSupportedError(ValidationError):
     """
 
     pass
-
-
-class IPFSConnectionError(PyEthPMError):
-    """
-    Raised when unable to connect to a locally running IPFS daemon.
-    """
-
-    pass

@@ -4,7 +4,7 @@ from urllib import parse
 
 from eth_utils import to_text
 
-from ethpm.backends import get_uri_backend
+from ethpm.backends.ipfs import get_ipfs_backend
 from ethpm.exceptions import UriNotSupportedError
 
 IPFS_SCHEME = "ipfs"
@@ -20,17 +20,17 @@ def get_manifest_from_content_addressed_uri(uri: str) -> Dict[str, Any]:
     """
     parse_result = parse.urlparse(uri)
     scheme = parse_result.scheme
-    uri_backend = get_uri_backend()
 
     if scheme == IPFS_SCHEME:
-        if uri_backend.can_handle_uri(uri):
-            raw_manifest_data = uri_backend.fetch_uri_contents(uri)
+        ipfs_backend = get_ipfs_backend()
+        if ipfs_backend.can_handle_uri(uri):
+            raw_manifest_data = ipfs_backend.fetch_uri_contents(uri)
             manifest_data = to_text(raw_manifest_data)
             return json.loads(manifest_data)
         else:
             raise TypeError(
-                "The URI Backend: {0} cannot handle the given URI: {1}.".format(
-                    type(uri_backend).__name__, uri
+                "The IPFS Backend: {0} cannot handle the given URI: {1}.".format(
+                    type(ipfs_backend).__name__, uri
                 )
             )
 

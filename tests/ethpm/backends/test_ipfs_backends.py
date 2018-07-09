@@ -9,6 +9,7 @@ from ethpm.backends.ipfs import (
     InfuraIPFSBackend,
     IPFSGatewayBackend,
     LocalIPFSBackend,
+    get_ipfs_backend,
 )
 from ethpm.constants import INFURA_GATEWAY_PREFIX, IPFS_GATEWAY_PREFIX
 
@@ -42,9 +43,9 @@ def test_ipfs_and_infura_gateway_backends_fetch_uri_contents(
 
 
 def test_local_ipfs_backend(monkeypatch, fake_client):
-    # do we need any kind of test against an actually running node? even if commented out?
     uri = "ipfs://Qme4otpS88NV8yQi8TfTP89EsQC5bko3F5N1yhRoi6cwGV"
-    backend = LocalIPFSBackend(fake_client)
+    backend = LocalIPFSBackend()
+    backend.client = fake_client
     contents = backend.fetch_uri_contents(uri)
     assert contents.startswith("Qm")
 
@@ -74,3 +75,16 @@ def test_dummy_ipfs_backend():
     mnfst = to_text(pkg)
     manifest = json.loads(mnfst)
     assert manifest["package_name"] == "safe-math-lib"
+
+
+def test_get_ipfs_backend_default():
+    backend = get_ipfs_backend()
+    assert isinstance(backend, IPFSGatewayBackend)
+
+
+def test_get_uri_backend_with_env_variable(monkeypatch):
+    monkeypatch.setenv(
+        "ETHPM_IPFS_BACKEND_CLASS", "ethpm.backends.ipfs.DummyIPFSBackend"
+    )
+    backend = get_ipfs_backend()
+    assert isinstance(backend, DummyIPFSBackend)
