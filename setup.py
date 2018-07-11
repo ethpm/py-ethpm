@@ -58,6 +58,7 @@ setup(
         'eth-keys>=0.2.0b3,<1',
         'eth-tester[py-evm]==0.1.0-beta.26',
         'eth-utils>=1.0.2,<2',
+        'ipfsapi>=0.4.3,<1',
         'jsonschema>=2.6.0,<3',
         'py-solc>=2.1.0,<3',
         'rlp>=1.0.1,<2',

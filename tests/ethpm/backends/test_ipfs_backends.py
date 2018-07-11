@@ -4,8 +4,23 @@ from eth_utils import to_text
 import pytest
 import requests_mock
 
-from ethpm.backends.ipfs import DummyIPFSBackend, InfuraIPFSBackend, IPFSGatewayBackend
+from ethpm.backends.ipfs import (
+    DummyIPFSBackend,
+    InfuraIPFSBackend,
+    IPFSGatewayBackend,
+    LocalIPFSBackend,
+    get_ipfs_backend,
+)
 from ethpm.constants import INFURA_GATEWAY_PREFIX, IPFS_GATEWAY_PREFIX
+
+
+@pytest.fixture
+def fake_client():
+    class FakeClient:
+        def cat(self, ipfs_hash):
+            return ipfs_hash
+
+    return FakeClient()
 
 
 @pytest.mark.parametrize(
@@ -25,6 +40,14 @@ def test_ipfs_and_infura_gateway_backends_fetch_uri_contents(
         contents = backend.fetch_uri_contents(uri)
         contents_dict = json.loads(to_text(contents))
         assert contents_dict["package_name"] == "safe-math-lib"
+
+
+def test_local_ipfs_backend(monkeypatch, fake_client):
+    uri = "ipfs://Qme4otpS88NV8yQi8TfTP89EsQC5bko3F5N1yhRoi6cwGV"
+    backend = LocalIPFSBackend()
+    backend.client = fake_client
+    contents = backend.fetch_uri_contents(uri)
+    assert contents.startswith("Qm")
 
 
 @pytest.mark.parametrize(
@@ -52,3 +75,16 @@ def test_dummy_ipfs_backend():
     mnfst = to_text(pkg)
     manifest = json.loads(mnfst)
     assert manifest["package_name"] == "safe-math-lib"
+
+
+def test_get_ipfs_backend_default():
+    backend = get_ipfs_backend()
+    assert isinstance(backend, IPFSGatewayBackend)
+
+
+def test_get_uri_backend_with_env_variable(monkeypatch):
+    monkeypatch.setenv(
+        "ETHPM_IPFS_BACKEND_CLASS", "ethpm.backends.ipfs.DummyIPFSBackend"
+    )
+    backend = get_ipfs_backend()
+    assert isinstance(backend, DummyIPFSBackend)

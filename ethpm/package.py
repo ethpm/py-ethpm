@@ -5,7 +5,7 @@ from eth_utils import to_text
 from web3 import Web3
 from web3.eth import Contract
 
-from ethpm.backends import get_uri_backend
+from ethpm.backends.ipfs import get_ipfs_backend
 from ethpm.deployments import Deployments
 from ethpm.exceptions import InsufficientAssetsError
 from ethpm.typing import ContractName
@@ -109,14 +109,14 @@ class Package(object):
         """
         Instantiate and return a Package object from an IPFS URI pointing to a manifest.
         """
-        uri_backend = get_uri_backend()
-        if uri_backend.can_handle_uri(ipfs_uri):
-            raw_package_data = uri_backend.fetch_uri_contents(ipfs_uri)
+        ipfs_backend = get_ipfs_backend()
+        if ipfs_backend.can_handle_uri(ipfs_uri):
+            raw_package_data = ipfs_backend.fetch_uri_contents(ipfs_uri)
             package_data = json.loads(to_text(raw_package_data))
         else:
             raise TypeError(
                 "The URI Backend: {0} cannot handle the given URI: {1}.".format(
-                    type(uri_backend).__name__, ipfs_uri
+                    type(ipfs_backend).__name__, ipfs_uri
                 )
             )
 

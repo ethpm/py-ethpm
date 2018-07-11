@@ -1,12 +1,18 @@
 from abc import abstractmethod
+import os
+from typing import Type
 
 from eth_utils import to_bytes
+import ipfsapi
 import requests
 
 from ethpm import V2_PACKAGES_DIR
 from ethpm.backends.base import BaseURIBackend
 from ethpm.constants import INFURA_GATEWAY_PREFIX, IPFS_GATEWAY_PREFIX
 from ethpm.utils.ipfs import extract_ipfs_path_from_uri, is_ipfs_uri
+from ethpm.utils.module_loading import import_string
+
+DEFAULT_IPFS_BACKEND = "ethpm.backends.ipfs.IPFSGatewayBackend"
 
 
 class BaseIPFSBackend(BaseURIBackend):
@@ -93,11 +99,27 @@ class DummyIPFSBackend(BaseIPFSBackend):
 class LocalIPFSBackend(BaseIPFSBackend):
     """
     Backend class for all IPFS URIs served through a direct connection to an IPFS node.
-    TODO - implement
+    Default IPFS port = 5001
     """
 
-    def can_handle_uri(self, ipfs_uri: str) -> bool:
-        return False
+    def __init__(self) -> None:
+        self.client = ipfsapi.Client("localhost", "5001")
 
     def fetch_uri_contents(self, ipfs_uri: str) -> bytes:
-        pass
+        ipfs_hash = extract_ipfs_path_from_uri(ipfs_uri)
+        contents = self.client.cat(ipfs_hash)
+        return contents
+
+
+def get_ipfs_backend(import_path: str = None) -> BaseIPFSBackend:
+    """
+    Return the `BaseIPFSBackend` class specified by import_path, default, or env variable.
+    """
+    backend_class = get_ipfs_backend_class(import_path)
+    return backend_class()
+
+
+def get_ipfs_backend_class(import_path: str = None) -> Type[BaseIPFSBackend]:
+    if import_path is None:
+        import_path = os.environ.get("ETHPM_IPFS_BACKEND_CLASS", DEFAULT_IPFS_BACKEND)
+    return import_string(import_path)
