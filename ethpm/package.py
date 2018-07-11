@@ -6,6 +6,7 @@ from web3 import Web3
 from web3.eth import Contract
 
 from ethpm.backends.ipfs import get_ipfs_backend
+from ethpm.dependencies import Dependencies
 from ethpm.deployments import Deployments
 from ethpm.exceptions import InsufficientAssetsError
 from ethpm.typing import ContractName
@@ -18,14 +19,14 @@ from ethpm.utils.contract import (
 from ethpm.utils.deployment_validation import validate_single_matching_uri
 from ethpm.utils.filesystem import load_package_data_from_file
 from ethpm.utils.manifest_validation import (
-    check_for_build_dependencies,
+    validate_build_dependencies_are_present,
     validate_deployments_are_present,
     validate_manifest_against_schema,
     validate_manifest_deployments,
 )
 from ethpm.utils.registry import lookup_manifest_uri_located_at_registry_uri
 from ethpm.utils.uri import get_manifest_from_content_addressed_uri
-from ethpm.validation import validate_registry_uri
+from ethpm.validation import validate_build_dependencies, validate_registry_uri
 
 
 class Package(object):
@@ -43,7 +44,6 @@ class Package(object):
 
         validate_manifest_against_schema(manifest)
         validate_manifest_deployments(manifest)
-        check_for_build_dependencies(manifest)
 
         self.package_data = manifest
 
@@ -141,6 +141,26 @@ class Package(object):
     @property
     def version(self) -> str:
         return self.package_data["version"]
+
+    #
+    # Build Dependencies
+    #
+
+    def get_build_dependencies(self) -> "Dependencies":
+        """
+        Retrieve instance of `Dependencies` (i.e. build dependencies)
+        belonging to this Package.
+        """
+        validate_build_dependencies_are_present(self.package_data)
+
+        dependencies = self.package_data["build_dependencies"]
+        validate_build_dependencies(dependencies)
+        dependency_packages = {
+            dependency: Package.from_ipfs(uri)
+            for dependency, uri in dependencies.items()
+        }
+
+        return Dependencies(dependency_packages)
 
     #
     # Deployments

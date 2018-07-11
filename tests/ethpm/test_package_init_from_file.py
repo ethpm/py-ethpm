@@ -69,6 +69,16 @@ def test_package_init_for_all_manifest_use_cases(all_standalone_manifests):
         Package(manifest)
 
 
+def test_package_init_for_manifest_with_build_dependency(
+    monkeypatch, piper_coin_manifest, w3
+):
+    monkeypatch.setenv(
+        "ETHPM_IPFS_BACKEND_CLASS", "ethpm.backends.ipfs.DummyIPFSBackend"
+    )
+    pkg = Package(piper_coin_manifest, w3)
+    assert isinstance(pkg, Package)
+
+
 def test_init_from_invalid_manifest_data():
     with pytest.raises(ValidationError):
         Package({})

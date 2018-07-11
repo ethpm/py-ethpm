@@ -39,6 +39,14 @@ def validate_deployments_are_present(manifest: Dict[str, Any]) -> None:
         raise ValidationError("Manifest's deployments key is empty.")
 
 
+def validate_build_dependencies_are_present(manifest: Dict[str, Any]) -> None:
+    if "build_dependencies" not in manifest:
+        raise ValidationError("Manifest doesn't have any build dependencies.")
+
+    if not manifest["build_dependencies"]:
+        raise ValidationError("Manifest's build dependencies key is empty.")
+
+
 def validate_manifest_deployments(manifest: Dict[str, Any]) -> None:
     """
     Validate that a manifest's deployments contracts reference existing contract_types.
@@ -59,16 +67,6 @@ def validate_manifest_deployments(manifest: Dict[str, Any]) -> None:
                     missing_contract_types
                 )
             )
-
-
-def check_for_build_dependencies(valid_manifest: Dict[str, Any]) -> None:
-    """
-    Catch packages that rely on other packages
-    """
-    if valid_manifest.get("build_dependencies"):
-        raise NotImplementedError(
-            "Handling of build dependencies has not yet been implemented"
-        )
 
 
 def validate_manifest_exists(manifest_id: str) -> None:

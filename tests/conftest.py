@@ -56,6 +56,18 @@ def safe_math_manifest(get_manifest):
     return get_manifest('safe-math-lib')
 
 
+@pytest.fixture
+def piper_coin_manifest():
+    with open(str(V2_PACKAGES_DIR / "piper-coin" / "1.0.0-pretty.json")) as file_obj:
+        return json.load(file_obj)
+
+
+@pytest.fixture
+def standard_token_manifest():
+    with open(str(V2_PACKAGES_DIR / "standard-token" / "1.0.0.json")) as file_obj:
+        return json.load(file_obj)
+
+
 # standalone = no `build_dependencies` which aren't fully supported yet
 @pytest.fixture
 def all_standalone_manifests(all_manifests):
