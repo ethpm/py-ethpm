@@ -36,19 +36,19 @@ def all_manifests():
             manifests.append(manifest)
     return manifests
 
+@pytest.fixture()
+def get_manifest():
+    def _get_manifest(name):
+        with open(str(V2_PACKAGES_DIR / name / "1.0.0.json")) as file_obj:
+            return json.load(file_obj)
+    return _get_manifest
+
 
 # safe-math-lib currently used as default manifest for testing
 # should be extended to all_manifest_types asap
 @pytest.fixture
-def safe_math_manifest():
-    with open(str(V2_PACKAGES_DIR / "safe-math-lib" / "1.0.0.json")) as file_obj:
-        return json.load(file_obj)
-
-
-@pytest.fixture
-def owned_manifest():
-    with open(str(V2_PACKAGES_DIR / "owned" / "1.0.0.json")) as file_obj:
-        return json.load(file_obj)
+def safe_math_manifest(get_manifest):
+    return get_manifest('safe-math-lib')
 
 
 # standalone = no `build_dependencies` which aren't fully supported yet
