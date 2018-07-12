@@ -71,7 +71,9 @@ def test_base_ipfs_gateway_backend_correctly_handle_uri_schemes(uri, expected):
 
 
 def test_dummy_ipfs_backend():
-    pkg = DummyIPFSBackend().fetch_uri_contents("safe-math-lib/1.0.0.json")
+    pkg = DummyIPFSBackend().fetch_uri_contents(
+        "ipfs://QmeD2s7KaBUoGYTP1eutHBmBkMMMoycdfiyGMx2DKrWXyV"
+    )
     mnfst = to_text(pkg)
     manifest = json.loads(mnfst)
     assert manifest["package_name"] == "safe-math-lib"
@@ -82,9 +84,9 @@ def test_get_ipfs_backend_default():
     assert isinstance(backend, IPFSGatewayBackend)
 
 
-def test_get_uri_backend_with_env_variable(monkeypatch):
+def test_get_uri_backend_with_env_variable(dummy_ipfs_backend, monkeypatch):
     monkeypatch.setenv(
-        "ETHPM_IPFS_BACKEND_CLASS", "ethpm.backends.ipfs.DummyIPFSBackend"
+        "ETHPM_IPFS_BACKEND_CLASS", "ethpm.backends.ipfs.LocalIPFSBackend"
     )
     backend = get_ipfs_backend()
-    assert isinstance(backend, DummyIPFSBackend)
+    assert isinstance(backend, LocalIPFSBackend)

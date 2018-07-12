@@ -8,7 +8,12 @@ from web3.eth import Contract
 from ethpm.backends.ipfs import get_ipfs_backend
 from ethpm.dependencies import Dependencies
 from ethpm.deployments import Deployments
-from ethpm.exceptions import InsufficientAssetsError
+from ethpm.exceptions import (
+    FailureToFetchIPFSAssetsError,
+    InsufficientAssetsError,
+    PyEthPMError,
+    UriNotSupportedError,
+)
 from ethpm.typing import ContractName
 from ethpm.utils.contract import (
     generate_contract_factory_kwargs,
@@ -26,7 +31,7 @@ from ethpm.utils.manifest_validation import (
 )
 from ethpm.utils.registry import lookup_manifest_uri_located_at_registry_uri
 from ethpm.utils.uri import get_manifest_from_content_addressed_uri
-from ethpm.validation import validate_build_dependencies, validate_registry_uri
+from ethpm.validation import validate_build_dependency, validate_registry_uri
 
 
 class Package(object):
@@ -114,7 +119,7 @@ class Package(object):
             raw_package_data = ipfs_backend.fetch_uri_contents(ipfs_uri)
             package_data = json.loads(to_text(raw_package_data))
         else:
-            raise TypeError(
+            raise UriNotSupportedError(
                 "The URI Backend: {0} cannot handle the given URI: {1}.".format(
                     type(ipfs_backend).__name__, ipfs_uri
                 )
@@ -146,19 +151,27 @@ class Package(object):
     # Build Dependencies
     #
 
+    # should we be doing any caching on this or get_deployments?
     def get_build_dependencies(self) -> "Dependencies":
         """
-        Retrieve instance of `Dependencies` (i.e. build dependencies)
-        belonging to this Package.
+        Return `Dependencies` instance containing the
+        build dependencies available on this Package.
         """
         validate_build_dependencies_are_present(self.package_data)
 
         dependencies = self.package_data["build_dependencies"]
-        validate_build_dependencies(dependencies)
-        dependency_packages = {
-            dependency: Package.from_ipfs(uri)
-            for dependency, uri in dependencies.items()
-        }
+        dependency_packages = {}
+        for name, uri in dependencies.items():
+            try:
+                validate_build_dependency(name, uri)
+                dependency_package = Package.from_ipfs(uri)
+            except PyEthPMError as e:
+                raise FailureToFetchIPFSAssetsError(
+                    "Failed to retrieve build dependency: {0} from URI: {1}.\n"
+                    "Got error: {2}.".format(name, uri, e)
+                )
+            else:
+                dependency_packages[name] = dependency_package
 
         return Dependencies(dependency_packages)
 

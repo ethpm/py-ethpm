@@ -19,14 +19,13 @@ PACKAGE_NAMES = [
     "wallet",
 ]
 
+
 def fetch_manifest(name):
-    with open(str(V2_PACKAGES_DIR / name / '1.0.0.json')) as file_obj:
+    with open(str(V2_PACKAGES_DIR / name / "1.0.0.json")) as file_obj:
         return json.load(file_obj)
 
 
-MANIFESTS = {
-    name: fetch_manifest(name) for name in PACKAGE_NAMES
-}
+MANIFESTS = {name: fetch_manifest(name) for name in PACKAGE_NAMES}
 
 
 @pytest.fixture
@@ -37,9 +36,17 @@ def w3():
 
 
 @pytest.fixture
+def dummy_ipfs_backend(monkeypatch):
+    monkeypatch.setenv(
+        "ETHPM_IPFS_BACKEND_CLASS", "ethpm.backends.ipfs.DummyIPFSBackend"
+    )
+
+
+@pytest.fixture
 def get_manifest():
     def _get_manifest(name):
         return copy.deepcopy(MANIFESTS[name])
+
     return _get_manifest
 
 
@@ -53,7 +60,7 @@ def all_manifests(get_manifest):
 # should be extended to all_manifest_types asap
 @pytest.fixture
 def safe_math_manifest(get_manifest):
-    return get_manifest('safe-math-lib')
+    return get_manifest("safe-math-lib")
 
 
 @pytest.fixture
@@ -64,8 +71,7 @@ def piper_coin_manifest():
 
 @pytest.fixture
 def standard_token_manifest():
-    with open(str(V2_PACKAGES_DIR / "standard-token" / "1.0.0.json")) as file_obj:
-        return json.load(file_obj)
+    return get_manifest("standard-token")
 
 
 # standalone = no `build_dependencies` which aren't fully supported yet

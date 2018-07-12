@@ -1,11 +1,10 @@
 import re
-from typing import Dict
 from urllib import parse
 
 from eth_utils import is_checksum_address
 
 from ethpm.constants import PACKAGE_NAME_REGEX, REGISTRY_URI_SCHEME
-from ethpm.exceptions import UriNotSupportedError
+from ethpm.exceptions import UriNotSupportedError, ValidationError
 from ethpm.utils.ipfs import is_ipfs_uri
 from ethpm.utils.registry import is_ens_domain
 
@@ -19,14 +18,21 @@ def validate_package_name(pkg_name: str) -> None:
         raise UriNotSupportedError("{0} is not a valid package name.".format(pkg_name))
 
 
-def validate_build_dependencies(dependencies: Dict[str, str]) -> None:
+def validate_ipfs_uri(uri: str) -> None:
+    """
+    Raise an exception if the provided URI is not a valid IPFS URI.
+    """
+    if not is_ipfs_uri(uri):
+        raise ValidationError("URI: {0} is not a valid IPFS URI.".format(uri))
+
+
+def validate_build_dependency(key: str, uri: str) -> None:
     """
     Raise an exception if the key in dependencies is not a valid package name,
     or if the value is not a valid IPFS URI.
     """
-    for key, value in dependencies.items():
-        validate_package_name(key)
-        is_ipfs_uri(value)
+    validate_package_name(key)
+    validate_ipfs_uri(uri)
 
 
 def validate_registry_uri(uri: str) -> None:

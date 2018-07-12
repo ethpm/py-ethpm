@@ -1,41 +1,52 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
+
+from ethpm.validation import validate_package_name
 
 
 class Dependencies:
     """
-    Access build dependencies belonging to a package.
+    Class to manage the `Package` instances of a Package's `build_dependencies`.
     """
 
-    def __init__(self, build_dependencies: Dict[str, "Package"]) -> None:
+    # ignoring Package type here and below to avoid a circular dependency
+    def __init__(
+        self, build_dependencies: Dict[str, "Package"]  # type: ignore
+    ) -> None:
         self.build_dependencies = build_dependencies
 
-    def __getitem__(self, key: str) -> "Package":
-        return self.get(key)
+    def __getitem__(self, key: str) -> "Package":  # type: ignore
+        return self.build_dependencies.get(key)
 
     def __contains__(self, key: str) -> bool:
         return key in self.build_dependencies
 
     def _validate_name(self, name: str) -> None:
+        validate_package_name(name)
         if name not in self.build_dependencies:
             raise KeyError(
                 "Package name: {0} not found in build dependencies.".format(name)
             )
 
-    def get(self, key: str) -> "Package":
-        self._validate_name(key)
-        return self.build_dependencies.get(key)
+    def items(self) -> Tuple[Tuple[str, "Package"], ...]:  # type: ignore
+        """
+        Return an iterable containing package name and
+        corresponding `Package` instance that are available.
+        """
+        item_dict = {
+            name: self.build_dependencies.get(name) for name in self.build_dependencies
+        }
+        return tuple(item_dict.items())
 
-    def items(self) -> Dict[str, "Package"]:
-        item_dict = {name: self.get(name) for name in self.build_dependencies}
-        return item_dict
-
-    def values(self) -> List["Package"]:
-        values = [self.get(name) for name in self.build_dependencies]
+    def values(self) -> List["Package"]:  # type: ignore
+        """
+        Return an iterable of the available `Package` instances.
+        """
+        values = [self.build_dependencies.get(name) for name in self.build_dependencies]
         return values
 
-    def get_dependency_package(self, package_name: str) -> "Package":
+    def get_dependency_package(self, package_name: str) -> "Package":  # type: ignore
         """
-        Return a the dependency Package of the given package name.
+        Return the dependency Package for a given package name.
         """
         self._validate_name(package_name)
-        return self.get(package_name)
+        return self.build_dependencies.get(package_name)
