@@ -5,7 +5,8 @@ from ethpm.package import Package
 
 
 @pytest.fixture()
-def safe_math_package(safe_math_manifest):
+def safe_math_package(get_manifest):
+    safe_math_manifest = get_manifest('safe-math-lib')
     return Package(safe_math_manifest)
 
 
