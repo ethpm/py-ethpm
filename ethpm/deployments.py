@@ -47,9 +47,9 @@ class Deployments:
         after validating contract name.
         """
         self._validate_name_and_references(contract_name)
-        raise NotImplementedError(
-            "All checks passed, but get_contract_instance API not complete."
-        )
+        factory = self.contract_factories[contract_name]
+        address = self.deployment_data[contract_name]["address"]
+        return self.w3.eth.contract(address=address, abi=factory.abi)
 
     def _validate_name_and_references(self, name: str) -> None:
         validate_contract_name(name)

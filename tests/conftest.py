@@ -4,7 +4,7 @@ import json
 import pytest
 from web3 import Web3
 
-from ethpm import V2_PACKAGES_DIR
+from ethpm import V2_PACKAGES_DIR, Package
 from ethpm.utils.chains import create_block_uri, get_chain_id
 
 PACKAGE_NAMES = [
@@ -109,6 +109,11 @@ def manifest_with_matching_deployment(w3, tmpdir, safe_math_manifest):
         }
     }
     return manifest
+
+
+@pytest.fixture
+def matching_package(manifest_with_matching_deployment):
+    return Package(manifest_with_matching_deployment)
 
 
 @pytest.fixture
