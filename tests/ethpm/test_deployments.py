@@ -1,5 +1,5 @@
+from eth_utils import to_bytes
 import pytest
-
 from web3.eth import Contract
 
 from ethpm import Package
@@ -119,26 +119,14 @@ def test_get_contract_instance_without_reference_in_contract_factories_raises(
 
 
 def test_deployments_get_contract_instance(manifest_with_matching_deployment, w3):
-    # in order to test this, we need to first deploy an instance
-    # of safe-math-lib to the chain of the w3 instance
-
-    # get safe math lib manifest
-    sml_manifest = manifest_with_matching_deployment
-    # get block_uri, abi, bin from manifest
-    block_uri = [k for k in sml_manifest["deployments"].keys()][0]
-    sml_bin = sml_manifest["contract_types"]["SafeMathLib"]["deployment_bytecode"][
-        "bytecode"
-    ]
-    sml_abi = sml_manifest["contract_types"]["SafeMathLib"]["abi"]
-    # deploy sml instance to w3
-    SML = w3.eth.contract(abi=sml_abi, bytecode=sml_bin)
-    tx_hash = SML.constructor().transact()
-    tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
-    address = tx_receipt.contractAddress
-    # udpate manifest with deployed address of sml
-    sml_manifest["deployments"][block_uri]["SafeMathLib"]["address"] = address
-    smp = Package(sml_manifest, w3)
-    deps = smp.get_deployments()
-    sml_instance = deps.get_contract_instance("SafeMathLib")
-    assert isinstance(sml_instance, Contract)
-    assert sml_instance.address == address
+    manifest, address = manifest_with_matching_deployment
+    safe_math_package = Package(manifest, w3)
+    deps = safe_math_package.deployments
+    safe_math_instance = deps.get_contract_instance("SafeMathLib")
+    assert isinstance(safe_math_instance, Contract)
+    assert safe_math_instance.address == to_bytes(hexstr=address)
+    assert safe_math_instance.bytecode == to_bytes(
+        hexstr=safe_math_package.package_data["contract_types"]["SafeMathLib"][
+            "deployment_bytecode"
+        ]["bytecode"]
+    )

@@ -39,7 +39,8 @@ def test_validate_deployed_contracts_present_validates(
 
 
 def test_validate_deployments(manifest_with_matching_deployment):
-    validate = validate_manifest_deployments(manifest_with_matching_deployment)
+    manifest, _ = manifest_with_matching_deployment
+    validate = validate_manifest_deployments(manifest)
     assert validate is None
 
 
