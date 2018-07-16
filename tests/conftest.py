@@ -19,29 +19,34 @@ PACKAGE_NAMES = [
     "wallet",
 ]
 
+def fetch_manifest(name):
+    with open(str(V2_PACKAGES_DIR / name / '1.0.0.json')) as file_obj:
+        return json.load(file_obj)
 
-@pytest.fixture()
+
+MANIFESTS = {
+    name: fetch_manifest(name) for name in PACKAGE_NAMES
+}
+
+
+@pytest.fixture
 def w3():
     w3 = Web3(EthereumTesterProvider())
     w3.eth.defaultAccount = w3.eth.accounts[0]
     return w3
 
 
-@pytest.fixture()
-def all_manifests():
-    manifests = []
-    for pkg in PACKAGE_NAMES:
-        with open(str(V2_PACKAGES_DIR / pkg / "1.0.0.json")) as file_obj:
-            manifest = json.load(file_obj)
-            manifests.append(manifest)
-    return manifests
-
-@pytest.fixture()
+@pytest.fixture
 def get_manifest():
     def _get_manifest(name):
-        with open(str(V2_PACKAGES_DIR / name / "1.0.0.json")) as file_obj:
-            return json.load(file_obj)
+        return copy.deepcopy(MANIFESTS[name])
     return _get_manifest
+
+
+@pytest.fixture
+def all_manifests(get_manifest):
+    manifests = [get_manifest(name) for name in PACKAGE_NAMES]
+    return manifests
 
 
 # safe-math-lib currently used as default manifest for testing
@@ -60,7 +65,7 @@ def all_standalone_manifests(all_manifests):
     return standalone_manifests
 
 
-@pytest.fixture()
+@pytest.fixture
 def invalid_manifest(safe_math_manifest):
     safe_math_manifest["manifest_version"] = 1
     return safe_math_manifest
@@ -148,6 +153,7 @@ def manifest_with_multiple_matches(w3, tmpdir, safe_math_manifest):
 
 @pytest.fixture
 def manifest_with_conflicting_deployments(tmpdir, safe_math_manifest):
+    # two different blockchain uri's representing the same chain
     manifest = copy.deepcopy(safe_math_manifest)
     manifest["deployments"][
         "blockchain://41941023680923e0fe4d74a34bdac8141f2540e3ae90623718e47d66d1ca4a2d/block/1e96de11320c83cca02e8b9caf3e489497e8e432befe5379f2f08599f8aecede"
