@@ -68,6 +68,13 @@ class InfuraIPFSBackend(IPFSOverHTTPBackend):
         return INFURA_GATEWAY_PREFIX
 
 
+MANIFEST_URIS = {
+    "ipfs://QmVu9zuza5mkJwwcFdh2SXBugm1oSgZVuEKkph9XLsbUwg": "standard-token",
+    "ipfs://QmeD2s7KaBUoGYTP1eutHBmBkMMMoycdfiyGMx2DKrWXyV": "safe-math-lib",
+    "ipfs://QmbeVyFLSuEUxiXKwSsEjef6icpdTdA4kGG9BcrJXKNKUW": "owned",
+}
+
+
 class DummyIPFSBackend(BaseIPFSBackend):
     """
     Backend class to serve IPFS URIs without having to make an HTTP request.
@@ -79,21 +86,13 @@ class DummyIPFSBackend(BaseIPFSBackend):
     """
 
     def fetch_uri_contents(self, ipfs_uri: str) -> bytes:
-        if is_ipfs_uri(ipfs_uri):
-            with open(
-                str(V2_PACKAGES_DIR / "safe-math-lib" / "1.0.0.json")
-            ) as file_obj:
-                contents = file_obj.read()
-        else:
-            with open(str(V2_PACKAGES_DIR / ipfs_uri)) as file_obj:
-                contents = file_obj.read()
+        pkg_name = MANIFEST_URIS[ipfs_uri]
+        with open(str(V2_PACKAGES_DIR / pkg_name / "1.0.0.json")) as file_obj:
+            contents = file_obj.read()
         return to_bytes(text=contents)
 
     def can_handle_uri(self, uri: str) -> bool:
-        if is_ipfs_uri(uri):
-            return True
-        path = V2_PACKAGES_DIR / uri
-        return path.exists()
+        return uri in MANIFEST_URIS
 
 
 class LocalIPFSBackend(BaseIPFSBackend):

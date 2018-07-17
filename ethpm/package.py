@@ -7,8 +7,14 @@ from web3 import Web3
 from web3.eth import Contract
 
 from ethpm.backends.ipfs import get_ipfs_backend
+from ethpm.dependencies import Dependencies
 from ethpm.deployments import Deployments
-from ethpm.exceptions import InsufficientAssetsError
+from ethpm.exceptions import (
+    FailureToFetchIPFSAssetsError,
+    InsufficientAssetsError,
+    PyEthPMError,
+    UriNotSupportedError,
+)
 from ethpm.typing import ContractName
 from ethpm.utils.contract import (
     generate_contract_factory_kwargs,
@@ -19,14 +25,14 @@ from ethpm.utils.contract import (
 from ethpm.utils.deployment_validation import validate_single_matching_uri
 from ethpm.utils.filesystem import load_package_data_from_file
 from ethpm.utils.manifest_validation import (
-    check_for_build_dependencies,
+    validate_build_dependencies_are_present,
     validate_deployments_are_present,
     validate_manifest_against_schema,
     validate_manifest_deployments,
 )
 from ethpm.utils.registry import lookup_manifest_uri_located_at_registry_uri
 from ethpm.utils.uri import get_manifest_from_content_addressed_uri
-from ethpm.validation import validate_registry_uri
+from ethpm.validation import validate_build_dependency, validate_registry_uri
 
 
 class Package(object):
@@ -44,7 +50,6 @@ class Package(object):
 
         validate_manifest_against_schema(manifest)
         validate_manifest_deployments(manifest)
-        check_for_build_dependencies(manifest)
 
         self.package_data = manifest
 
@@ -142,7 +147,7 @@ class Package(object):
             raw_package_data = ipfs_backend.fetch_uri_contents(ipfs_uri)
             package_data = json.loads(to_text(raw_package_data))
         else:
-            raise TypeError(
+            raise UriNotSupportedError(
                 "The URI Backend: {0} cannot handle the given URI: {1}.".format(
                     type(ipfs_backend).__name__, ipfs_uri
                 )
@@ -169,6 +174,34 @@ class Package(object):
     @property
     def version(self) -> str:
         return self.package_data["version"]
+
+    #
+    # Build Dependencies
+    #
+
+    # should we be doing any caching on this or get_deployments?
+    def get_build_dependencies(self) -> "Dependencies":
+        """
+        Return `Dependencies` instance containing the
+        build dependencies available on this Package.
+        """
+        validate_build_dependencies_are_present(self.package_data)
+
+        dependencies = self.package_data["build_dependencies"]
+        dependency_packages = {}
+        for name, uri in dependencies.items():
+            try:
+                validate_build_dependency(name, uri)
+                dependency_package = Package.from_ipfs(uri)
+            except PyEthPMError as e:
+                raise FailureToFetchIPFSAssetsError(
+                    "Failed to retrieve build dependency: {0} from URI: {1}.\n"
+                    "Got error: {2}.".format(name, uri, e)
+                )
+            else:
+                dependency_packages[name] = dependency_package
+
+        return Dependencies(dependency_packages)
 
     #
     # Deployments
