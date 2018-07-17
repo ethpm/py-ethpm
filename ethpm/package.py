@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 from typing import Any, Dict, Generator, Tuple, Union
 
 from eth_utils import to_canonical_address, to_text, to_tuple
@@ -29,12 +30,12 @@ from ethpm.utils.deployments import (
     validate_deployments_tx_receipt,
     validate_linked_references,
 )
-from ethpm.utils.filesystem import load_manifest_from_file
 from ethpm.utils.manifest_validation import (
     check_for_deployments,
     validate_build_dependencies_are_present,
     validate_manifest_against_schema,
     validate_manifest_deployments,
+    validate_raw_manifest_format,
 )
 from ethpm.validation import (
     validate_address,
@@ -94,21 +95,19 @@ class Package(object):
         return self.manifest["manifest_version"]
 
     @classmethod
-    def from_file(cls, file_path_or_obj: str, w3: Web3) -> "Package":
+    def from_file(cls, file_path: Path, w3: Web3) -> "Package":
         """
-        Return a Package object instantiated by a manifest located at the provided filepath.
+        Return a Package object instantiated by a manifest located at the provided Path.
         """
-        if isinstance(file_path_or_obj, str):
-            with open(file_path_or_obj) as file_obj:
-                manifest = load_manifest_from_file(file_obj)
-        elif hasattr(file_path_or_obj, "read") and callable(file_path_or_obj.read):
-            manifest = load_manifest_from_file(file_path_or_obj)
+        if isinstance(file_path, Path):
+            raw_manifest = file_path.read_text()
+            validate_raw_manifest_format(raw_manifest)
+            manifest = json.loads(raw_manifest)
         else:
             raise TypeError(
                 "The Package.from_file method takes either a filesystem path or a file-like object."
-                f"Got {type(file_path_or_obj)} instead."
+                f"Got {type(file_path)} instead."
             )
-
         return cls(manifest, w3)
 
     @classmethod
@@ -120,9 +119,14 @@ class Package(object):
             - HTTP          `https://raw.githubusercontent.com/repo/path.json#hash`
             - Registry      `ercXXX://registry.eth/greeter?version=1.0.0`
         """
-        contents = resolve_uri_contents(uri)
-        manifest = json.loads(to_text(contents))
+        contents = to_text(resolve_uri_contents(uri))
+        validate_raw_manifest_format(contents)
+        manifest = json.loads(contents)
         return cls(manifest, w3)
+
+    #
+    # Contracts
+    #
 
     def get_contract_factory(self, name: ContractName) -> Contract:
         """

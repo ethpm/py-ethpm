@@ -7,8 +7,64 @@ from ethpm.utils.manifest_validation import (
     validate_manifest_against_schema,
     validate_manifest_deployments,
     validate_manifest_exists,
+    validate_raw_manifest_format,
 )
 from ethpm.validation import validate_manifest_version
+
+
+@pytest.fixture
+def all_raw_strict_manifests(package_names):
+    manifests = []
+    for name in package_names:
+        with open(str(V2_PACKAGES_DIR / name / "1.0.0.json")) as file_obj:
+            manifests.append(file_obj.read().strip("\n"))
+    return manifests
+
+
+@pytest.fixture
+def all_pretty_manifests(package_names):
+    manifests = []
+    for name in package_names:
+        with open(str(V2_PACKAGES_DIR / name / "1.0.0-pretty.json")) as file_obj:
+            manifests.append(file_obj.read())
+    return manifests
+
+
+def test_validate_raw_manifest_configuration_validates_strict_manifests(
+    all_raw_strict_manifests
+):
+    for manifest in all_raw_strict_manifests:
+        assert validate_raw_manifest_format(manifest) is None
+
+
+def test_validate_raw_manifest_format_invalidates_pretty_manifests(
+    all_pretty_manifests
+):
+    for manifest in all_pretty_manifests:
+        with pytest.raises(ValidationError):
+            validate_raw_manifest_format(manifest)
+
+
+@pytest.mark.parametrize(
+    "manifest",
+    (
+        # not alphabetical
+        '{"x":"y","a":"b"}',
+        # not UTF-8
+        '{"\x80":"b","c":"d"}',
+        # newlines
+        '{"a":"b",\n"c":"d"}',
+        '{"a":"b","c":"d"}\n',
+        # whitespace
+        '{"a":"b","c": "d"}',
+    ),
+)
+def test_validate_raw_manifest_format_invalidates_invalid_manifests(tmpdir, manifest):
+    p = tmpdir.mkdir("invalid").join("manifest.json")
+    p.write(manifest)
+    invalid_manifest = p.read()
+    with pytest.raises(ValidationError):
+        validate_raw_manifest_format(invalid_manifest)
 
 
 def test_validate_manifest_exists_validates():

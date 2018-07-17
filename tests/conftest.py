@@ -27,6 +27,11 @@ def pytest_addoption(parser):
     parser.addoption("--integration", action="store_true", default=False)
 
 
+@pytest.fixture
+def package_names():
+    return PACKAGE_NAMES
+
+
 def fetch_manifest(name):
     return get_manifest_tool(name, "1.0.0.json")
 

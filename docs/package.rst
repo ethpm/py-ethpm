@@ -13,7 +13,7 @@ new ``Package`` class for a given package.
    >>> from ethpm import Package, V2_PACKAGES_DIR
    >>> from web3 import Web3
 
-   >>> owned_manifest_path = str(V2_PACKAGES_DIR / 'owned' / '1.0.0.json')
+   >>> owned_manifest_path = V2_PACKAGES_DIR / 'owned' / '1.0.0.json'
    >>> w3 = Web3(Web3.EthereumTesterProvider())
 
    >>> OwnedPackage = Package.from_file(owned_manifest_path, w3)
@@ -88,7 +88,7 @@ Methods
 
 .. py:classmethod:: Package.from_file(file_path, w3)
 
-   This classmethod is provided to instantiate a ``Package`` from a local file. A valid ``Web3`` instance is also required to instantiate a ``Package``.
+   This classmethod is provided to instantiate a ``Package`` from a local file. ``file_path`` arg must be a `pathlib.Path` instance. A valid ``Web3`` instance is also required to instantiate a ``Package``.
 
 .. py:classmethod:: Package.from_uri(uri, w3)
   

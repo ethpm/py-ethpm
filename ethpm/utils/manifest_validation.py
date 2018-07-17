@@ -116,3 +116,28 @@ def format_manifest(manifest: Manifest, *, prettify: bool) -> str:
     if prettify:
         return json.dumps(manifest, sort_keys=True, indent=4)
     return json.dumps(manifest, sort_keys=True, separators=(",", ":"))
+
+
+def validate_raw_manifest_format(raw_manifest: str) -> None:
+    """
+    Raise a ValidationError if a manifest ...
+    - is not tightly packed (i.e. no linebreaks or extra whitespace)
+    - does not have alphabetically sorted keys
+    - has duplicate keys
+    - is not UTF-8 encoded
+    - has a trailing newline
+    """
+    try:
+        manifest_dict = json.loads(raw_manifest, encoding="UTF-8")
+    except json.JSONDecodeError as err:
+        raise json.JSONDecodeError(
+            "Failed to load package data. File is not a valid JSON document.",
+            err.doc,
+            err.pos,
+        )
+    compact_manifest = json.dumps(manifest_dict, sort_keys=True, separators=(",", ":"))
+    if raw_manifest != compact_manifest:
+        raise ValidationError(
+            "Manifest is not correctly configured as specified in the EthPM-Spec. "
+            "http://ethpm.github.io/ethpm-spec/package-spec.html#document-format "
+        )
