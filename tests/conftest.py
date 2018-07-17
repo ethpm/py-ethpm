@@ -3,7 +3,6 @@ import json
 
 import pytest
 from web3 import Web3
-from web3.providers.eth_tester import EthereumTesterProvider
 
 from ethpm import V2_PACKAGES_DIR
 from ethpm.utils.chains import create_block_uri, get_chain_id
@@ -30,7 +29,7 @@ MANIFESTS = {name: fetch_manifest(name) for name in PACKAGE_NAMES}
 
 @pytest.fixture
 def w3():
-    w3 = Web3(EthereumTesterProvider())
+    w3 = Web3(Web3.EthereumTesterProvider())
     w3.eth.defaultAccount = w3.eth.accounts[0]
     return w3
 
@@ -109,7 +108,7 @@ def manifest_with_matching_deployment(w3, tmpdir, safe_math_manifest):
             "block": "0x420cb2b2bd634ef42f9082e1ee87a8d4aeeaf506ea5cdeddaa8ff7cbf911810c",
         }
     }
-    return manifest
+    return manifest, w3
 
 
 @pytest.fixture
@@ -127,7 +126,7 @@ def manifest_with_no_matching_deployments(w3, tmpdir, safe_math_manifest):
             "block": "0x420cb2b2bd634ef42f9082e1ee87a8d4aeeaf506ea5cdeddaa8ff7cbf911810c",
         }
     }
-    return manifest
+    return manifest, w3
 
 
 @pytest.fixture
@@ -156,7 +155,7 @@ def manifest_with_multiple_matches(w3, tmpdir, safe_math_manifest):
             "block": "0x420cb2b2bd634ef42f9082e1ee87a8d4aeeaf506ea5cdeddaa8ff7cbf911810c",
         }
     }
-    return manifest
+    return manifest, w3
 
 
 @pytest.fixture
@@ -173,4 +172,4 @@ def manifest_with_conflicting_deployments(tmpdir, safe_math_manifest):
             "block": "0x420cb2b2bd634ef42f9082e1ee87a8d4aeeaf506ea5cdeddaa8ff7cbf911810c",
         }
     }
-    return manifest
+    return manifest, w3

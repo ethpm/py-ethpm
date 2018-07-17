@@ -26,18 +26,18 @@ def test_get_build_dependencies_with_invalid_uris(
 
 
 def test_get_build_dependencies_without_dependencies_raises_exception(
-    piper_coin_manifest
+    piper_coin_manifest, w3
 ):
     piper_coin_manifest.pop("build_dependencies", None)
-    pkg = Package(piper_coin_manifest)
+    pkg = Package(piper_coin_manifest, w3)
     with pytest.raises(ValidationError):
         pkg.get_build_dependencies()
 
 
 def test_get_build_dependencies_with_empty_dependencies_raises_exception(
-    dummy_ipfs_backend, piper_coin_manifest
+    dummy_ipfs_backend, piper_coin_manifest, w3
 ):
     piper_coin_manifest["build_dependencies"] = {}
-    pkg = Package(piper_coin_manifest)
+    pkg = Package(piper_coin_manifest, w3)
     with pytest.raises(ValidationError):
         pkg.get_build_dependencies()

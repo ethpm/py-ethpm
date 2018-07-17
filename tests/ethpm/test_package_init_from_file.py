@@ -52,18 +52,18 @@ def non_json_manifest(tmpdir, request):
         yield file_obj_or_path
 
 
-def test_init_from_minimal_valid_manifest():
+def test_init_from_minimal_valid_manifest(w3):
     minimal_manifest = {
         "package_name": "foo",
         "manifest_version": "2",
         "version": "1.0.0",
     }
 
-    Package(minimal_manifest)
+    Package(minimal_manifest, w3)
 
 
-def test_package_init_for_all_manifest_use_cases(all_manifests):
-    package = Package(all_manifests)
+def test_package_init_for_all_manifest_use_cases(all_manifests, w3):
+    package = Package(all_manifests, w3)
     assert isinstance(package, Package)
 
 
@@ -74,14 +74,14 @@ def test_package_init_for_manifest_with_build_dependency(
     assert isinstance(pkg, Package)
 
 
-def test_init_from_invalid_manifest_data():
+def test_init_from_invalid_manifest_data(w3):
     with pytest.raises(ValidationError):
-        Package({})
+        Package({}, w3)
 
 
-def test_init_from_invalid_argument_type():
+def test_init_from_invalid_argument_type(w3):
     with pytest.raises(TypeError):
-        Package("not a manifest")
+        Package("not a manifest", w3)
 
 
 def test_from_file_fails_with_missing_filepath(tmpdir, w3):
