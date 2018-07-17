@@ -1,6 +1,7 @@
 import json
 from typing import Any, Dict
 
+from eth_typing import Address
 from eth_utils import to_text
 from web3 import Web3
 from web3.eth import Contract
@@ -57,15 +58,8 @@ class Package(object):
         """
         API to generate a contract factory class.
         """
-        current_w3 = None
-
-        if w3 is not None:
-            current_w3 = w3
-        else:
-            current_w3 = self.w3
-
         validate_contract_name(name)
-        validate_w3_instance(current_w3)
+        current_w3 = self.get_w3_instance(w3)
 
         try:
             contract_data = self.package_data["contract_types"][name]
@@ -79,6 +73,40 @@ class Package(object):
         contract_kwargs = generate_contract_factory_kwargs(contract_data)
         contract_factory = current_w3.eth.contract(**contract_kwargs)
         return contract_factory
+
+    def get_contract_instance(
+        self, name: ContractName, address: Address, w3: Web3 = None
+    ) -> Contract:
+        """
+        Return a Contract object representing the contract type at the provided address.
+        """
+        validate_contract_name(name)
+        current_w3 = self.get_w3_instance(w3)
+
+        try:
+            self.package_data["contract_types"][name]["abi"]
+        except KeyError:
+            raise InsufficientAssetsError(
+                "Package does not have the ABI required to generate a contract instance "
+                "for contract: {0} at address: {1}.".format(name, address)
+            )
+        contract_kwargs = generate_contract_factory_kwargs(
+            self.package_data["contract_types"][name]
+        )
+        contract_instance = current_w3.eth.contract(address=address, **contract_kwargs)
+        return contract_instance
+
+    def get_w3_instance(self, w3: Web3 = None) -> Web3:
+        """
+        Validate and return the appropriate web3 instance to be used.
+        """
+        current_w3 = None
+        if w3 is not None:
+            current_w3 = w3
+        else:
+            current_w3 = self.w3
+        validate_w3_instance(current_w3)
+        return current_w3
 
     def __repr__(self) -> str:
         name = self.name

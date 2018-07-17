@@ -57,6 +57,7 @@ setup(
         'bumpversion>=0.5.3,<1',
         'eth-keys>=0.2.0b3,<1',
         'eth-tester[py-evm]==0.1.0-beta.26',
+        'eth-typing>=1.0.0,<2',
         'eth-utils>=1.0.2,<2',
         'ipfsapi>=0.4.3,<1',
         'jsonschema>=2.6.0,<3',

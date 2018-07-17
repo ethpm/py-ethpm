@@ -1,3 +1,4 @@
+from eth_utils import is_same_address
 import pytest
 
 from ethpm.exceptions import InsufficientAssetsError
@@ -8,6 +9,15 @@ from ethpm.package import Package
 def safe_math_package(get_manifest):
     safe_math_manifest = get_manifest('safe-math-lib')
     return Package(safe_math_manifest)
+
+
+@pytest.fixture()
+def deployed_safe_math(safe_math_package, w3):
+    safe_math_package.set_default_w3(w3)
+    SafeMath = safe_math_package.get_contract_factory("SafeMathLib")
+    tx_hash = SafeMath.constructor().transact()
+    tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
+    return safe_math_package, tx_receipt.contractAddress
 
 
 def test_package_object_instantiates_with_a_web3_object(all_standalone_manifests, w3):
@@ -61,6 +71,22 @@ def test_get_contract_factory_with_missing_contract_types(safe_math_package, w3)
 def test_get_contract_factory_throws_if_name_isnt_present(safe_math_package, w3):
     with pytest.raises(InsufficientAssetsError):
         assert safe_math_package.get_contract_factory("DoesNotExist", w3)
+
+
+def test_get_contract_instance(deployed_safe_math):
+    safe_math_package, address = deployed_safe_math
+    contract_instance = safe_math_package.get_contract_instance("SafeMathLib", address)
+    assert contract_instance.abi is not False
+    assert is_same_address(contract_instance.address, address)
+
+
+def test_get_contract_instance_throws_with_insufficient_assets(deployed_safe_math):
+    safe_math_package, address = deployed_safe_math
+    with pytest.raises(InsufficientAssetsError):
+        assert safe_math_package.get_contract_instance("IncorrectLib", address)
+    safe_math_package.package_data["contract_types"]["SafeMathLib"].pop("abi")
+    with pytest.raises(InsufficientAssetsError):
+        assert safe_math_package.get_contract_instance("SafeMathLib", address)
 
 
 def test_package_object_properties(safe_math_package):
