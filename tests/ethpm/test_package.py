@@ -20,17 +20,15 @@ def deployed_safe_math(safe_math_package, w3):
     return safe_math_package, tx_receipt.contractAddress
 
 
-def test_package_object_instantiates_with_a_web3_object(all_standalone_manifests, w3):
-    for manifest in all_standalone_manifests:
-        current_package = Package(manifest, w3)
-        assert current_package.w3 is w3
+def test_package_object_instantiates_with_a_web3_object(all_manifests, w3):
+    current_package = Package(all_manifests, w3)
+    assert current_package.w3 is w3
 
 
-def test_set_default_web3(all_standalone_manifests, w3):
-    for manifest in all_standalone_manifests:
-        current_package = Package(manifest)
-        current_package.set_default_w3(w3)
-        assert current_package.w3 is w3
+def test_set_default_web3(all_manifests, w3):
+    current_package = Package(all_manifests)
+    current_package.set_default_w3(w3)
+    assert current_package.w3 is w3
 
 
 def test_get_contract_factory_with_unique_web3(safe_math_package, w3):

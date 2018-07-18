@@ -62,11 +62,9 @@ def test_init_from_minimal_valid_manifest():
     Package(minimal_manifest)
 
 
-# only standalone packages are currently supported
-# update test to all use cases when dependent packages are supported
-def test_package_init_for_all_manifest_use_cases(all_standalone_manifests):
-    for manifest in all_standalone_manifests:
-        Package(manifest)
+def test_package_init_for_all_manifest_use_cases(all_manifests):
+    package = Package(all_manifests)
+    assert isinstance(package, Package)
 
 
 def test_package_init_for_manifest_with_build_dependency(

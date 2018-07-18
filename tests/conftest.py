@@ -50,10 +50,9 @@ def get_manifest():
     return _get_manifest
 
 
-@pytest.fixture
-def all_manifests(get_manifest):
-    manifests = [get_manifest(name) for name in PACKAGE_NAMES]
-    return manifests
+@pytest.fixture(params=PACKAGE_NAMES)
+def all_manifests(request, get_manifest):
+    return get_manifest(request.param)
 
 
 # safe-math-lib currently used as default manifest for testing
@@ -72,15 +71,6 @@ def piper_coin_manifest():
 @pytest.fixture
 def standard_token_manifest():
     return get_manifest("standard-token")
-
-
-# standalone = no `build_dependencies` which aren't fully supported yet
-@pytest.fixture
-def all_standalone_manifests(all_manifests):
-    standalone_manifests = [
-        mnfst for mnfst in all_manifests if "build_dependencies" not in mnfst
-    ]
-    return standalone_manifests
 
 
 @pytest.fixture
