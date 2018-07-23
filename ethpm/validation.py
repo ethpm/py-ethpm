@@ -35,6 +35,19 @@ def validate_build_dependency(key: str, uri: str) -> None:
     validate_ipfs_uri(uri)
 
 
+def is_valid_registry_uri(uri: str) -> bool:
+    """
+    Return a boolean indicating whether `uri` argument
+    conforms to the Registry URI scheme.
+    """
+    try:
+        validate_registry_uri(uri)
+    except UriNotSupportedError:
+        return False
+    else:
+        return True
+
+
 def validate_registry_uri(uri: str) -> None:
     """
     Raise an exception if the URI does not conform to the registry URI scheme.

@@ -12,6 +12,7 @@ from ethpm.backends.ipfs import (
     IPFSGatewayBackend,
     LocalIPFSBackend,
     get_ipfs_backend,
+    get_ipfs_backend_class,
 )
 from ethpm.constants import INFURA_GATEWAY_PREFIX, IPFS_GATEWAY_PREFIX
 
@@ -91,7 +92,12 @@ def test_dummy_ipfs_backend():
     assert manifest["package_name"] == "safe-math-lib"
 
 
-def test_get_ipfs_backend_default():
+def test_get_ipfs_backend_class_with_default_backend():
+    backend = get_ipfs_backend_class()
+    assert issubclass(backend, InfuraIPFSBackend)
+
+
+def test_get_ipfs_backend_with_default_backend():
     backend = get_ipfs_backend()
     assert isinstance(backend, InfuraIPFSBackend)
 

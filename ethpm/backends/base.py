@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from web3 import Web3
+
 
 class BaseURIBackend(ABC):
     """
@@ -17,7 +19,7 @@ class BaseURIBackend(ABC):
         pass
 
     @abstractmethod
-    def fetch_uri_contents(self, uri: str) -> bytes:
+    def fetch_uri_contents(self, uri: str, w3: Web3) -> bytes:
         """
         Fetch the contents stored at a URI.
         """

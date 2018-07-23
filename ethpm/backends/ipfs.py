@@ -6,6 +6,7 @@ from typing import Dict, List, Type
 from eth_utils import to_bytes
 import ipfsapi
 import requests
+from web3 import Web3
 
 from ethpm import V2_PACKAGES_DIR
 from ethpm.backends.base import BaseURIBackend
@@ -15,6 +16,7 @@ from ethpm.constants import (
     IPFS_GATEWAY_PREFIX,
 )
 from ethpm.utils.ipfs import dummy_ipfs_pin, extract_ipfs_path_from_uri, is_ipfs_uri
+from ethpm.exceptions import UriNotSupportedError
 from ethpm.utils.module_loading import import_string
 
 
@@ -45,7 +47,8 @@ class IPFSOverHTTPBackend(BaseIPFSBackend):
     All subclasses must implement: base_uri
     """
 
-    def fetch_uri_contents(self, uri: str) -> bytes:
+    # TODO change to use ipfsapi.Client
+    def fetch_uri_contents(self, uri: str, w3: Web3 = None) -> bytes:
         ipfs_hash = extract_ipfs_path_from_uri(uri)
         gateway_uri = self.base_uri + ipfs_hash
         response = requests.get(gateway_uri)
@@ -118,7 +121,7 @@ class DummyIPFSBackend(BaseIPFSBackend):
     - Path to manifest/contract in V2_PACKAGES_DIR -> defined manifest/contract
     """
 
-    def fetch_uri_contents(self, ipfs_uri: str) -> bytes:
+    def fetch_uri_contents(self, ipfs_uri: str, w3: Web3 = None) -> bytes:
         pkg_name = MANIFEST_URIS[ipfs_uri]
         with open(str(V2_PACKAGES_DIR / pkg_name / "1.0.0.json")) as file_obj:
             contents = file_obj.read()
@@ -151,9 +154,14 @@ class LocalIPFSBackend(BaseIPFSBackend):
     def __init__(self) -> None:
         self.client = ipfsapi.Client("localhost", "5001")
 
-    def fetch_uri_contents(self, ipfs_uri: str) -> bytes:
+    def fetch_uri_contents(self, ipfs_uri: str, w3: Web3 = None) -> bytes:
         ipfs_hash = extract_ipfs_path_from_uri(ipfs_uri)
-        contents = self.client.cat(ipfs_hash)
+        try:
+            contents = self.client.cat(ipfs_hash)
+        except ipfsapi.exceptions.ConnectionError:
+            raise UriNotSupportedError(
+                "Cannot connect to local IPFS node to serve URI: {0}".format(ipfs_uri)
+            )
         return contents
 
     def pin_assets(self, file_or_dir_path: Path) -> List[Dict[str, str]]:

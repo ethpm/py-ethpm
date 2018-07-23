@@ -6,15 +6,16 @@ from eth_utils import to_bytes, to_text
 from web3 import Web3
 from web3.eth import Contract
 
-from ethpm.backends.ipfs import get_ipfs_backend
 from ethpm.dependencies import Dependencies
 from ethpm.deployments import Deployments
 from ethpm.exceptions import (
+    CannotHandleURI,
     FailureToFetchIPFSAssetsError,
     InsufficientAssetsError,
     PyEthPMError,
     UriNotSupportedError,
 )
+from ethpm.utils.backend import get_backends_for_uri
 from ethpm.utils.cache import cached_property
 from ethpm.utils.contract import (
     generate_contract_factory_kwargs,
@@ -30,9 +31,7 @@ from ethpm.utils.manifest_validation import (
     validate_manifest_against_schema,
     validate_manifest_deployments,
 )
-from ethpm.utils.registry import lookup_manifest_uri_located_at_registry_uri
-from ethpm.utils.uri import get_manifest_from_content_addressed_uri
-from ethpm.validation import validate_build_dependency, validate_registry_uri
+from ethpm.validation import validate_build_dependency
 
 
 class Package(object):
@@ -81,8 +80,7 @@ class Package(object):
     @classmethod
     def from_file(cls, file_path_or_obj: str, w3: Web3) -> "Package":
         """
-        Allows users to create a Package object
-        from a filepath
+        Return a Package object instantiated by a manifest located at the provided filepath.
         """
         if isinstance(file_path_or_obj, str):
             with open(file_path_or_obj) as file_obj:
@@ -98,38 +96,28 @@ class Package(object):
         return cls(package_data, w3)
 
     @classmethod
-    def from_ipfs(cls, ipfs_uri: str, w3: Web3) -> "Package":
+    def from_uri(cls, uri: str, w3: Web3) -> "Package":
         """
-        Instantiate and return a Package object from an IPFS URI pointing to a manifest.
+        Return a Package object instantiated by a manifest located at a content-addressed URI.
+        URI schemes supported:
+            - IPFS          `ipfs://Qm...`
+            - HTTP          `https://raw.githubusercontent.com/repo/path.json#hash`
+            - Registry      `ercXXX://registry.eth/greeter?version=1.0.0`
         """
-        ipfs_backend = get_ipfs_backend()
-        if ipfs_backend.can_handle_uri(ipfs_uri):
-            raw_package_data = ipfs_backend.fetch_uri_contents(ipfs_uri)
-            package_data = json.loads(to_text(raw_package_data))
+        good_backends = get_backends_for_uri(uri)
+        for backend in good_backends:
+            try:
+                contents = backend().fetch_uri_contents(uri, w3)
+            except UriNotSupportedError:
+                continue
+            package_data = json.loads(to_text(contents))
+            return cls(package_data, w3)
         else:
-            raise UriNotSupportedError(
-                "The URI Backend: {0} cannot handle the given URI: {1}.".format(
-                    type(ipfs_backend).__name__, ipfs_uri
+            raise CannotHandleURI(
+                "URI: {0} cannot be served by any of the available backends.".format(
+                    uri
                 )
             )
-
-        return cls(package_data, w3)
-
-    @classmethod
-    def from_registry(cls, registry_uri: str, w3: Web3) -> "Package":
-        """
-        Instantiate a Package object from a valid Registry URI.
-        --
-        Requires a web3 object connected to the chain the registry lives on.
-        """
-        validate_registry_uri(registry_uri)
-        manifest_uri = lookup_manifest_uri_located_at_registry_uri(registry_uri, w3)
-        manifest_data = get_manifest_from_content_addressed_uri(manifest_uri)
-        return cls(manifest_data, w3)
-
-    #
-    # Contracts
-    #
 
     def get_contract_factory(self, name: ContractName) -> Contract:
         """
@@ -187,7 +175,7 @@ class Package(object):
         for name, uri in dependencies.items():
             try:
                 validate_build_dependency(name, uri)
-                dependency_package = Package.from_ipfs(uri, self.w3)
+                dependency_package = Package.from_uri(uri, self.w3)
             except PyEthPMError as e:
                 raise FailureToFetchIPFSAssetsError(
                     "Failed to retrieve build dependency: {0} from URI: {1}.\n"
