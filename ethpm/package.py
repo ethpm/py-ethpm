@@ -16,6 +16,7 @@ from ethpm.exceptions import (
     UriNotSupportedError,
 )
 from ethpm.typing import ContractName
+from ethpm.utils.cache import cached_property
 from ethpm.utils.contract import (
     generate_contract_factory_kwargs,
     validate_contract_name,
@@ -51,8 +52,8 @@ class Package(object):
         validate_manifest_deployments(manifest)
         validate_w3_instance(w3)
 
-        self.package_data = manifest
         self.w3 = w3
+        self.package_data = manifest
 
     def set_default_w3(self, w3: Web3) -> None:
         """
@@ -170,8 +171,8 @@ class Package(object):
     # Build Dependencies
     #
 
-    # should we be doing any caching on this or get_deployments?
-    def get_build_dependencies(self) -> "Dependencies":
+    @cached_property
+    def build_dependencies(self) -> "Dependencies":
         """
         Return `Dependencies` instance containing the
         build dependencies available on this Package.
@@ -198,7 +199,8 @@ class Package(object):
     # Deployments
     #
 
-    def get_deployments(self) -> "Deployments":
+    @cached_property
+    def deployments(self) -> "Deployments":
         """
         API to retrieve instance of deployed contract dependency.
         """

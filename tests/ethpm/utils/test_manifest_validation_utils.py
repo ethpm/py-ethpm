@@ -34,14 +34,12 @@ def test_validate_manifest_invalidates(invalid_manifest):
 def test_validate_deployed_contracts_present_validates(
     manifest_with_conflicting_deployments
 ):
-    manifest, _ = manifest_with_conflicting_deployments
     with pytest.raises(ValidationError):
-        validate_manifest_deployments(manifest)
+        validate_manifest_deployments(manifest_with_conflicting_deployments)
 
 
 def test_validate_deployments(manifest_with_matching_deployment):
-    manifest, w3 = manifest_with_matching_deployment
-    validate = validate_manifest_deployments(manifest)
+    validate = validate_manifest_deployments(manifest_with_matching_deployment)
     assert validate is None
 
 

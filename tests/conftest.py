@@ -108,7 +108,7 @@ def manifest_with_matching_deployment(w3, tmpdir, safe_math_manifest):
             "block": "0x420cb2b2bd634ef42f9082e1ee87a8d4aeeaf506ea5cdeddaa8ff7cbf911810c",
         }
     }
-    return manifest, w3
+    return manifest
 
 
 @pytest.fixture
@@ -126,7 +126,7 @@ def manifest_with_no_matching_deployments(w3, tmpdir, safe_math_manifest):
             "block": "0x420cb2b2bd634ef42f9082e1ee87a8d4aeeaf506ea5cdeddaa8ff7cbf911810c",
         }
     }
-    return manifest, w3
+    return manifest
 
 
 @pytest.fixture
@@ -155,7 +155,7 @@ def manifest_with_multiple_matches(w3, tmpdir, safe_math_manifest):
             "block": "0x420cb2b2bd634ef42f9082e1ee87a8d4aeeaf506ea5cdeddaa8ff7cbf911810c",
         }
     }
-    return manifest, w3
+    return manifest
 
 
 @pytest.fixture
@@ -172,4 +172,4 @@ def manifest_with_conflicting_deployments(tmpdir, safe_math_manifest):
             "block": "0x420cb2b2bd634ef42f9082e1ee87a8d4aeeaf506ea5cdeddaa8ff7cbf911810c",
         }
     }
-    return manifest, w3
+    return manifest
