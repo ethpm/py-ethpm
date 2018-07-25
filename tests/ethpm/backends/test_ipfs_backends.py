@@ -1,9 +1,11 @@
 import json
+from pathlib import Path
 
 from eth_utils import to_text
 import pytest
 import requests_mock
 
+from ethpm import V2_PACKAGES_DIR
 from ethpm.backends.ipfs import (
     DummyIPFSBackend,
     InfuraIPFSBackend,
@@ -13,12 +15,22 @@ from ethpm.backends.ipfs import (
 )
 from ethpm.constants import INFURA_GATEWAY_PREFIX, IPFS_GATEWAY_PREFIX
 
+OWNED_MANIFEST_PATH = V2_PACKAGES_DIR / "owned" / "1.0.0.json"
+
 
 @pytest.fixture
 def fake_client():
     class FakeClient:
         def cat(self, ipfs_hash):
             return ipfs_hash
+
+        def add(self, file_or_dir_path, recursive):
+            if Path(file_or_dir_path) == OWNED_MANIFEST_PATH:
+                return {
+                    "Hash": "QmbeVyFLSuEUxiXKwSsEjef6icpdTdA4kGG9BcrJXKNKUW",
+                    "Name": "1.0.0.json",
+                    "Size": "454",
+                }
 
     return FakeClient()
 
@@ -81,7 +93,7 @@ def test_dummy_ipfs_backend():
 
 def test_get_ipfs_backend_default():
     backend = get_ipfs_backend()
-    assert isinstance(backend, IPFSGatewayBackend)
+    assert isinstance(backend, InfuraIPFSBackend)
 
 
 def test_get_uri_backend_with_env_variable(dummy_ipfs_backend, monkeypatch):
@@ -90,3 +102,12 @@ def test_get_uri_backend_with_env_variable(dummy_ipfs_backend, monkeypatch):
     )
     backend = get_ipfs_backend()
     assert isinstance(backend, LocalIPFSBackend)
+
+
+def test_pin_assets_to_infura_backend(fake_client):
+    backend = get_ipfs_backend()
+    backend.client = fake_client
+    hashes = backend.pin_assets(OWNED_MANIFEST_PATH)
+    asset_data = hashes[0]
+    assert asset_data["Name"] == "1.0.0.json"
+    assert asset_data["Hash"] == "QmbeVyFLSuEUxiXKwSsEjef6icpdTdA4kGG9BcrJXKNKUW"

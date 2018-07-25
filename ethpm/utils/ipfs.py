@@ -1,7 +1,5 @@
 from urllib import parse
 
-INFURA_IPFS_URI_PREFIX = "https://ipfs.infura.io/ipfs/"
-
 
 def extract_ipfs_path_from_uri(value: str) -> str:
     """
