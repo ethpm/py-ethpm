@@ -71,4 +71,5 @@ def test_get_contract_instance_throws_with_insufficient_assets(deployed_safe_mat
 def test_package_object_properties(safe_math_package):
     assert safe_math_package.name == "safe-math-lib"
     assert safe_math_package.version == "1.0.0"
+    assert safe_math_package.manifest_version == "2"
     assert safe_math_package.__repr__() == "<Package safe-math-lib==1.0.0>"

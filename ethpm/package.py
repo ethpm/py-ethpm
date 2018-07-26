@@ -75,6 +75,10 @@ class Package(object):
     def version(self) -> str:
         return self.package_data["version"]
 
+    @property
+    def manifest_version(self) -> str:
+        return self.package_data["manifest_version"]
+
     @classmethod
     def from_file(cls, file_path_or_obj: str, w3: Web3) -> "Package":
         """
