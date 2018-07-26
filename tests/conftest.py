@@ -3,7 +3,6 @@ import json
 
 import pytest
 from web3 import Web3
-from web3.providers.eth_tester import EthereumTesterProvider
 
 from ethpm import V2_PACKAGES_DIR
 from ethpm.utils.chains import create_block_uri, get_chain_id
@@ -30,7 +29,7 @@ MANIFESTS = {name: fetch_manifest(name) for name in PACKAGE_NAMES}
 
 @pytest.fixture
 def w3():
-    w3 = Web3(EthereumTesterProvider())
+    w3 = Web3(Web3.EthereumTesterProvider())
     w3.eth.defaultAccount = w3.eth.accounts[0]
     return w3
 

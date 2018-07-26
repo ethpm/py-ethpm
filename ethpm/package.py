@@ -16,6 +16,7 @@ from ethpm.exceptions import (
     UriNotSupportedError,
 )
 from ethpm.typing import ContractName
+from ethpm.utils.cache import cached_property
 from ethpm.utils.contract import (
     generate_contract_factory_kwargs,
     validate_contract_name,
@@ -36,12 +37,11 @@ from ethpm.validation import validate_build_dependency, validate_registry_uri
 
 
 class Package(object):
-    def __init__(self, manifest: Dict[str, Any], w3: Web3 = None) -> None:
+    def __init__(self, manifest: Dict[str, Any], w3: Web3) -> None:
         """
-        A package must be constructed with a valid manifest.
+        A package must be constructed with a dict representing a valid manifest
+        and a valid w3 instance.
         """
-        self.w3 = w3
-
         if not isinstance(manifest, dict):
             raise TypeError(
                 "Package object must be initialized with a dictionary. "
@@ -50,73 +50,34 @@ class Package(object):
 
         validate_manifest_against_schema(manifest)
         validate_manifest_deployments(manifest)
+        validate_w3_instance(w3)
 
+        self.w3 = w3
         self.package_data = manifest
 
     def set_default_w3(self, w3: Web3) -> None:
         """
         Set the default Web3 instance.
         """
+        validate_w3_instance(w3)
         self.w3 = w3
-
-    def get_contract_factory(self, name: ContractName, w3: Web3 = None) -> Contract:
-        """
-        API to generate a contract factory class.
-        """
-        validate_contract_name(name)
-        current_w3 = self.get_w3_instance(w3)
-
-        try:
-            contract_data = self.package_data["contract_types"][name]
-            validate_minimal_contract_factory_data(contract_data)
-        except KeyError:
-            raise InsufficientAssetsError(
-                "This package has insufficient package data to generate "
-                "a contract factory for contract:{0}.".format(name)
-            )
-
-        contract_kwargs = generate_contract_factory_kwargs(contract_data)
-        contract_factory = current_w3.eth.contract(**contract_kwargs)
-        return contract_factory
-
-    def get_contract_instance(
-        self, name: ContractName, address: Address, w3: Web3 = None
-    ) -> Contract:
-        """
-        Return a Contract object representing the contract type at the provided address.
-        """
-        validate_contract_name(name)
-        current_w3 = self.get_w3_instance(w3)
-
-        try:
-            self.package_data["contract_types"][name]["abi"]
-        except KeyError:
-            raise InsufficientAssetsError(
-                "Package does not have the ABI required to generate a contract instance "
-                "for contract: {0} at address: {1}.".format(name, address)
-            )
-        contract_kwargs = generate_contract_factory_kwargs(
-            self.package_data["contract_types"][name]
-        )
-        contract_instance = current_w3.eth.contract(address=address, **contract_kwargs)
-        return contract_instance
-
-    def get_w3_instance(self, w3: Web3 = None) -> Web3:
-        """
-        Validate and return the appropriate web3 instance to be used.
-        """
-        current_w3 = None
-        if w3 is not None:
-            current_w3 = w3
-        else:
-            current_w3 = self.w3
-        validate_w3_instance(current_w3)
-        return current_w3
 
     def __repr__(self) -> str:
         name = self.name
         version = self.version
         return "<Package {0}=={1}>".format(name, version)
+
+    @property
+    def name(self) -> str:
+        return self.package_data["package_name"]
+
+    @property
+    def version(self) -> str:
+        return self.package_data["version"]
+
+    @property
+    def manifest_version(self) -> str:
+        return self.package_data["manifest_version"]
 
     @classmethod
     def from_file(cls, file_path_or_obj: str, w3: Web3) -> "Package":
@@ -138,7 +99,7 @@ class Package(object):
         return cls(package_data, w3)
 
     @classmethod
-    def from_ipfs(cls, ipfs_uri: str) -> "Package":
+    def from_ipfs(cls, ipfs_uri: str, w3: Web3) -> "Package":
         """
         Instantiate and return a Package object from an IPFS URI pointing to a manifest.
         """
@@ -153,7 +114,7 @@ class Package(object):
                 )
             )
 
-        return cls(package_data)
+        return cls(package_data, w3)
 
     @classmethod
     def from_registry(cls, registry_uri: str, w3: Web3) -> "Package":
@@ -167,20 +128,55 @@ class Package(object):
         manifest_data = get_manifest_from_content_addressed_uri(manifest_uri)
         return cls(manifest_data, w3)
 
-    @property
-    def name(self) -> str:
-        return self.package_data["package_name"]
+    #
+    # Contracts
+    #
 
-    @property
-    def version(self) -> str:
-        return self.package_data["version"]
+    def get_contract_factory(self, name: ContractName) -> Contract:
+        """
+        API to generate a contract factory class.
+        """
+        validate_contract_name(name)
+        try:
+            contract_data = self.package_data["contract_types"][name]
+            validate_minimal_contract_factory_data(contract_data)
+        except KeyError:
+            raise InsufficientAssetsError(
+                "This package has insufficient package data to generate "
+                "a contract factory for contract:{0}.".format(name)
+            )
+
+        contract_kwargs = generate_contract_factory_kwargs(contract_data)
+        contract_factory = self.w3.eth.contract(**contract_kwargs)
+        return contract_factory
+
+    def get_contract_instance(
+        self, name: ContractName, address: Address, w3: Web3 = None
+    ) -> Contract:
+        """
+        Return a Contract object representing the contract type at the provided address.
+        """
+        validate_contract_name(name)
+
+        try:
+            self.package_data["contract_types"][name]["abi"]
+        except KeyError:
+            raise InsufficientAssetsError(
+                "Package does not have the ABI required to generate a contract instance "
+                "for contract: {0} at address: {1}.".format(name, address)
+            )
+        contract_kwargs = generate_contract_factory_kwargs(
+            self.package_data["contract_types"][name]
+        )
+        contract_instance = self.w3.eth.contract(address=address, **contract_kwargs)
+        return contract_instance
 
     #
     # Build Dependencies
     #
 
-    # should we be doing any caching on this or get_deployments?
-    def get_build_dependencies(self) -> "Dependencies":
+    @cached_property
+    def build_dependencies(self) -> "Dependencies":
         """
         Return `Dependencies` instance containing the
         build dependencies available on this Package.
@@ -192,7 +188,7 @@ class Package(object):
         for name, uri in dependencies.items():
             try:
                 validate_build_dependency(name, uri)
-                dependency_package = Package.from_ipfs(uri)
+                dependency_package = Package.from_ipfs(uri, self.w3)
             except PyEthPMError as e:
                 raise FailureToFetchIPFSAssetsError(
                     "Failed to retrieve build dependency: {0} from URI: {1}.\n"
@@ -207,25 +203,22 @@ class Package(object):
     # Deployments
     #
 
-    def get_deployments(self, w3: Web3 = None) -> "Deployments":
+    @cached_property
+    def deployments(self) -> "Deployments":
         """
         API to retrieve instance of deployed contract dependency.
         """
-        if w3 is None:
-            w3 = self.w3
-
-        validate_w3_instance(w3)
         validate_deployments_are_present(self.package_data)
 
         all_blockchain_uris = self.package_data["deployments"].keys()
-        matching_uri = validate_single_matching_uri(all_blockchain_uris, w3)
+        matching_uri = validate_single_matching_uri(all_blockchain_uris, self.w3)
 
         deployments = self.package_data["deployments"][matching_uri]
         all_contract_factories = {
             deployment_data["contract_type"]: self.get_contract_factory(
-                deployment_data["contract_type"], w3
+                deployment_data["contract_type"]
             )
             for deployment_data in deployments.values()
         }
 
-        return Deployments(deployments, all_contract_factories, w3)
+        return Deployments(deployments, all_contract_factories, self.w3)

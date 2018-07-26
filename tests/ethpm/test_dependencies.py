@@ -7,15 +7,15 @@ from ethpm.validation import validate_build_dependency
 
 
 @pytest.fixture
-def dependencies(dummy_ipfs_backend, piper_coin_manifest):
+def dependencies(dummy_ipfs_backend, piper_coin_manifest, w3):
     deps = piper_coin_manifest["build_dependencies"]
-    dep_pkgs = {dep: Package.from_ipfs(uri) for dep, uri in deps.items()}
+    dep_pkgs = {dep: Package.from_ipfs(uri, w3) for dep, uri in deps.items()}
     return Dependencies(dep_pkgs)
 
 
 @pytest.fixture
-def safe_math_lib_package(safe_math_manifest):
-    return Package(safe_math_manifest)
+def safe_math_lib_package(safe_math_manifest, w3):
+    return Package(safe_math_manifest, w3)
 
 
 def test_dependencies_implements_getitem(dependencies, safe_math_lib_package):
