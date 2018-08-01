@@ -4,10 +4,19 @@ from typing import Any, Dict, Generator, List, Tuple  # ignore: F401
 
 from eth_utils import to_dict
 
-from ethpm.backends.ipfs import get_ipfs_backend
+from ethpm.backends.ipfs import BaseIPFSBackend, get_ipfs_backend
 from ethpm.utils.filesystem import load_json_from_file_path
 from ethpm.utils.ipfs import create_ipfs_uri
 from ethpm.validation import validate_manifest_version, validate_package_name
+
+MANIFEST_FIELDS = [
+    "manifest_version",
+    "version",
+    "package_name",
+    "meta",
+    "sources",
+    "contract_types",
+]
 
 
 class Manifest:
@@ -62,39 +71,9 @@ class Manifest:
             )
         self.solc_path = solc_path
         solc = load_json_from_file_path(self.solc_path)
-        for contract in solc["contracts"]:
-            contract_path, contract_name = contract.split(":")
-            source_data = self._create_source(contract_path)
-            setattr(self, "sources", {**self.sources, **source_data})
-            if contract_types is not None and contract_name in contract_types:
-                contract_type_data = self._create_contract_type(
-                    contract_name, contract, solc
-                )
-                setattr(
-                    self,
-                    "contract_types",
-                    {**self.contract_types, **contract_type_data},
-                )
-
-    @to_dict
-    def _create_contract_type(
-        self, contract_name: str, contract: str, solc: Dict[str, Any]
-    ) -> Generator[Tuple[str, Any], None, None]:
-        yield contract_name, self._generate_contract_type_dict(contract, solc)
-
-    @to_dict
-    def _generate_contract_type_dict(self, contract: str, solc: Dict[str, Any]) -> Generator[Tuple[str, Any], None, None]:
-        yield "abi", json.loads(solc["contracts"][contract]["abi"])
-        yield "natspec", json.loads(solc["contracts"][contract]["devdoc"])
-
-    @to_dict
-    def _create_source(self, contract_path: str) -> Generator[Tuple[str, Any], None, None]:
-        [ipfs_return_data] = self.ipfs_backend.pin_assets(
-            Path(self.solc_path).parent / contract_path
-        )
-        ipfs_hash = ipfs_return_data["Hash"]
-        ipfs_uri = create_ipfs_uri(ipfs_hash)
-        yield "./{0}".format(contract_path), ipfs_uri
+        self.sources = generate_all_sources(solc, solc_path, self.ipfs_backend)
+        if contract_types:
+            self.contract_types = generate_all_contract_types(solc, contract_types)
 
     def add_meta(self, **kwargs: Any) -> None:
         """
@@ -116,14 +95,14 @@ class Manifest:
         """
         Returns a string of a pretty printed version of this manifest.
         """
-        attr_dict = self._generate_attr_dict()
+        attr_dict = self._generate_manifest_attributes()
         return json.dumps(attr_dict, indent=4, sort_keys=True)
 
     def minified(self) -> str:
         """
         Returns a string of a minified version of this manifest.
         """
-        attr_dict = self._generate_attr_dict()
+        attr_dict = self._generate_manifest_attributes()
         return json.dumps(attr_dict, separators=(",", ":"), sort_keys=True)
 
     # TODO implement `write_pretty_to_disk` w/o indenting ABI
@@ -138,8 +117,55 @@ class Manifest:
         return path
 
     @to_dict
-    def _generate_attr_dict(self) -> Generator[Tuple[str, Any], Any, None]:
+    def _generate_manifest_attributes(self) -> Generator[Tuple[str, Any], Any, None]:
         for key, value in self.__dict__.items():
-            if key is not "solc_path" and key is not "ipfs_backend":
-                if value:
-                    yield key, value
+            if key in MANIFEST_FIELDS and value:
+                yield key, value
+
+
+@to_dict
+def generate_all_contract_types(
+    solc: Dict[str, Any], contract_types: List[str]
+) -> Generator[Tuple[str, Any], None, None]:
+    """
+    Return a dict representing all of a Manifest's "contract_types" data.
+    """
+    for contract in solc["contracts"]:
+        _, contract_name = contract.split(":")
+        if contract_name in contract_types:
+            yield contract_name, generate_single_contract_type(contract, solc)
+
+
+@to_dict
+def generate_single_contract_type(
+    contract: str, solc: Dict[str, Any]
+) -> Generator[Tuple[str, Any], None, None]:
+    """
+    Return a dict represnting a single contract type.
+    """
+    yield "abi", json.loads(solc["contracts"][contract]["abi"])
+    yield "natspec", json.loads(solc["contracts"][contract]["devdoc"])
+
+
+@to_dict
+def generate_all_sources(
+    solc: Dict[str, Any], solc_path: str, ipfs_backend: BaseIPFSBackend
+) -> Generator[Tuple[str, str], None, None]:
+    """
+    Return a dict containing all of a Manifest's "sources" data.
+    """
+    for contract in solc["contracts"]:
+        contract_path, _ = contract.split(":")
+        source_data = pin_single_source(contract_path, solc_path, ipfs_backend)
+        yield "./{0}".format(contract_path), source_data
+
+
+def pin_single_source(
+    contract_path: str, solc_path: str, ipfs_backend: BaseIPFSBackend
+) -> str:
+    """
+    Return an IPFS URI, after pinning a source file to IPFS via `ipfs_backend`.
+    """
+    [ipfs_return_data] = ipfs_backend.pin_assets(Path(solc_path).parent / contract_path)
+    ipfs_hash = ipfs_return_data["Hash"]
+    return create_ipfs_uri(ipfs_hash)

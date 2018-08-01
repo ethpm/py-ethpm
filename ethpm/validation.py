@@ -47,6 +47,16 @@ def validate_package_name(pkg_name: str) -> None:
         raise ValidationError("{0} is not a valid package name.".format(pkg_name))
 
 
+def validate_manifest_version(version: str) -> None:
+    """
+    Raise an exception if the version is not 2.
+    """
+    if not int(version) == 2:
+        raise ValidationError(
+            "Py-EthPM does not support the provided version: {0}".format(version)
+        )
+
+
 def validate_ipfs_uri(uri: str) -> None:
     """
     Raise an exception if the provided URI is not a valid IPFS URI.

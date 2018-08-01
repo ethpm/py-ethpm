@@ -1,5 +1,11 @@
 import json
-from typing import IO, Dict
+from pathlib import Path
+from typing import IO, Any, Dict
+
+
+def load_json_from_file_path(path: Path) -> Dict[Any, Any]:
+    with open(str(path)) as f:
+        return json.load(f)
 
 
 def load_package_data_from_file(file_obj: IO[str]) -> Dict[str, str]:
