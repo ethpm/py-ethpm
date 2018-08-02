@@ -14,7 +14,7 @@ from ethpm.constants import (
     INFURA_GATEWAY_PREFIX,
     IPFS_GATEWAY_PREFIX,
 )
-from ethpm.utils.ipfs import extract_ipfs_path_from_uri, is_ipfs_uri
+from ethpm.utils.ipfs import dummy_ipfs_pin, extract_ipfs_path_from_uri, is_ipfs_uri
 from ethpm.utils.module_loading import import_string
 
 
@@ -42,7 +42,6 @@ class BaseIPFSBackend(BaseURIBackend):
 class IPFSOverHTTPBackend(BaseIPFSBackend):
     """
     Base class for all IPFS URIs served over an http connection.
-
     All subclasses must implement: base_uri
     """
 
@@ -129,10 +128,18 @@ class DummyIPFSBackend(BaseIPFSBackend):
         return uri in MANIFEST_URIS
 
     def pin_assets(self, file_or_dir_path: Path) -> List[Dict[str, str]]:
-        # TODO Steal generate_file_hash from populus#feat/v2
-        raise NotImplementedError(
-            "pin_assets has not been implemented yet for DummyIPFSBackend"
-        )
+        """
+        Return a dict containing the IPFS hash, file name, and size of a file.
+        """
+        if file_or_dir_path.is_dir():
+            asset_data = [dummy_ipfs_pin(path) for path in file_or_dir_path.glob("*")]
+        elif file_or_dir_path.is_file():
+            asset_data = [dummy_ipfs_pin(file_or_dir_path)]
+        else:
+            raise FileNotFoundError(
+                "{0} is not a valid file or directory path.".format(file_or_dir_path)
+            )
+        return asset_data
 
 
 class LocalIPFSBackend(BaseIPFSBackend):
