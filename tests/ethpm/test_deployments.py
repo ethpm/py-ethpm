@@ -1,4 +1,6 @@
+from eth_utils import to_bytes
 import pytest
+from web3.eth import Contract
 
 from ethpm import Package
 from ethpm.deployments import Deployments
@@ -116,8 +118,15 @@ def test_get_contract_instance_without_reference_in_contract_factories_raises(
         invalid_deployment.get_contract_instance("SafeMathLib")
 
 
-def test_get_contract_instance_correctly_configured_raises_NotImplementedError(
-    deployment
-):
-    with pytest.raises(NotImplementedError):
-        deployment.get_contract_instance("SafeMathLib")
+def test_deployments_get_contract_instance(manifest_with_matching_deployment, w3):
+    manifest, address = manifest_with_matching_deployment
+    safe_math_package = Package(manifest, w3)
+    deps = safe_math_package.deployments
+    safe_math_instance = deps.get_contract_instance("SafeMathLib")
+    assert isinstance(safe_math_instance, Contract)
+    assert safe_math_instance.address == to_bytes(hexstr=address)
+    assert safe_math_instance.bytecode == to_bytes(
+        hexstr=safe_math_package.package_data["contract_types"]["SafeMathLib"][
+            "deployment_bytecode"
+        ]["bytecode"]
+    )

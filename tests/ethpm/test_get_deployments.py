@@ -7,7 +7,8 @@ from ethpm.exceptions import ValidationError
 
 @pytest.fixture
 def matching_package(manifest_with_matching_deployment, w3):
-    return Package(manifest_with_matching_deployment, w3)
+    manifest, _ = manifest_with_matching_deployment
+    return Package(manifest, w3)
 
 
 def test_get_deployments_with_empty_deployment_raise_exception(

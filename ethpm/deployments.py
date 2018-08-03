@@ -1,5 +1,6 @@
 from typing import Dict, ItemsView, List
 
+from eth_utils import to_bytes
 from web3.eth import Contract
 from web3.main import Web3
 
@@ -47,9 +48,14 @@ class Deployments:
         after validating contract name.
         """
         self._validate_name_and_references(contract_name)
-        raise NotImplementedError(
-            "All checks passed, but get_contract_instance API not complete."
-        )
+        factory = self.contract_factories[contract_name]
+        address = to_bytes(hexstr=self.deployment_data[contract_name]["address"])
+        contract_kwargs = {
+            "abi": factory.abi,
+            "bytecode": factory.bytecode,
+            "bytecode_runtime": factory.bytecode_runtime,
+        }
+        return self.w3.eth.contract(address=address, **contract_kwargs)
 
     def _validate_name_and_references(self, name: str) -> None:
         validate_contract_name(name)
