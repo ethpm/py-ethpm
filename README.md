@@ -8,7 +8,7 @@ A Python implementation of the [Ethereum Package Manager Specification](http://e
 
 Read more in the documentation on [ReadTheDocs](https://py-ethpm.readthedocs.io/en/latest/).
 
-WARNING
+WARNING!
 
 `Py-EthPM` is currently in public alpha. *Keep in mind*:
 - It is expected to have bugs and is not meant to be used in production

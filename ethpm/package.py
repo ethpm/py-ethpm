@@ -1,7 +1,7 @@
 import json
 from typing import Any, Dict
 
-from eth_typing import Address
+from eth_typing import Address, ContractName
 from eth_utils import to_text
 from web3 import Web3
 from web3.eth import Contract
@@ -15,7 +15,6 @@ from ethpm.exceptions import (
     PyEthPMError,
     UriNotSupportedError,
 )
-from ethpm.typing import ContractName
 from ethpm.utils.cache import cached_property
 from ethpm.utils.contract import (
     generate_contract_factory_kwargs,
