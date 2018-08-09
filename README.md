@@ -118,3 +118,14 @@ If you are in a beta version, `make release bump=stage` will switch to a stable.
 
 To issue an unstable version when the current version is stable, specify the
 new version explicitly, like `make release bump="--new-version 4.0.0-alpha.1 devnum"`
+
+### EthPM-Spec
+
+-  `EthPM-Spec <https://github.com/ethpm/ethpm-spec>`__ is referenced
+   inside this repo as a submodule.*\*
+-  If you clone this repository, run this command to fetch
+   the contents of the submodule
+
+```
+   git submodule init
+```
