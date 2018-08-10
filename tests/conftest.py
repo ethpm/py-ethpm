@@ -20,6 +20,10 @@ PACKAGE_NAMES = [
 ]
 
 
+def pytest_addoption(parser):
+    parser.addoption("--integration", action="store_true", default=False)
+
+
 def fetch_manifest(name):
     with open(str(V2_PACKAGES_DIR / name / "1.0.0.json")) as file_obj:
         return json.load(file_obj)
