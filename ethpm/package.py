@@ -2,7 +2,7 @@ import json
 from typing import Any, Dict
 
 from eth_typing import Address, ContractName
-from eth_utils import to_text
+from eth_utils import to_bytes, to_text
 from web3 import Web3
 from web3.eth import Contract
 
@@ -38,8 +38,8 @@ from ethpm.validation import validate_build_dependency, validate_registry_uri
 class Package(object):
     def __init__(self, manifest: Dict[str, Any], w3: Web3) -> None:
         """
-        A package must be constructed with a dict representing a valid manifest
-        and a valid w3 instance.
+        A package should be created using one of the available
+        classmethods and a valid w3 instance.
         """
         if not isinstance(manifest, dict):
             raise TypeError(
@@ -133,7 +133,7 @@ class Package(object):
 
     def get_contract_factory(self, name: ContractName) -> Contract:
         """
-        API to generate a contract factory class.
+        Return a contract factory for a given contract type.
         """
         validate_contract_name(name)
         try:
@@ -149,14 +149,11 @@ class Package(object):
         contract_factory = self.w3.eth.contract(**contract_kwargs)
         return contract_factory
 
-    def get_contract_instance(
-        self, name: ContractName, address: Address, w3: Web3 = None
-    ) -> Contract:
+    def get_contract_instance(self, name: ContractName, address: Address) -> Contract:
         """
         Return a Contract object representing the contract type at the provided address.
         """
         validate_contract_name(name)
-
         try:
             self.package_data["contract_types"][name]["abi"]
         except KeyError:
@@ -167,7 +164,10 @@ class Package(object):
         contract_kwargs = generate_contract_factory_kwargs(
             self.package_data["contract_types"][name]
         )
-        contract_instance = self.w3.eth.contract(address=address, **contract_kwargs)
+        binary_address = to_bytes(hexstr=address)
+        contract_instance = self.w3.eth.contract(
+            address=binary_address, **contract_kwargs
+        )
         return contract_instance
 
     #
