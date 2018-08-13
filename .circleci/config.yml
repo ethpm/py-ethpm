@@ -13,6 +13,17 @@ common: &common
         name: install submodules
         command: git submodule update --init
     - run:
+        name: install ipfs
+        command:
+          wget https://dist.ipfs.io/go-ipfs/v0.4.11/go-ipfs_v0.4.11_linux-amd64.tar.gz &&
+          tar xvfz go-ipfs_v0.4.11_linux-amd64.tar.gz &&
+          sudo cp go-ipfs/ipfs /usr/local/bin && 
+          ipfs init
+    - run:
+        name: start ipfs node in background
+        command: ipfs daemon
+        background: true
+    - run:
         name: merge pull request base
         command: |
           if [[ -n "${CIRCLE_PR_NUMBER}" ]]; then
@@ -44,7 +55,7 @@ common: &common
           fi
     - run:
         name: run tox
-        command: ~/.local/bin/tox
+        command: ~/.local/bin/tox -- --integration
     - save_cache:
         paths:
           - .tox

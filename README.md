@@ -93,6 +93,8 @@ If for some reason it is not working, add `--recreate` params.
 pytest tests/ethpm/utils/test_uri_utils.py
 ```
 
+IPFS integration tests (`tests/ethpm/integration/`) require a direct connection to an IPFS node and are skipped by default (except in CircleCI, where they are run). To include these tests in your test run, first start an IPFS node and then add `--integration` to the pytest command.
+
 ### Release setup
 
 For Debian-like systems:
