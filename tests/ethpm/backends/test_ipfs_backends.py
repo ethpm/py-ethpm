@@ -78,9 +78,9 @@ def test_local_ipfs_backend(monkeypatch, fake_client):
         ("ercxxx://packages.eth/owned?version=1.0.0", False),
     ),
 )
-def test_base_ipfs_gateway_backend_correctly_handle_uri_schemes(uri, expected):
+def test_base_ipfs_gateway_backend_correctly_handles_uri_schemes(uri, expected):
     backend = IPFSGatewayBackend()
-    assert backend.can_handle_uri(uri) is expected
+    assert backend.can_resolve_uri(uri) is expected
 
 
 def test_dummy_ipfs_backend():

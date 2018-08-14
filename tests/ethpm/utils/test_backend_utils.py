@@ -3,7 +3,11 @@ import pytest
 from ethpm.backends.ipfs import InfuraIPFSBackend, IPFSGatewayBackend, LocalIPFSBackend
 from ethpm.backends.registry import RegistryURIBackend
 from ethpm.exceptions import CannotHandleURI
-from ethpm.utils.backend import get_backends_for_uri
+from ethpm.utils.backend import (
+    get_resolvable_backends_for_uri,
+    get_translatable_backends_for_uri,
+    resolve_uri_contents,
+)
 
 
 @pytest.mark.parametrize(
@@ -11,13 +15,27 @@ from ethpm.utils.backend import get_backends_for_uri
     (
         (
             "ipfs://QmTKB75Y73zhNbD3Y73xeXGjYrZHmaXXNxoZqGCagu7r8u/",
-            [IPFSGatewayBackend, InfuraIPFSBackend, LocalIPFSBackend],
+            (IPFSGatewayBackend, InfuraIPFSBackend, LocalIPFSBackend),
         ),
-        ("ercXXX://packages.zeppelinos.eth/erc20?version=1.0.0", [RegistryURIBackend]),
+        ("ercXXX://packages.zeppelinos.eth/erc20?version=1.0.0", ()),
     ),
 )
-def test_get_backends_for_uri(dummy_ipfs_backend, uri, backends):
-    good_backends = get_backends_for_uri(uri)
+def test_get_resolvable_backends_for_supported_uris(dummy_ipfs_backend, uri, backends):
+    good_backends = get_resolvable_backends_for_uri(uri)
+    assert good_backends == backends
+
+
+@pytest.mark.parametrize(
+    "uri,backends",
+    (
+        ("ercXXX://packages.zeppelinos.eth/erc20?version=1.0.0", (RegistryURIBackend,)),
+        ("ipfs://QmTKB75Y73zhNbD3Y73xeXGjYrZHmaXXNxoZqGCagu7r8u/", ()),
+    ),
+)
+def test_get_translatable_backends_for_supported_uris(
+    dummy_ipfs_backend, uri, backends
+):
+    good_backends = get_translatable_backends_for_uri(uri)
     assert good_backends == backends
 
 
@@ -38,6 +56,6 @@ def test_get_backends_for_uri(dummy_ipfs_backend, uri, backends):
         "https://github.com/ethpm/ethpm-spec/examples/owned/1.0.0.json#content_hash",
     ),
 )
-def test_get_backends_for_uri_raises_exception_for_unsupported_schemes(uri):
+def test_resolve_uri_contents_raises_exception_for_unsupported_schemes(uri):
     with pytest.raises(CannotHandleURI):
-        get_backends_for_uri(uri)
+        resolve_uri_contents(uri)

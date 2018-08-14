@@ -6,7 +6,6 @@ from typing import Dict, List, Type
 from eth_utils import to_bytes
 import ipfsapi
 import requests
-from web3 import Web3
 
 from ethpm import V2_PACKAGES_DIR
 from ethpm.backends.base import BaseURIBackend
@@ -15,8 +14,8 @@ from ethpm.constants import (
     INFURA_GATEWAY_PREFIX,
     IPFS_GATEWAY_PREFIX,
 )
+from ethpm.exceptions import CannotHandleURI
 from ethpm.utils.ipfs import dummy_ipfs_pin, extract_ipfs_path_from_uri, is_ipfs_uri
-from ethpm.exceptions import UriNotSupportedError
 from ethpm.utils.module_loading import import_string
 
 
@@ -25,12 +24,19 @@ class BaseIPFSBackend(BaseURIBackend):
     Base class for all URIs with an IPFS scheme.
     """
 
-    def can_handle_uri(self, uri: str) -> bool:
+    def can_resolve_uri(self, uri: str) -> bool:
         """
         Return a bool indicating whether or not this backend
-        is capable of serving the content at the URI.
+        is capable of serving the content located at the URI.
         """
         return is_ipfs_uri(uri)
+
+    def can_translate_uri(self, uri: str) -> bool:
+        """
+        Return False. IPFS URIs cannot be used to point
+        to another content-addressed URI.
+        """
+        return False
 
     @abstractmethod
     def pin_assets(self, file_or_dir_path: Path) -> List[Dict[str, str]]:
@@ -48,7 +54,7 @@ class IPFSOverHTTPBackend(BaseIPFSBackend):
     """
 
     # TODO change to use ipfsapi.Client
-    def fetch_uri_contents(self, uri: str, w3: Web3 = None) -> bytes:
+    def fetch_uri_contents(self, uri: str) -> bytes:
         ipfs_hash = extract_ipfs_path_from_uri(uri)
         gateway_uri = self.base_uri + ipfs_hash
         response = requests.get(gateway_uri)
@@ -121,13 +127,13 @@ class DummyIPFSBackend(BaseIPFSBackend):
     - Path to manifest/contract in V2_PACKAGES_DIR -> defined manifest/contract
     """
 
-    def fetch_uri_contents(self, ipfs_uri: str, w3: Web3 = None) -> bytes:
+    def fetch_uri_contents(self, ipfs_uri: str) -> bytes:
         pkg_name = MANIFEST_URIS[ipfs_uri]
         with open(str(V2_PACKAGES_DIR / pkg_name / "1.0.0.json")) as file_obj:
             contents = file_obj.read()
         return to_bytes(text=contents)
 
-    def can_handle_uri(self, uri: str) -> bool:
+    def can_resolve_uri(self, uri: str) -> bool:
         return uri in MANIFEST_URIS
 
     def pin_assets(self, file_or_dir_path: Path) -> List[Dict[str, str]]:
@@ -154,12 +160,12 @@ class LocalIPFSBackend(BaseIPFSBackend):
     def __init__(self) -> None:
         self.client = ipfsapi.Client("localhost", "5001")
 
-    def fetch_uri_contents(self, ipfs_uri: str, w3: Web3 = None) -> bytes:
+    def fetch_uri_contents(self, ipfs_uri: str) -> bytes:
         ipfs_hash = extract_ipfs_path_from_uri(ipfs_uri)
         try:
             contents = self.client.cat(ipfs_hash)
         except ipfsapi.exceptions.ConnectionError:
-            raise UriNotSupportedError(
+            raise CannotHandleURI(
                 "Cannot connect to local IPFS node to serve URI: {0}".format(ipfs_uri)
             )
         return contents

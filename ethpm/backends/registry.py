@@ -1,39 +1,42 @@
-from web3 import Web3
+import os
+from urllib import parse
+
+from eth_utils import to_bytes
+from web3.auto.infura import w3
 
 from ethpm.backends.base import BaseURIBackend
-from ethpm.backends.ipfs import get_ipfs_backend
-from ethpm.exceptions import UriNotSupportedError
-from ethpm.utils.registry import lookup_manifest_uri_located_at_registry_uri
+from ethpm.constants import INFURA_API_KEY
+from ethpm.utils.registry import fetch_standard_registry_abi
 from ethpm.validation import is_valid_registry_uri
+
+# TODO: Update registry ABI once ERC is finalized.
+REGISTRY_ABI = fetch_standard_registry_abi()
 
 
 class RegistryURIBackend(BaseURIBackend):
     """
     Backend class to handle Registry URIs.
 
-    A Registry URI must point towards a valid IPFS URI.
-
-    `RegistryURIBackend` uses IPFS backend set via env variable
-    (defaults to InfuraIPFSBackend).
+    A Registry URI must resolve to a resolvable content-addressed URI.
     """
 
-    def can_handle_uri(self, uri: str) -> bool:
+    def __init__(self) -> None:
+        os.environ["INFURA_API_KEY"] = INFURA_API_KEY
+        self.w3 = w3
+
+    def can_translate_uri(self, uri: str) -> bool:
         return is_valid_registry_uri(uri)
 
-    def fetch_uri_contents(self, uri: str, w3: Web3) -> bytes:
+    def can_resolve_uri(self, uri: str) -> bool:
+        return False
+
+    def fetch_uri_contents(self, uri: str) -> bytes:
         """
-        Return the contents stored at `uri` assuming `uri`
-        is a valid Registry URI pointing towards an IPFS URI.
-        Requires a valid web3 instance connected to the chain on which
-        the registry lives.
+        Return content-addressed URI stored at registry URI.
         """
-        manifest_uri = lookup_manifest_uri_located_at_registry_uri(uri, w3)
-        ipfs_backend = get_ipfs_backend()
-        if ipfs_backend.can_handle_uri(manifest_uri):
-            manifest_data = ipfs_backend.fetch_uri_contents(manifest_uri, w3)
-            return manifest_data
-        raise UriNotSupportedError(
-            "URI: {0} found at {1} cannot be served with the current IPFS backend: {2}".format(
-                manifest_uri, uri, ipfs_backend
-            )
-        )
+        parsed_uri = parse.urlparse(uri)
+        authority = parsed_uri.netloc
+        pkg_name = to_bytes(text=parsed_uri.path.strip("/"))
+        registry = self.w3.eth.contract(address=authority, abi=REGISTRY_ABI)
+        manifest_uri = registry.functions.lookupPackage(pkg_name).call()
+        return manifest_uri

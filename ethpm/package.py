@@ -9,13 +9,11 @@ from web3.eth import Contract
 from ethpm.dependencies import Dependencies
 from ethpm.deployments import Deployments
 from ethpm.exceptions import (
-    CannotHandleURI,
     FailureToFetchIPFSAssetsError,
     InsufficientAssetsError,
     PyEthPMError,
-    UriNotSupportedError,
 )
-from ethpm.utils.backend import get_backends_for_uri
+from ethpm.utils.backend import resolve_uri_contents
 from ethpm.utils.cache import cached_property
 from ethpm.utils.contract import (
     generate_contract_factory_kwargs,
@@ -104,20 +102,9 @@ class Package(object):
             - HTTP          `https://raw.githubusercontent.com/repo/path.json#hash`
             - Registry      `ercXXX://registry.eth/greeter?version=1.0.0`
         """
-        good_backends = get_backends_for_uri(uri)
-        for backend in good_backends:
-            try:
-                contents = backend().fetch_uri_contents(uri, w3)
-            except UriNotSupportedError:
-                continue
-            package_data = json.loads(to_text(contents))
-            return cls(package_data, w3)
-        else:
-            raise CannotHandleURI(
-                "URI: {0} cannot be served by any of the available backends.".format(
-                    uri
-                )
-            )
+        contents = resolve_uri_contents(uri)
+        package_data = json.loads(to_text(contents))
+        return cls(package_data, w3)
 
     def get_contract_factory(self, name: ContractName) -> Contract:
         """

@@ -1,25 +1,32 @@
 from abc import ABC, abstractmethod
 
-from web3 import Web3
-
 
 class BaseURIBackend(ABC):
     """
     Generic backend that all URI backends are subclassed from.
 
     All subclasses must implement:
-    can_handle_uri, fetch_uri_contents
+    can_resolve_uri, can_translate_uri, fetch_uri_contents
     """
 
     @abstractmethod
-    def can_handle_uri(self, uri: str) -> bool:
+    def can_resolve_uri(self, uri: str) -> bool:
         """
-        Return a bool indicating whether this backend class can handle the given URI.
+        Return a bool indicating whether this backend class can
+        resolve the given URI to it's contents.
         """
         pass
 
     @abstractmethod
-    def fetch_uri_contents(self, uri: str, w3: Web3) -> bytes:
+    def can_translate_uri(self, uri: str) -> bool:
+        """
+        Return a bool indicating whether this backend class can
+        translate the given URI to a corresponding content-addressed URI.
+        """
+        pass
+
+    @abstractmethod
+    def fetch_uri_contents(self, uri: str) -> bytes:
         """
         Fetch the contents stored at a URI.
         """
