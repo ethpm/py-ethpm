@@ -22,7 +22,6 @@ from ethpm.utils.contract import (
     validate_minimal_contract_factory_data,
     validate_w3_instance,
 )
-from ethpm.utils.deployment_validation import validate_single_matching_uri
 from ethpm.utils.filesystem import load_package_data_from_file
 from ethpm.utils.manifest_validation import (
     validate_build_dependencies_are_present,
@@ -30,7 +29,11 @@ from ethpm.utils.manifest_validation import (
     validate_manifest_against_schema,
     validate_manifest_deployments,
 )
-from ethpm.validation import validate_address, validate_build_dependency
+from ethpm.validation import (
+    validate_address,
+    validate_build_dependency,
+    validate_single_matching_uri,
+)
 
 
 class Package(object):
@@ -57,6 +60,8 @@ class Package(object):
         """
         Set the default Web3 instance.
         """
+        if "deployments" in self.__dict__:
+            del self.deployments
         validate_w3_instance(w3)
         self.w3 = w3
         self.w3.eth.defaultContractFactory = LinkableContract
@@ -184,7 +189,7 @@ class Package(object):
     @cached_property
     def deployments(self) -> "Deployments":
         """
-        API to retrieve instance of deployed contract dependency.
+        API to retrieve package deployments available on the current w3-connected chain.
         """
         validate_deployments_are_present(self.package_data)
 

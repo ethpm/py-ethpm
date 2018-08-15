@@ -1,11 +1,13 @@
 import re
-from typing import Any
+from typing import Any, List
 from urllib import parse
 
 from eth_utils import is_address, is_canonical_address, is_checksum_address, is_text
+from web3 import Web3
 
 from ethpm.constants import PACKAGE_NAME_REGEX, REGISTRY_URI_SCHEME
-from ethpm.exceptions import ValidationError
+from ethpm.exceptions import UriNotSupportedError, ValidationError
+from ethpm.utils.chains import check_if_chain_matches_chain_uri
 from ethpm.utils.ipfs import is_ipfs_uri
 from ethpm.utils.registry import is_ens_domain
 
@@ -145,3 +147,23 @@ def validate_registry_uri_version(query: str) -> None:
         raise ValidationError(
             "{0} is not a correctly formatted version param.".format(query)
         )
+
+
+def validate_single_matching_uri(all_blockchain_uris: List[str], w3: Web3) -> str:
+    """
+    Return a single block URI after validating that it is the *only* URI in
+    all_blockchain_uris that matches the w3 instance.
+    """
+    matching_uris = [
+        uri for uri in all_blockchain_uris if check_if_chain_matches_chain_uri(w3, uri)
+    ]
+
+    if not matching_uris:
+        raise ValidationError("Package has no matching URIs on chain.")
+    elif len(matching_uris) != 1:
+        raise ValidationError(
+            "Package has too many ({0}) matching URIs: {1}.".format(
+                len(matching_uris), matching_uris
+            )
+        )
+    return matching_uris[0]
