@@ -102,3 +102,22 @@ def test_get_uri_backend_with_env_variable(dummy_ipfs_backend, monkeypatch):
     )
     backend = get_ipfs_backend()
     assert isinstance(backend, LocalIPFSBackend)
+
+
+def test_pin_assets_to_dummy_backend(dummy_ipfs_backend):
+    # test file
+    backend = get_ipfs_backend()
+    hashes = backend.pin_assets(OWNED_MANIFEST_PATH)
+    asset_data = hashes[0]
+    assert asset_data["Name"] == "1.0.0.json"
+    assert asset_data["Hash"] == "QmbeVyFLSuEUxiXKwSsEjef6icpdTdA4kGG9BcrJXKNKUW"
+    assert asset_data["Size"] == "443"
+    # test directory
+    dir_data = backend.pin_assets(V2_PACKAGES_DIR / "standard-token" / "contracts")
+    dir_names = [result["Name"] for result in dir_data]
+    dir_hashes = [result["Hash"] for result in dir_data]
+    dir_sizes = [result["Size"] for result in dir_data]
+    assert len(dir_data) == 2
+    assert "StandardToken.sol" in dir_names
+    assert "QmRJHLmPVct2rbBpdGjP3xkXbF7romQigtmcs8TRfV1yC7" in dir_hashes
+    assert "2865" in dir_sizes
