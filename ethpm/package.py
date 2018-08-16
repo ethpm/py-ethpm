@@ -2,10 +2,11 @@ import json
 from typing import Any, Dict
 
 from eth_typing import Address, ContractName
-from eth_utils import to_bytes, to_text
+from eth_utils import to_canonical_address, to_text
 from web3 import Web3
 from web3.eth import Contract
 
+from ethpm.contract import LinkableContract
 from ethpm.dependencies import Dependencies
 from ethpm.deployments import Deployments
 from ethpm.exceptions import (
@@ -49,6 +50,7 @@ class Package(object):
         validate_w3_instance(w3)
 
         self.w3 = w3
+        self.w3.eth.defaultContractFactory = LinkableContract
         self.package_data = manifest
 
     def set_default_w3(self, w3: Web3) -> None:
@@ -57,6 +59,7 @@ class Package(object):
         """
         validate_w3_instance(w3)
         self.w3 = w3
+        self.w3.eth.defaultContractFactory = LinkableContract
 
     def __repr__(self) -> str:
         name = self.name
@@ -139,9 +142,9 @@ class Package(object):
         contract_kwargs = generate_contract_factory_kwargs(
             self.package_data["contract_types"][name]
         )
-        binary_address = to_bytes(hexstr=address)
+        canonical_address = to_canonical_address(address)
         contract_instance = self.w3.eth.contract(
-            address=binary_address, **contract_kwargs
+            address=canonical_address, **contract_kwargs
         )
         return contract_instance
 
