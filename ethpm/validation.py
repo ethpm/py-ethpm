@@ -6,7 +6,7 @@ from eth_utils import is_address, is_canonical_address, is_checksum_address, is_
 from web3 import Web3
 
 from ethpm.constants import PACKAGE_NAME_REGEX, REGISTRY_URI_SCHEME
-from ethpm.exceptions import UriNotSupportedError, ValidationError
+from ethpm.exceptions import ValidationError
 from ethpm.utils.chains import check_if_chain_matches_chain_uri
 from ethpm.utils.ipfs import is_ipfs_uri
 from ethpm.utils.registry import is_ens_domain

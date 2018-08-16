@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from typing import Dict, List, Type
 
-from eth_utils import to_bytes
+from eth_utils import import_string, to_bytes
 import ipfsapi
 import requests
 
@@ -16,7 +16,6 @@ from ethpm.constants import (
 )
 from ethpm.exceptions import CannotHandleURI
 from ethpm.utils.ipfs import dummy_ipfs_pin, extract_ipfs_path_from_uri, is_ipfs_uri
-from ethpm.utils.module_loading import import_string
 
 
 class BaseIPFSBackend(BaseURIBackend):

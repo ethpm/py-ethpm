@@ -60,9 +60,12 @@ class Package(object):
         """
         Set the default Web3 instance.
         """
+        validate_w3_instance(w3)
+        # Mechanism to bust cached properties when switching chains.
         if "deployments" in self.__dict__:
             del self.deployments
-        validate_w3_instance(w3)
+        if "build_dependencies" in self.__dict__:
+            del self.build_dependencies
         self.w3 = w3
         self.w3.eth.defaultContractFactory = LinkableContract
 
@@ -161,8 +164,8 @@ class Package(object):
     @cached_property
     def build_dependencies(self) -> "Dependencies":
         """
-        Return `Dependencies` instance containing the
-        build dependencies available on this Package.
+        Return `Dependencies` instance containing the build dependencies available on this Package.
+        Cached property (self.build_dependencies) busted everytime self.set_default_w3() is called.
         """
         validate_build_dependencies_are_present(self.package_data)
 
@@ -190,6 +193,7 @@ class Package(object):
     def deployments(self) -> "Deployments":
         """
         API to retrieve package deployments available on the current w3-connected chain.
+        Cached property (self.deployments) gets busted everytime self.set_default_w3() is called.
         """
         validate_deployments_are_present(self.package_data)
 
