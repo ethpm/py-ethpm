@@ -21,7 +21,7 @@ class RegistryURIBackend(BaseURIBackend):
     """
 
     def __init__(self) -> None:
-        os.environ["INFURA_API_KEY"] = INFURA_API_KEY
+        os.environ.setdefault("INFUFA_API_KEY", INFURA_API_KEY)
         self.w3 = w3
 
     def can_translate_uri(self, uri: str) -> bool:

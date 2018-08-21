@@ -4,7 +4,7 @@ from urllib import parse
 from eth_utils import is_checksum_address
 
 from ethpm.constants import PACKAGE_NAME_REGEX, REGISTRY_URI_SCHEME
-from ethpm.exceptions import CannotHandleURI, ValidationError
+from ethpm.exceptions import ValidationError
 from ethpm.utils.ipfs import is_ipfs_uri
 from ethpm.utils.registry import is_ens_domain
 
@@ -42,7 +42,7 @@ def is_valid_registry_uri(uri: str) -> bool:
     """
     try:
         validate_registry_uri(uri)
-    except CannotHandleURI:
+    except ValidationError:
         return False
     else:
         return True
@@ -59,14 +59,11 @@ def validate_registry_uri(uri: str) -> None:
         parsed.path,
         parsed.query,
     )
-    try:
-        validate_registry_uri_scheme(scheme)
-        validate_registry_uri_authority(authority)
-        if query:
-            validate_registry_uri_version(query)
-        validate_package_name(pkg_name[1:])
-    except ValidationError:
-        raise CannotHandleURI("{0} is not a valid registry URI.".format(uri))
+    validate_registry_uri_scheme(scheme)
+    validate_registry_uri_authority(authority)
+    if query:
+        validate_registry_uri_version(query)
+    validate_package_name(pkg_name[1:])
 
 
 def validate_registry_uri_authority(auth: str) -> None:
