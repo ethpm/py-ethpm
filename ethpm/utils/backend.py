@@ -23,22 +23,22 @@ URI_BACKENDS = [
 
 
 def resolve_uri_contents(uri: str, fingerprint: bool = None) -> bytes:
-    is_resolvable = get_resolvable_backends_for_uri(uri)
-    is_translatable = get_translatable_backends_for_uri(uri)
-    if is_resolvable:
-        for backend in is_resolvable:
+    resolvable_backends = get_resolvable_backends_for_uri(uri)
+    if resolvable_backends:
+        for backend in resolvable_backends:
             try:
                 contents = backend().fetch_uri_contents(uri)
             except CannotHandleURI:
                 continue
             return contents
 
-    if is_translatable:
+    translatable_backends = get_translatable_backends_for_uri(uri)
+    if translatable_backends:
         if fingerprint:
             raise CannotHandleURI(
                 "Registry URIs must point to a resolvable content-addressed URI."
             )
-        for backend in is_translatable:
+        for backend in translatable_backends:
             package_id = backend().fetch_uri_contents(uri)
             return resolve_uri_contents(package_id, True)
 
