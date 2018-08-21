@@ -12,6 +12,7 @@ from ethpm.backends.ipfs import (
     IPFSGatewayBackend,
     LocalIPFSBackend,
     get_ipfs_backend,
+    get_ipfs_backend_class,
 )
 from ethpm.constants import INFURA_GATEWAY_PREFIX, IPFS_GATEWAY_PREFIX
 
@@ -77,9 +78,9 @@ def test_local_ipfs_backend(monkeypatch, fake_client):
         ("ercxxx://packages.eth/owned?version=1.0.0", False),
     ),
 )
-def test_base_ipfs_gateway_backend_correctly_handle_uri_schemes(uri, expected):
+def test_base_ipfs_gateway_backend_correctly_handles_uri_schemes(uri, expected):
     backend = IPFSGatewayBackend()
-    assert backend.can_handle_uri(uri) is expected
+    assert backend.can_resolve_uri(uri) is expected
 
 
 def test_dummy_ipfs_backend():
@@ -91,7 +92,12 @@ def test_dummy_ipfs_backend():
     assert manifest["package_name"] == "safe-math-lib"
 
 
-def test_get_ipfs_backend_default():
+def test_get_ipfs_backend_class_with_default_backend():
+    backend = get_ipfs_backend_class()
+    assert issubclass(backend, InfuraIPFSBackend)
+
+
+def test_get_ipfs_backend_with_default_backend():
     backend = get_ipfs_backend()
     assert isinstance(backend, InfuraIPFSBackend)
 

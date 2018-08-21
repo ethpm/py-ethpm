@@ -23,9 +23,9 @@ class ValidationError(PyEthPMError):
     pass
 
 
-class UriNotSupportedError(ValidationError):
+class CannotHandleURI(PyEthPMError):
     """
-    Raised when URI scheme is invalid or not supported by the current backend.
+    Raised when the given URI cannot be served by any of the available backends.
     """
 
     pass
