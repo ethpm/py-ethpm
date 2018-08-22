@@ -3,29 +3,9 @@ import pytest
 from web3.contract import Contract
 
 from ethpm import Package
-from ethpm.contract import LinkableContract, validate_empty_bytes
-from ethpm.exceptions import BytecodeLinkingError
-
-ESCROW_DEPLOYMENT_BYTECODE = {
-    "bytecode": "0x60806040526040516020806102a8833981016040525160008054600160a060020a0319908116331790915560018054600160a060020a0390931692909116919091179055610256806100526000396000f3006080604052600436106100565763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166366d003ac811461005b57806367e404ce1461008c57806369d89575146100a1575b600080fd5b34801561006757600080fd5b506100706100b8565b60408051600160a060020a039092168252519081900360200190f35b34801561009857600080fd5b506100706100c7565b3480156100ad57600080fd5b506100b66100d6565b005b600154600160a060020a031681565b600054600160a060020a031681565b600054600160a060020a031633141561019857600154604080517f9341231c000000000000000000000000000000000000000000000000000000008152600160a060020a039092166004830152303160248301525173000000000000000000000000000000000000000091639341231c916044808301926020929190829003018186803b15801561016657600080fd5b505af415801561017a573d6000803e3d6000fd5b505050506040513d602081101561019057600080fd5b506102289050565b600154600160a060020a031633141561005657600054604080517f9341231c000000000000000000000000000000000000000000000000000000008152600160a060020a039092166004830152303160248301525173000000000000000000000000000000000000000091639341231c916044808301926020929190829003018186803b15801561016657600080fd5b5600a165627a7a723058201766d3411ff91d047cf900369478c682a497a6e560cd1b2fe4d9f2d6fe13b4210029",  # noqa: E501
-    "link_references": [{"offsets": [383, 577], "length": 20, "name": "SafeSendLib"}],
-}
-
-
-@pytest.fixture
-def get_factory(get_manifest, w3):
-    def _get_factory(package, factory_name):
-        manifest = get_manifest(package)
-        # Special case to add deployment bytecode to escrow manifest
-        if package == "escrow":
-            manifest["contract_types"]["Escrow"][
-                "deployment_bytecode"
-            ] = ESCROW_DEPLOYMENT_BYTECODE
-        Pkg = Package(manifest, w3)
-        factory = Pkg.get_contract_factory(factory_name)
-        return factory
-
-    return _get_factory
+from ethpm.contract import LinkableContract, apply_all_link_references
+from ethpm.exceptions import BytecodeLinkingError, ValidationError
+from ethpm.validation import validate_empty_bytes
 
 
 @pytest.mark.parametrize(
@@ -34,12 +14,20 @@ def get_factory(get_manifest, w3):
         (
             "escrow",
             "Escrow",
-            {"SafeSendLib": "0x4F5B11c860b37b68DE6D14Fb7e7b5f18A9A1bdC0"},
+            {
+                "SafeSendLib": to_canonical_address(
+                    "0x4F5B11c860b37b68DE6D14Fb7e7b5f18A9A1bdC0"
+                )
+            },
         ),
         (
             "wallet",
             "Wallet",
-            {"SafeMathLib": "0xa66A05D6AB5c1c955F4D2c3FCC166AE6300b452B"},
+            {
+                "SafeMathLib": to_canonical_address(
+                    "0xa66A05D6AB5c1c955F4D2c3FCC166AE6300b452B"
+                )
+            },
         ),
     ),
 )
@@ -47,16 +35,21 @@ def test_linkable_contract_class_handles_link_refs(
     package, factory, attr_dict, get_factory, w3
 ):
     factory = get_factory(package, factory)
+    linked_factory = factory.link_bytecode(attr_dict)
     assert issubclass(LinkableContract, Contract)
     assert issubclass(factory, LinkableContract)
+    assert issubclass(linked_factory, LinkableContract)
     assert factory.has_linkable_bytecode() is True
     assert factory.is_bytecode_linked is False
-    factory.link_bytecode(attr_dict)
-    assert factory.is_bytecode_linked is True
+    assert linked_factory.is_bytecode_linked is True
+    # Can't link a factory that's already linked.
+    with pytest.raises(BytecodeLinkingError):
+        linked_factory.link_bytecode(attr_dict)
     offset = factory.deployment_link_refs[0]["offsets"][0]
-    # Ignore lint error b/c black conflict
     link_address = to_canonical_address(list(attr_dict.values())[0])
-    assert factory.bytecode[offset : offset + 20] == link_address  # noqa: E203
+    # Ignore lint error b/c black conflict
+    assert factory.bytecode[offset : offset + 20] == b"\00" * 20  # noqa: E203
+    assert linked_factory.bytecode[offset : offset + 20] == link_address  # noqa: E203
 
 
 def test_linkable_contract_class_handles_missing_link_refs(get_manifest, w3):
@@ -70,6 +63,92 @@ def test_linkable_contract_class_handles_missing_link_refs(get_manifest, w3):
             {"SafeMathLib": "0xa66A05D6AB5c1c955F4D2c3FCC166AE6300b452B"}
         )
     assert safe_math_lib.is_bytecode_linked is False
+
+
+SAFE_SEND_ADDRESS = "0x4F5B11c860b37b68DE6D14Fb7e7b5f18A9A1bdC0"
+SAFE_MATH_ADDRESS = "0xa66A05D6AB5c1c955F4D2c3FCC166AE6300b452B"
+SAFE_SEND_CANON = to_canonical_address(SAFE_SEND_ADDRESS)
+SAFE_MATH_CANON = to_canonical_address(SAFE_MATH_ADDRESS)
+
+
+@pytest.mark.parametrize(
+    "bytecode,link_refs,attr_dict,expected",
+    (
+        (
+            bytearray(60),
+            [{"length": 20, "name": "SafeSendLib", "offsets": [1]}],
+            {"SafeSendLib": SAFE_SEND_CANON},
+            b"\00" + SAFE_SEND_CANON + bytearray(39),
+        ),
+        (
+            bytearray(60),
+            [{"length": 20, "name": "SafeSendLib", "offsets": [1, 31]}],
+            {"SafeSendLib": SAFE_SEND_CANON},
+            b"\00" + SAFE_SEND_CANON + bytearray(10) + SAFE_SEND_CANON + bytearray(9),
+        ),
+        (
+            bytearray(80),
+            [
+                {"length": 20, "name": "SafeSendLib", "offsets": [1, 50]},
+                {"length": 20, "name": "SafeMathLib", "offsets": [25]},
+            ],
+            {"SafeSendLib": SAFE_SEND_CANON, "SafeMathLib": SAFE_MATH_CANON},
+            b"\00"
+            + SAFE_SEND_CANON
+            + bytearray(4)
+            + SAFE_MATH_CANON
+            + bytearray(5)
+            + SAFE_SEND_CANON
+            + bytearray(10),
+        ),
+    ),
+)
+def test_apply_all_link_references(bytecode, link_refs, attr_dict, expected):
+    actual = apply_all_link_references(bytecode, link_refs, attr_dict)
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "bytecode,link_refs,attr_dict",
+    (
+        # Non-empty bytecode
+        (
+            b"\01" * 60,
+            [{"length": 20, "name": "SafeSendLib", "offsets": [1]}],
+            {"SafeSendLib": SAFE_SEND_CANON},
+        ),
+        # Illegal offset
+        (
+            bytearray(60),
+            [{"length": 20, "name": "SafeSendLib", "offsets": [61]}],
+            {"SafeSendLib": SAFE_SEND_CANON},
+        ),
+        # Illegal offsets
+        (
+            bytearray(60),
+            [{"length": 20, "name": "SafeSendLib", "offsets": [1, 3]}],
+            {"SafeSendLib": SAFE_SEND_CANON},
+        ),
+        # Illegal length
+        (
+            bytearray(60),
+            [{"length": 61, "name": "SafeSendLib", "offsets": [0]}],
+            {"SafeSendLib": SAFE_SEND_CANON},
+        ),
+        # Conflicting link refs
+        (
+            bytearray(60),
+            [
+                {"length": 20, "name": "SafeSendLib", "offsets": [1]},
+                {"length": 20, "name": "SafeMathLib", "offsets": [15]},
+            ],
+            {"SafeSendLib": SAFE_SEND_CANON, "SafeMathLib": SAFE_MATH_CANON},
+        ),
+    ),
+)
+def test_apply_all_link_references_with_incorrect_args(bytecode, link_refs, attr_dict):
+    with pytest.raises(BytecodeLinkingError):
+        apply_all_link_references(bytecode, link_refs, attr_dict)
 
 
 @pytest.mark.parametrize(
@@ -99,8 +178,8 @@ def test_contract_factory_invalidates_incorrect_attr_dicts(get_factory, attr_dic
     "offset,length,bytecode",
     (
         (0, 3, b"\00\00\00"),
-        (1, 20, b"\01" + b"\00" * 20 + b"\01"),
-        (26, 20, b"\01" + b"\00" * 20 + b"\01" * 5 + b"\00" * 20 + b"\01"),
+        (1, 20, b"\01" + bytearray(20) + b"\01"),
+        (26, 20, b"\01" + bytearray(20) + b"\01" * 5 + bytearray(20) + b"\01"),
     ),
 )
 def test_validate_empty_bytes(offset, length, bytecode):
@@ -114,9 +193,9 @@ def test_validate_empty_bytes(offset, length, bytecode):
         (0, 2, b"\00"),
         (0, 3, b"\01\01\01"),
         (1, 1, b"\00\01\00\01"),
-        (1, 20, b"\00" * 20 + b"\01"),
+        (1, 20, bytearray(20) + b"\01"),
     ),
 )
 def test_validate_empty_bytes_invalidates(offset, length, bytecode):
-    with pytest.raises(BytecodeLinkingError):
+    with pytest.raises(ValidationError):
         validate_empty_bytes(offset, length, bytecode)

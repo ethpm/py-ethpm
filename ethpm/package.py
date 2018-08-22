@@ -120,7 +120,7 @@ class Package(object):
         except KeyError:
             raise InsufficientAssetsError(
                 "This package has insufficient package data to generate "
-                "a contract factory for contract:{0}.".format(name)
+                "a contract factory for contract: {0}.".format(name)
             )
 
         contract_kwargs = generate_contract_factory_kwargs(contract_data)
