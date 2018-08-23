@@ -9,6 +9,21 @@ from ethpm.utils.ipfs import is_ipfs_uri
 from ethpm.utils.registry import is_ens_domain
 
 
+def validate_empty_bytes(offset: int, length: int, bytecode: bytes) -> None:
+    """
+    Validates that segment [`offset`:`offset`+`length`] of
+    `bytecode` is comprised of empty bytes (b'\00').
+    """
+    slot_length = offset + length
+    slot = bytecode[offset:slot_length]
+    if slot != bytearray(length):
+        raise ValidationError(
+            "Bytecode segment: [{0}:{1}] is not comprised of empty bytes, rather: {2}.".format(
+                offset, slot_length, slot
+            )
+        )
+
+
 def validate_package_name(pkg_name: str) -> None:
     """
     Raise an exception if the value is not a valid package name

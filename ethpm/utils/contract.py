@@ -43,10 +43,20 @@ def generate_contract_factory_kwargs(
     """
     if "abi" in contract_data:
         yield "abi", contract_data["abi"]
+
     if "deployment_bytecode" in contract_data:
         yield "bytecode", contract_data["deployment_bytecode"]["bytecode"]
+        if "link_references" in contract_data["deployment_bytecode"]:
+            yield "deployment_link_refs", contract_data["deployment_bytecode"][
+                "link_references"
+            ]
+
     if "runtime_bytecode" in contract_data:
         yield "bytecode_runtime", contract_data["runtime_bytecode"]["bytecode"]
+        if "link_references" in contract_data["runtime_bytecode"]:
+            yield "runtime_link_refs", contract_data["runtime_bytecode"][
+                "link_references"
+            ]
 
 
 def compile_contracts(contract_name: str, alias: str, paths: List[str]) -> str:
