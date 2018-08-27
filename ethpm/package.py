@@ -30,7 +30,7 @@ from ethpm.utils.manifest_validation import (
     validate_manifest_against_schema,
     validate_manifest_deployments,
 )
-from ethpm.validation import validate_build_dependency
+from ethpm.validation import validate_address, validate_build_dependency
 
 
 class Package(object):
@@ -131,6 +131,7 @@ class Package(object):
         """
         Return a Contract object representing the contract type at the provided address.
         """
+        validate_address(address)
         validate_contract_name(name)
         try:
             self.package_data["contract_types"][name]["abi"]

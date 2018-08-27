@@ -1,6 +1,6 @@
 from typing import Dict, ItemsView, List
 
-from eth_utils import to_bytes
+from eth_utils import to_canonical_address
 from web3.eth import Contract
 from web3.main import Web3
 
@@ -49,7 +49,7 @@ class Deployments:
         """
         self._validate_name_and_references(contract_name)
         factory = self.contract_factories[contract_name]
-        address = to_bytes(hexstr=self.deployment_data[contract_name]["address"])
+        address = to_canonical_address(self.deployment_data[contract_name]["address"])
         contract_kwargs = {
             "abi": factory.abi,
             "bytecode": factory.bytecode,
