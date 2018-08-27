@@ -1,4 +1,4 @@
-from eth_utils import is_same_address
+from eth_utils import is_same_address, to_canonical_address
 import pytest
 from web3 import Web3
 
@@ -17,7 +17,7 @@ def deployed_safe_math(safe_math_package, w3):
     SafeMath = safe_math_package.get_contract_factory("SafeMathLib")
     tx_hash = SafeMath.constructor().transact()
     tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
-    return safe_math_package, tx_receipt.contractAddress
+    return safe_math_package, to_canonical_address(tx_receipt.contractAddress)
 
 
 def test_package_object_instantiates_with_a_web3_object(all_manifests, w3):

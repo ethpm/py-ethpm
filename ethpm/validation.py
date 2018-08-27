@@ -1,12 +1,26 @@
 import re
+from typing import Any
 from urllib import parse
 
-from eth_utils import is_checksum_address
+from eth_utils import is_address, is_canonical_address, is_checksum_address
 
 from ethpm.constants import PACKAGE_NAME_REGEX, REGISTRY_URI_SCHEME
 from ethpm.exceptions import ValidationError
 from ethpm.utils.ipfs import is_ipfs_uri
 from ethpm.utils.registry import is_ens_domain
+
+
+def validate_address(address: Any) -> None:
+    """
+    Raise a ValidationError if an address is not canonicalized.
+    """
+    if not is_address(address):
+        raise ValidationError("Expected an address, got: {0}".format(address))
+    if not is_canonical_address(address):
+        raise ValidationError(
+            "Py-EthPM library only accepts canonicalized addresses. "
+            "{0} is not in the accepted format.".format(address)
+        )
 
 
 def validate_empty_bytes(offset: int, length: int, bytecode: bytes) -> None:

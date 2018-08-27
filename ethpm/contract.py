@@ -6,7 +6,7 @@ from web3.contract import Contract
 from web3.utils.decorators import combomethod
 
 from ethpm.exceptions import BytecodeLinkingError, ValidationError
-from ethpm.validation import validate_empty_bytes
+from ethpm.validation import validate_address, validate_empty_bytes
 
 
 class LinkableContract(Contract):
@@ -24,6 +24,7 @@ class LinkableContract(Contract):
             raise BytecodeLinkingError(
                 "Contract cannot be instantiated until its bytecode is linked."
             )
+        validate_address(address)
         super(LinkableContract, self).__init__(address=address, **kwargs)
 
     @combomethod

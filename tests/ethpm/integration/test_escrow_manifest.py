@@ -35,7 +35,7 @@ def test_deployed_escrow_and_safe_send(escrow_manifest, compiled_safe_send, w3):
         "0x4F5B11c860b37b68DE6D14Fb7e7b5f18A9A1bdC0"
     ).transact()
     escrow_tx_receipt = w3.eth.waitForTransactionReceipt(escrow_tx_hash)
-    escrow_address = escrow_tx_receipt.contractAddress
+    escrow_address = to_canonical_address(escrow_tx_receipt.contractAddress)
 
     # Cannot instantiate a contract instance from an unlinked factory
     with pytest.raises(BytecodeLinkingError):

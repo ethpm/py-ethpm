@@ -1,4 +1,4 @@
-from eth_utils import to_bytes
+from eth_utils import to_bytes, to_canonical_address
 import pytest
 from web3.eth import Contract
 
@@ -124,7 +124,7 @@ def test_deployments_get_contract_instance(manifest_with_matching_deployment, w3
     deps = safe_math_package.deployments
     safe_math_instance = deps.get_contract_instance("SafeMathLib")
     assert isinstance(safe_math_instance, Contract)
-    assert safe_math_instance.address == to_bytes(hexstr=address)
+    assert safe_math_instance.address == to_canonical_address(address)
     assert safe_math_instance.bytecode == to_bytes(
         hexstr=safe_math_package.package_data["contract_types"]["SafeMathLib"][
             "deployment_bytecode"
