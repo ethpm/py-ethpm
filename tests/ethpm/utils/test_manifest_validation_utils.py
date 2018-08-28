@@ -66,13 +66,13 @@ def test_extract_contract_types_from_deployments(data, expected):
     assert actual == expected
 
 
-@pytest.mark.parametrize("version", (2, "2", b"2"))
-def test_validate_manifest_version_validates_version_two(version):
+@pytest.mark.parametrize("version", ("2"))
+def test_validate_manifest_version_validates_version_two_string(version):
     validate = validate_manifest_version(version)
     assert validate is None
 
 
-@pytest.mark.parametrize("version", (1, 3, "1" "3", b"3"))
+@pytest.mark.parametrize("version", (1, 2, "1" "3", b"3"))
 def test_validate_manifest_version_invalidates_incorrect_versions(version):
     with pytest.raises(ValidationError):
         validate_manifest_version(version)

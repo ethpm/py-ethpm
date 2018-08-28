@@ -2,9 +2,11 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Tuple  # ignore: F401
 
+import cytoolz
 from eth_utils import to_dict
 
 from ethpm.backends.ipfs import BaseIPFSBackend, get_ipfs_backend
+from ethpm.exceptions import ValidationError
 from ethpm.utils.filesystem import load_json_from_file_path
 from ethpm.utils.ipfs import create_ipfs_uri
 from ethpm.validation import validate_manifest_version, validate_package_name
@@ -18,67 +20,39 @@ MANIFEST_FIELDS = [
     "contract_types",
 ]
 
+META_FIELDS = {
+    "license": str,
+    "authors": list,
+    "description": str,
+    "keywords": list,
+    "links": dict,
+}
 
-class Manifest:
+
+def generate_manifest(
+    manifest_version: str,
+    package_name: str,
+    version: str,
+    meta: Dict[str, Any] = None,
+    compiled_json_output_path: Path = None,
+    contract_types: List[str] = None,
+    build_dependencies: Dict[str, str] = None,
+) -> Dict[str, Any]:
     """
-    Class for handling manifest generation that represents a set of packaged contract(s).
+    Returns JSON manifest representing the input args.
 
-    Expected directory structure:
-        |-- combined.json (solc output)
-        |-- ... (will write manifests to disk here) ...
-        |-- contracts/
-        |   |-- Contract1.sol
-        |   |-- Contract2.sol
-    """
+    :manifest_version:  [required]
+        "2"
 
-    def __init__(self, manifest_version: str, package_name: str, version: str) -> None:
-        validate_manifest_version(manifest_version)
-        validate_package_name(package_name)
-        self.manifest_version = manifest_version
-        self.package_name = package_name
-        self.version = version
-        self.ipfs_backend = get_ipfs_backend()
-        self.solc_path = None  # type: Path
-        self.sources = {}  # type: Dict[str,str]
-        self.contract_types = {}  # type: Dict[str,Any]
+    :package_name:      [required]
+        string of the package name
 
-    def link_solc_output(
-        self, solc_path: Path, contract_types: List[str] = None
-    ) -> None:
-        """
-        Populate the manifest with data from a linked solc output.
+    :version:           [required]
+        string of the package version - semver is recommended
 
-        :solc_path
-            Path leading to a file containing output from solc
-            Solc output *must* be generated with `abi` & `devdoc` flags enabled
-
-            i.e.
-        `solc --output-dir ./ --combined-json abi,bin,devdoc,interface,userdoc contracts/Owned.sol`
-
-        :contract_types
-            List containing the contract types to be included in this manifest.
-
-            * Packages should only include contract types that can be
-              found in the source files for this package.
-            * Packages should not include abstract contracts in the contract types section.
-            * Packages should not include contract types from dependencies.
-        """
-        if self.solc_path:
-            raise AttributeError(
-                "This manifest has already been linked to solc output located at {0}.".format(
-                    self.solc_path
-                )
-            )
-        self.solc_path = solc_path
-        solc = load_json_from_file_path(self.solc_path)
-        self.sources = generate_all_sources(solc, solc_path, self.ipfs_backend)
-        if contract_types:
-            self.contract_types = generate_all_contract_types(solc, contract_types)
-
-    def add_meta(self, **kwargs: Any) -> None:
-        """
-        Adds metadata to the `meta` key in this manifest.
-        Suggested kwarg types
+    :meta:              [optional]
+        Dict containing any custom metadata for the package.
+        Accepted fields:
         - `authors`         List[str]
         - `license`         str
         - `description`     str
@@ -88,84 +62,183 @@ class Manifest:
             - `website`
             - `documentation`
             - `repository`
-        """
-        self.meta = {key: value for key, value in kwargs.items() if value}
 
-    def pretty(self) -> str:
-        """
-        Returns a string of a pretty printed version of this manifest.
-        """
-        attr_dict = self._generate_manifest_attributes()
-        return json.dumps(attr_dict, indent=4, sort_keys=True)
+    :compiled_json_output_path:         [optional]
+        string of the path to standard-json compiler output
+        compiler output *must* be generated with `abi` & `devdoc` flags enabled
 
-    def minified(self) -> str:
-        """
-        Returns a string of a minified version of this manifest.
-        """
-        attr_dict = self._generate_manifest_attributes()
-        return json.dumps(attr_dict, separators=(",", ":"), sort_keys=True)
+            i.e.
+            `solc --output-dir ./ --combined-json
+            abi,bin,bin-runtime,devdoc,interface,userdoc contracts/Owned.sol`
 
-    # TODO implement `write_pretty_to_disk` w/o indenting ABI
-    def write_minified_to_disk(self) -> Path:
-        """
-        Returns a path leading to a minified version of this manifest written to disk.
-        Manifest is written to the same dir in which the `contracts/` dir is located.
-        """
-        manifest_contents = self.minified()
-        path = self.solc_path.parent / str(self.version + ".json")
-        path.write_text(manifest_contents)
-        return path
+    :contract_types:    [optional]
+        List[str] containing the contract types to be included in this manifest.
+            * Packages should only include contract types that can be
+              found in the source files for this package.
+            * Packages should not include abstract contracts in the contract types section.
+            * Packages should not include contract types from dependencies.
 
-    @to_dict
-    def _generate_manifest_attributes(self) -> Generator[Tuple[str, Any], Any, None]:
-        for key, value in self.__dict__.items():
-            if key in MANIFEST_FIELDS and value:
-                yield key, value
-
-
-@to_dict
-def generate_all_contract_types(
-    solc: Dict[str, Any], contract_types: List[str]
-) -> Generator[Tuple[str, Any], None, None]:
+    :build_dependencies:[optional]
+        Dict[str, str] with the package name pointing to a content-
+        addressable URI which resolves to the package's manifest.
     """
-    Return a dict representing all of a Manifest's "contract_types" data.
-    """
-    for contract in solc["contracts"]:
-        _, contract_name = contract.split(":")
-        if contract_name in contract_types:
-            yield contract_name, generate_single_contract_type(contract, solc)
+    validate_manifest_version(manifest_version)
+    validate_package_name(package_name)
+    manifest = {
+        "manifest_version": manifest_version,
+        "package_name": package_name,
+        "version": version,
+    }
+    build_fns = (
+        build_meta(meta),
+        build_sources(compiled_json_output_path),
+        build_contract_types(compiled_json_output_path, contract_types),
+        build_build_dependencies(build_dependencies),
+    )
+    cytoolz.pipe(manifest, *build_fns)
+    return manifest
 
 
-@to_dict
-def generate_single_contract_type(
-    contract: str, solc: Dict[str, Any]
-) -> Generator[Tuple[str, Any], None, None]:
+#
+# Meta
+#
+
+
+@cytoolz.curry
+def build_meta(meta: Dict[str, Any], manifest: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Return a dict represnting a single contract type.
+    Validate meta object keys and values, and attach object to manifest if valid.
     """
-    yield "abi", json.loads(solc["contracts"][contract]["abi"])
-    yield "natspec", json.loads(solc["contracts"][contract]["devdoc"])
+    if meta:
+        validate_meta_object(meta)
+        manifest["meta"] = meta
+    return manifest
+
+
+def validate_meta_object(meta: Dict[str, Any]) -> None:
+    """
+    Validates that every key is one of `META_FIELDS` and has a value of the expected type.
+    """
+    for key, value in meta.items():
+        if key not in META_FIELDS:
+            raise ValidationError("{0} is not a permitted meta field.".format(key))
+        if type(value) is not META_FIELDS[key]:
+            raise ValidationError(
+                "Values for {0} are expected to have the type {1}, instead got {2}.".format(
+                    key, META_FIELDS[key], type(value)
+                )
+            )
+
+
+#
+# Sources
+#
+
+
+@cytoolz.curry
+def build_sources(
+    compiled_json_output_path: Path, manifest: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    Generate all source keys/values found in the linked compiled json output, and
+    attach them to the manifest.
+    """
+    if compiled_json_output_path:
+        manifest["sources"] = generate_all_sources(compiled_json_output_path)
+    return manifest
 
 
 @to_dict
 def generate_all_sources(
-    solc: Dict[str, Any], solc_path: str, ipfs_backend: BaseIPFSBackend
+    compiled_json_output_path: Path
 ) -> Generator[Tuple[str, str], None, None]:
     """
     Return a dict containing all of a Manifest's "sources" data.
     """
-    for contract in solc["contracts"]:
+    compiled_json_output = load_json_from_file_path(compiled_json_output_path)
+    ipfs_backend = get_ipfs_backend()
+    for contract in compiled_json_output["contracts"]:
         contract_path, _ = contract.split(":")
-        source_data = pin_single_source(contract_path, solc_path, ipfs_backend)
+        source_data = pin_single_source(
+            contract_path, compiled_json_output_path, ipfs_backend
+        )
         yield "./{0}".format(contract_path), source_data
 
 
 def pin_single_source(
-    contract_path: str, solc_path: str, ipfs_backend: BaseIPFSBackend
+    contract_path: str, compiled_json_output_path: Path, ipfs_backend: BaseIPFSBackend
 ) -> str:
     """
     Return an IPFS URI, after pinning a source file to IPFS via `ipfs_backend`.
     """
-    [ipfs_return_data] = ipfs_backend.pin_assets(Path(solc_path).parent / contract_path)
+    (ipfs_return_data,) = ipfs_backend.pin_assets(
+        Path(compiled_json_output_path).parent / contract_path
+    )
     ipfs_hash = ipfs_return_data["Hash"]
     return create_ipfs_uri(ipfs_hash)
+
+
+#
+# Contract Types
+#
+
+
+@cytoolz.curry
+def build_contract_types(
+    compiled_json_output_path: Path, contract_types: List[str], manifest: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    Create a contract_type field for each contract_type listed in `contract_types`,
+    and attach them to the manifest.
+    """
+    if compiled_json_output_path and contract_types:
+        compiled_json_output = load_json_from_file_path(compiled_json_output_path)
+        contract_types = generate_all_contract_types(
+            compiled_json_output, contract_types
+        )
+        manifest["contract_types"] = contract_types
+    return manifest
+
+
+@to_dict
+def generate_all_contract_types(
+    compiled_json_output: Dict[str, Any], contract_types: List[str]
+) -> Generator[Tuple[str, Any], None, None]:
+    """
+    Return a dict representing all of a Manifest's "contract_types" data.
+    """
+    for contract in compiled_json_output["contracts"]:
+        _, contract_name = contract.split(":")
+        if contract_name in contract_types:
+            yield contract_name, generate_single_contract_type(
+                contract, compiled_json_output
+            )
+
+
+@to_dict
+def generate_single_contract_type(
+    contract: str, compiled_json_output: Dict[str, Any]
+) -> Generator[Tuple[str, Any], None, None]:
+    """
+    Return a dict represnting a single contract type.
+    """
+    yield "abi", json.loads(compiled_json_output["contracts"][contract]["abi"])
+    yield "natspec", json.loads(compiled_json_output["contracts"][contract]["devdoc"])
+
+
+#
+# Build Dependencies
+#
+
+
+@cytoolz.curry
+def build_build_dependencies(
+    build_dependencies: Dict[str, str], manifest: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    Will attach the build dependencies object, if specified in `generate_manifest` kwargs,
+    and attach it to the manifest.
+    """
+    if build_dependencies:
+        manifest["build_dependencies"] = build_dependencies
+    return manifest
