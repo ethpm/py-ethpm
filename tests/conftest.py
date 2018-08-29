@@ -2,7 +2,7 @@ import copy
 import json
 from pathlib import Path
 
-from eth_utils import to_hex
+from eth_utils import to_canonical_address, to_hex
 import pytest
 from web3 import Web3
 
@@ -121,6 +121,63 @@ def manifest_with_empty_deployments(tmpdir, safe_math_manifest):
     manifest = copy.deepcopy(safe_math_manifest)
     manifest["deployments"] = {}
     return manifest
+
+
+@pytest.fixture
+def escrow_manifest_with_matching_deployment(escrow_manifest, w3):
+    # deploy new safe-send
+    safe_send_bin = escrow_manifest["contract_types"]["SafeSendLib"][
+        "deployment_bytecode"
+    ]["bytecode"]
+    safe_send_abi = escrow_manifest["contract_types"]["SafeSendLib"]["abi"]
+    SafeSendFactory = w3.eth.contract(abi=safe_send_abi, bytecode=safe_send_bin)
+    safe_send_tx_hash = SafeSendFactory.constructor().transact()
+    safe_send_tx_receipt = w3.eth.waitForTransactionReceipt(safe_send_tx_hash)
+    safe_send_address = safe_send_tx_receipt.contractAddress
+    w3.testing.mine(3)
+    chain_id = w3.toHex(get_genesis_block_hash(w3))
+    block = w3.eth.getBlock("earliest")
+    block_uri = create_block_uri(chain_id, w3.toHex(block.hash))
+    deployment_data = list(escrow_manifest["deployments"].values())[0]
+    new_safe_send_deployment_data = {
+        "address": safe_send_address,
+        "block": w3.toHex(safe_send_tx_receipt.blockHash),
+        "contract_type": "SafeSendLib",
+        "transaction": w3.toHex(safe_send_tx_hash),
+    }
+    deployment_data["SafeSendLib"] = new_safe_send_deployment_data
+    manifest = copy.deepcopy(escrow_manifest)
+    manifest["deployments"] = {}
+    manifest["deployments"][block_uri] = deployment_data
+    # create escrow package linked to deployed safe-math
+    EscrowPackage = Package(manifest, w3)
+    EscrowFactory = EscrowPackage.get_contract_factory("Escrow")
+    safe_send_link_reference = {"SafeSendLib": to_canonical_address(safe_send_address)}
+    LinkedEscrowFactory = EscrowFactory.link_bytecode(safe_send_link_reference)
+    # deploy new escrow
+    escrow_tx_hash = LinkedEscrowFactory.constructor(w3.eth.defaultAccount).transact()
+    escrow_tx_receipt = w3.eth.waitForTransactionReceipt(escrow_tx_hash)
+    w3.testing.mine(3)
+    latest_block = w3.eth.getBlock("latest")
+    # create manifest with new safe-math and new escrow
+    final_deployment_data = list(manifest["deployments"].values())[0]
+    final_block_uri = create_block_uri(chain_id, w3.toHex(latest_block.hash))
+    new_escrow_deployment_data = {
+        "address": escrow_tx_receipt.contractAddress,
+        "block": w3.toHex(escrow_tx_receipt.blockHash),
+        "contract_type": "Escrow",
+        "transaction": w3.toHex(escrow_tx_hash),
+        "runtime_bytecode": {
+            "link_dependencies": [
+                {"offsets": [301, 495], "type": "reference", "value": "SafeSendLib"}
+            ]
+        },
+    }
+    final_deployment_data["Escrow"] = new_escrow_deployment_data
+    final_manifest = copy.deepcopy(manifest)
+    final_manifest["deployments"] = {}
+    final_manifest["deployments"][final_block_uri] = final_deployment_data
+    return final_manifest, safe_send_link_reference
 
 
 @pytest.fixture

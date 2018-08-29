@@ -3,8 +3,14 @@ import pytest
 from web3.eth import Contract
 
 from ethpm import Package
+from ethpm.contract import LinkableContract
 from ethpm.deployments import Deployments
-from ethpm.exceptions import ValidationError
+from ethpm.exceptions import BytecodeLinkingError, ValidationError
+from ethpm.utils.deployments import (
+    get_linked_deployments,
+    normalize_link_dependencies,
+    validate_link_dependencies,
+)
 
 DEPLOYMENT_DATA = {
     "SafeMathLib": {
@@ -126,3 +132,98 @@ def test_deployments_get_instance(manifest_with_matching_deployment, w3):
             "deployment_bytecode"
         ]["bytecode"]
     )
+
+
+def test_deployments_get_contract_instance_with_link_dependency(
+    escrow_manifest_with_matching_deployment, w3
+):
+    manifest, link_ref = escrow_manifest_with_matching_deployment
+    EscrowPackage = Package(manifest, w3)
+    deployments = EscrowPackage.deployments
+    escrow_deployment = deployments.get_deployment_instance("Escrow")
+    assert isinstance(escrow_deployment, LinkableContract)
+
+
+def test_get_linked_deployments(escrow_manifest_with_matching_deployment):
+    all_deployments = list(
+        escrow_manifest_with_matching_deployment[0]["deployments"].values()
+    )[0]
+    escrow_deployment = all_deployments["Escrow"]
+    actual_linked_deployments = get_linked_deployments(all_deployments)
+    assert actual_linked_deployments == {"Escrow": escrow_deployment}
+
+
+@pytest.mark.parametrize(
+    "deployments",
+    (
+        (
+            {
+                "Escrow": {
+                    "contract_type": "Escrow",
+                    "address": "0x8c1968deB27251A3f1F4508df32dA4dfD1b7b57f",
+                    "transaction": "0xc60e32c63abf34579390ef65d83cc5eb52225de38c3eeca2e5afa961d71c16d0",  # noqa: E501
+                    "block": "0x4d1a618802bb87752d95db453dddeea622820424a2f836bedf8769a67ee276b8",
+                    "runtime_bytecode": {
+                        "link_dependencies": [
+                            {
+                                "offsets": [301, 495],
+                                "type": "reference",
+                                "value": "Escrow",
+                            }
+                        ]
+                    },
+                }
+            },
+        )
+    ),
+)
+def test_get_linked_deployments_raises_exception_with_self_reference(deployments):
+    with pytest.raises(BytecodeLinkingError):
+        get_linked_deployments(deployments)
+
+
+@pytest.mark.parametrize(
+    "link_data,expected",
+    (
+        (
+            [
+                {"offsets": [1], "type": "reference", "value": "123"},
+                {"offsets": [2, 3], "type": "literal", "value": "abc"},
+            ],
+            ((1, "reference", "123"), (2, "literal", "abc"), (3, "literal", "abc")),
+        ),
+        (
+            [{"offsets": [1, 2, 3], "type": "literal", "value": "123"}],
+            ((1, "literal", "123"), (2, "literal", "123"), (3, "literal", "123")),
+        ),
+    ),
+)
+def test_normalize_link_dependencies(link_data, expected):
+    link_deps = normalize_link_dependencies(link_data)
+    assert link_deps == expected
+
+
+@pytest.mark.parametrize(
+    "link_deps,bytecode",
+    (
+        (((1, b"abc"),), b"xabc"),
+        (((1, b"a"), (5, b"xx"), (15, b"1")), b"0a000xx000000001"),
+    ),
+)
+def test_validate_link_dependencies(link_deps, bytecode):
+    result = validate_link_dependencies(link_deps, bytecode)
+    assert result is None
+
+
+@pytest.mark.parametrize(
+    "link_deps,bytecode",
+    (
+        (((0, b"abc"),), b"xabc"),
+        (((2, b"abc"),), b"xabc"),
+        (((8, b"abc"),), b"xabc"),
+        (((1, b"a"), (5, b"xxx"), (15, b"1")), b"0a000xx000000001"),
+    ),
+)
+def test_validate_link_dependencies_invalidates(link_deps, bytecode):
+    with pytest.raises(ValidationError):
+        validate_link_dependencies(link_deps, bytecode)
