@@ -30,7 +30,6 @@ OWNED_META = {
 def test_manifest_generates_pretty_and_minified_versions():
     manifest = generate_manifest(MANIFEST_VERSION, "package", PACKAGE_VERSION)
     assert manifest == json.loads(MINIFIED_MANIFEST)
-    # assert manifest.pretty() == PRETTY_MANIFEST
 
 
 def test_create_owned_manifest_with_meta(dummy_ipfs_backend, PACKAGING_EXAMPLES_DIR):
@@ -45,7 +44,12 @@ def test_create_owned_manifest_with_meta(dummy_ipfs_backend, PACKAGING_EXAMPLES_
         meta=OWNED_META,
         compiled_json_output_path=OWNED_SOLC_OUTPUT,
     )
+    # Test that "sources" keys are equivalent, since expected_sources contains
+    # ipfs hashes rather than inlined source code
+    actual_sources = manifest.pop("sources")
+    expected_sources = expected_json.pop("sources")
     assert manifest == expected_json
+    assert actual_sources.keys() == expected_sources.keys()
 
 
 def test_create_standard_token_manifest(dummy_ipfs_backend, PACKAGING_EXAMPLES_DIR):
@@ -63,4 +67,7 @@ def test_create_standard_token_manifest(dummy_ipfs_backend, PACKAGING_EXAMPLES_D
         compiled_json_output_path=STANDARD_TOKEN_SOLC_OUTPUT,
         contract_types=["StandardToken"],
     )
+    actual_sources = manifest.pop("sources")
+    expected_sources = expected_json.pop("sources")
     assert manifest == expected_json
+    assert actual_sources.keys() == expected_sources.keys()
