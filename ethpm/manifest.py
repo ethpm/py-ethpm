@@ -243,8 +243,8 @@ def build_build_dependencies(
     build_dependencies: Dict[str, str], manifest: Dict[str, Any]
 ) -> Dict[str, Any]:
     """
-    Will attach the build dependencies object, if specified in `generate_manifest`
-    kwargs, and attach it to the manifest.
+    Will attach the build dependencies object, if specified in `generate_manifest` kwargs,
+    and attach it to the manifest.
     """
     if build_dependencies:
         return cytoolz.assoc(manifest, "build_dependencies", build_dependencies)

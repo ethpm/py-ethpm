@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 from eth_utils.toolz import assoc
 import pytest
@@ -27,6 +28,22 @@ from ethpm.tools.builder import (
 BASE_MANIFEST = {"package_name": "package", "manifest_version": "2", "version": "1.0.0"}
 
 
+@pytest.fixture
+def owned_package(PACKAGING_EXAMPLES_DIR):
+    root = PACKAGING_EXAMPLES_DIR / "owned"
+    manifest = json.loads(Path(str(root / "1.0.0.json")).read_text())
+    compiler = json.loads(Path(str(root / "combined.json")).read_text())["contracts"]
+    return root, manifest, compiler
+
+
+@pytest.fixture
+def standard_token_package(PACKAGING_EXAMPLES_DIR):
+    root = PACKAGING_EXAMPLES_DIR / "standard-token"
+    manifest = json.loads(Path(str(root / "1.0.0.json")).read_text())
+    compiler = json.loads(Path(str(root / "combined.json")).read_text())["contracts"]
+    return root, manifest, compiler
+
+
 def test_builder_simple():
     manifest = build(
         {}, package_name("package"), manifest_version("2"), version("1.0.0"), validate()
@@ -47,7 +64,7 @@ def test_builder_simple_with_package(w3):
 
 
 def test_builder_with_manifest_validation():
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match="_invalid_package_name"):
         build(
             {},
             package_name("_invalid_package_name"),
@@ -100,12 +117,10 @@ def test_builder_simple_with_multi_meta_field():
     assert manifest == expected
 
 
-def test_builder_with_inline_source(PACKAGING_EXAMPLES_DIR, monkeypatch):
-    package_root_dir = PACKAGING_EXAMPLES_DIR / "owned"
-    owned_output = PACKAGING_EXAMPLES_DIR / "owned" / "combined.json"
-    compiler_output = json.loads(owned_output.read_text())["contracts"]
+def test_builder_with_inline_source(owned_package, monkeypatch):
+    root, _, compiler_output = owned_package
 
-    monkeypatch.chdir(package_root_dir)
+    monkeypatch.chdir(str(root))
     manifest = build(BASE_MANIFEST, inline_source("Owned", compiler_output), validate())
 
     expected = assoc(
@@ -120,13 +135,12 @@ def test_builder_with_inline_source(PACKAGING_EXAMPLES_DIR, monkeypatch):
     assert manifest == expected
 
 
-def test_builder_with_inline_source_with_package_root_dir_arg(PACKAGING_EXAMPLES_DIR):
-    package_root_dir = PACKAGING_EXAMPLES_DIR / "owned"
-    owned_output = PACKAGING_EXAMPLES_DIR / "owned" / "combined.json"
-    compiler_output = json.loads(owned_output.read_text())["contracts"]
+def test_builder_with_inline_source_with_package_root_dir_arg(owned_package):
+    root, _, compiler_output = owned_package
+
     manifest = build(
         BASE_MANIFEST,
-        inline_source("Owned", compiler_output, package_root_dir=package_root_dir),
+        inline_source("Owned", compiler_output, package_root_dir=root),
         validate(),
     )
     expected = assoc(
@@ -141,12 +155,9 @@ def test_builder_with_inline_source_with_package_root_dir_arg(PACKAGING_EXAMPLES
     assert manifest == expected
 
 
-def test_builder_with_pin_source(PACKAGING_EXAMPLES_DIR, dummy_ipfs_backend):
-    package_root_dir = PACKAGING_EXAMPLES_DIR / "owned"
-    expected_manifest = package_root_dir / "1.0.0.json"
-    owned_output = PACKAGING_EXAMPLES_DIR / "owned" / "combined.json"
+def test_builder_with_pin_source(owned_package, dummy_ipfs_backend):
+    root, expected_manifest, compiler_output = owned_package
     ipfs_backend = get_ipfs_backend()
-    compiler_output = json.loads(owned_output.read_text())["contracts"]
 
     manifest = build(
         {},
@@ -160,27 +171,60 @@ def test_builder_with_pin_source(PACKAGING_EXAMPLES_DIR, dummy_ipfs_backend):
         keywords("authorization"),
         license("MIT"),
         links(documentation="ipfs://QmUYcVzTfSwJoigggMxeo2g5STWAgJdisQsqcXHws7b1FW"),
-        pin_source("Owned", compiler_output, ipfs_backend, package_root_dir),
+        pin_source("Owned", compiler_output, ipfs_backend, root),
         validate(),
     )
 
-    assert manifest == json.loads(expected_manifest.read_text())
+    assert manifest == expected_manifest
 
 
-def test_builder_with_default_contract_types(PACKAGING_EXAMPLES_DIR):
-    owned_output = PACKAGING_EXAMPLES_DIR / "owned" / "combined.json"
-    compiler_output = json.loads(owned_output.read_text())["contracts"]
+def test_builder_with_default_contract_types(owned_package):
+    _, _, compiler_output = owned_package
 
     manifest = build(BASE_MANIFEST, contract_type("Owned", compiler_output), validate())
 
-    xx = normalize_contract_type(tuple(compiler_output.values())[0])
-    expected = assoc(BASE_MANIFEST, "contract_types", {"Owned": xx})
+    contract_type_data = normalize_contract_type(tuple(compiler_output.values())[0])
+    expected = assoc(BASE_MANIFEST, "contract_types", {"Owned": contract_type_data})
     assert manifest == expected
 
 
-def test_builder_with_aliased_contract_types(PACKAGING_EXAMPLES_DIR):
-    owned_output = PACKAGING_EXAMPLES_DIR / "owned" / "combined.json"
-    compiler_output = json.loads(owned_output.read_text())["contracts"]
+def test_builder_with_single_alias_kwarg(owned_package):
+    _, _, compiler_output = owned_package
+
+    manifest = build(
+        BASE_MANIFEST,
+        contract_type("Owned", compiler_output, alias="OwnedAlias"),
+        validate(),
+    )
+
+    contract_type_data = normalize_contract_type(tuple(compiler_output.values())[0])
+    expected = assoc(
+        BASE_MANIFEST,
+        "contract_types",
+        {"OwnedAlias": assoc(contract_type_data, "contract_type", "Owned")},
+    )
+    assert manifest == expected
+
+
+def test_builder_without_alias_and_with_select_contract_types(owned_package):
+    _, _, compiler_output = owned_package
+
+    manifest = build(
+        BASE_MANIFEST,
+        contract_type("Owned", compiler_output, abi=True, natspec=True),
+        validate(),
+    )
+
+    contract_type_data = normalize_contract_type(tuple(compiler_output.values())[0])
+    selected_data = {
+        k: v for k, v in contract_type_data.items() if k != "deployment_bytecode"
+    }
+    expected = assoc(BASE_MANIFEST, "contract_types", {"Owned": selected_data})
+    assert manifest == expected
+
+
+def test_builder_with_alias_and_select_contract_types(owned_package):
+    _, _, compiler_output = owned_package
 
     manifest = build(
         BASE_MANIFEST,
@@ -195,24 +239,22 @@ def test_builder_with_aliased_contract_types(PACKAGING_EXAMPLES_DIR):
         validate(),
     )
 
-    xx = normalize_contract_type(tuple(compiler_output.values())[0])
+    contract_type_data = normalize_contract_type(tuple(compiler_output.values())[0])
     expected = assoc(
         BASE_MANIFEST,
         "contract_types",
-        {"OwnedAlias": assoc(xx, "contract_type", "Owned")},
+        {"OwnedAlias": assoc(contract_type_data, "contract_type", "Owned")},
     )
     assert manifest == expected
 
 
 def test_builder_with_standard_token_manifest(
-    PACKAGING_EXAMPLES_DIR, dummy_ipfs_backend, monkeypatch
+    standard_token_package, dummy_ipfs_backend, monkeypatch
 ):
-    standard_token_output = PACKAGING_EXAMPLES_DIR / "standard-token" / "combined.json"
-    expected_manifest = PACKAGING_EXAMPLES_DIR / "standard-token" / "1.0.0.json"
-    compiler_output = json.loads(standard_token_output.read_text())["contracts"]
+    root, expected_manifest, compiler_output = standard_token_package
     ipfs_backend = get_ipfs_backend()
 
-    monkeypatch.chdir(PACKAGING_EXAMPLES_DIR / "standard-token")
+    monkeypatch.chdir(str(root))
     manifest = build(
         {},
         package_name("standard-token"),
@@ -223,5 +265,4 @@ def test_builder_with_standard_token_manifest(
         contract_type("StandardToken", compiler_output, abi=True, natspec=True),
     )
 
-    expected = json.loads(expected_manifest.read_text())
-    assert manifest == expected
+    assert manifest == expected_manifest

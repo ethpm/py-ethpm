@@ -3,7 +3,7 @@ import json
 import operator
 import os
 from pathlib import Path
-from typing import Any, Dict, Generator, NewType
+from typing import Any, Dict, Generator, List, Optional
 
 from eth_utils import add_0x_prefix, to_dict
 from eth_utils.toolz import assoc, assoc_in, curry, pipe
@@ -12,12 +12,15 @@ from web3 import Web3
 from ethpm import Package
 from ethpm.backends.ipfs import BaseIPFSBackend
 from ethpm.exceptions import ManifestBuildingError
+from ethpm.typing import Manifest
 from ethpm.utils.manifest_validation import validate_manifest_against_schema
-
-Manifest = NewType("Manifest", Dict[str, Any])
 
 
 def build(obj, *fns):
+    """
+    Wrapper function to pipe manifest through build functions.
+    Does not validate the manifest by default.
+    """
     return pipe(obj, *fns)
 
 
@@ -28,16 +31,25 @@ def build(obj, *fns):
 
 @curry
 def package_name(name: str, manifest: Manifest) -> Manifest:
+    """
+    Return a copy of manifest with `name` set to "package_name".
+    """
     return assoc(manifest, "package_name", name)
 
 
 @curry
 def manifest_version(manifest_version: str, manifest: Manifest) -> Manifest:
+    """
+    Return a copy of manifest with `manifest_version` set to "manifest_version".
+    """
     return assoc(manifest, "manifest_version", manifest_version)
 
 
 @curry
 def version(version: str, manifest: Manifest) -> Manifest:
+    """
+    Return a copy of manifest with `version` set to "version".
+    """
     return assoc(manifest, "version", version)
 
 
@@ -47,6 +59,9 @@ def version(version: str, manifest: Manifest) -> Manifest:
 
 
 def authors(*author_list):
+    """
+    Return a copy of manifest with a list of author posargs set to "meta": {"authors": author_list}
+    """
     return _authors(author_list)
 
 
@@ -58,15 +73,25 @@ def _authors(authors: set, manifest: Manifest) -> Manifest:
 
 @curry
 def license(license: str, manifest: Manifest) -> Manifest:
+    """
+    Return a copy of manifest with `license` set to "meta": {"license": `license`}
+    """
     return assoc_in(manifest, ("meta", "license"), license)
 
 
 @curry
 def description(description: str, manifest: Manifest) -> Manifest:
+    """
+    Return a copy of manifest with `description` set to "meta": {"descriptions": `description`}
+    """
     return assoc_in(manifest, ("meta", "description"), description)
 
 
 def keywords(*keyword_list):
+    """
+    Return a copy of manifest with a list of keyword posargs set to
+    "meta": {"keywords": keyword_list}
+    """
     return _keywords(keyword_list)
 
 
@@ -77,6 +102,9 @@ def _keywords(keywords: set, manifest: Manifest) -> Manifest:
 
 
 def links(**link_dict):
+    """
+    Return a copy of manifest with a dict of link kwargs set to "meta": {"links": link_dict}
+    """
     return _links(link_dict)
 
 
@@ -91,6 +119,9 @@ def _links(link_dict: Dict[str, str], manifest: Manifest) -> Manifest:
 
 
 def get_names_and_paths(compiler_output: Dict[str, Any]) -> Dict[str, str]:
+    """
+    Return a mapping of contract name to relative path as defined in compiler output.
+    """
     return {
         name: path
         for path, sep, name in map(
@@ -100,8 +131,15 @@ def get_names_and_paths(compiler_output: Dict[str, Any]) -> Dict[str, str]:
 
 
 def inline_source(
-    name: str, compiler_output: Dict[str, Any], package_root_dir: str = None
+    name: str, compiler_output: Dict[str, Any], package_root_dir: Optional[str] = None
 ) -> Manifest:
+    """
+    Return a copy of manifest with added field to
+    "sources": {relative_source_path: contract_source_data}.
+
+    If `package_root_dir` is not provided, cwd is expected to resolve the relative
+    path to the source as defined in the compiler output.
+    """
     return _inline_source(name, compiler_output, package_root_dir)
 
 
@@ -109,27 +147,32 @@ def inline_source(
 def _inline_source(
     name: str,
     compiler_output: Dict[str, Any],
-    package_root_dir: str,
+    package_root_dir: Optional[str],
     manifest: Manifest,
 ) -> Manifest:
     names_and_paths = get_names_and_paths(compiler_output)
     cwd = Path(os.getcwd())
     source_path_suffix = names_and_paths[name]
 
-    if (cwd / source_path_suffix).is_file():
+    if package_root_dir:
+        if (package_root_dir / source_path_suffix).is_file():
+            source_data = (package_root_dir / source_path_suffix).read_text()
+        else:
+            raise ManifestBuildingError(
+                "Contract source: {0} cannot be found in provided package_root_dir: {1}.".format(
+                    source_path_suffix, package_root_dir
+                )
+            )
+    elif (cwd / source_path_suffix).is_file():
         source_data = (cwd / source_path_suffix).read_text()
-    elif package_root_dir and (package_root_dir / source_path_suffix).is_file():
-        source_data = (package_root_dir / source_path_suffix).read_text()
     else:
-        raise ManifestBuildingError("package_root_dir is wrong, plz fix")
+        raise ManifestBuildingError(
+            "Contract source cannot be resolved, please make sure that the working "
+            "directory is set to the correct directory or provide `package_root_dir`."
+        )
 
-    if "sources" not in manifest:
-        manifest["sources"] = {}
-
-    return assoc(
-        manifest,
-        "sources",
-        assoc(manifest["sources"], "./{0}".format(source_path_suffix), source_data),
+    return assoc_in(
+        manifest, ["sources", "./{0}".format(source_path_suffix)], source_data
     )
 
 
@@ -137,8 +180,15 @@ def pin_source(
     name: str,
     compiler_output: Dict[str, Any],
     ipfs_backend: BaseIPFSBackend,
-    package_root_dir: str = None,
+    package_root_dir: Optional[str] = None,
 ) -> Manifest:
+    """
+    Pins source to IPFS and returns a copy of manifest with added field to
+    "sources": {relative_source_path: IFPS URI}.
+
+    If `package_root_dir` is not provided, cwd is expected to resolve the relative path
+    to the source as defined in the compiler output.
+    """
     return _pin_source(name, compiler_output, ipfs_backend, package_root_dir)
 
 
@@ -147,28 +197,33 @@ def _pin_source(
     name: str,
     compiler_output: Dict[str, Any],
     ipfs_backend: BaseIPFSBackend,
-    package_root_dir: str,
+    package_root_dir: Optional[str],
     manifest: Manifest,
 ) -> Manifest:
     names_and_paths = get_names_and_paths(compiler_output)
     source_path = names_and_paths[name]
     if package_root_dir:
+        if not (package_root_dir / source_path).is_file():
+            raise ManifestBuildingError(
+                "Unable to find and pin contract source: {0} "
+                "under specified package_root_dir: {1}.".format(
+                    source_path, package_root_dir
+                )
+            )
         (ipfs_data,) = ipfs_backend.pin_assets(package_root_dir / source_path)
     else:
         cwd = Path(os.getcwd())
+        if not (cwd / source_path).is_file():
+            raise ManifestBuildingError(
+                "Unable to find and pin contract source: {0} "
+                "current working directory: {1}.".format(source_path, cwd)
+            )
         (ipfs_data,) = ipfs_backend.pin_assets(cwd / source_path)
 
-    if "sources" not in manifest:
-        manifest["sources"] = {}
-
-    return assoc(
+    return assoc_in(
         manifest,
-        "sources",
-        assoc(
-            manifest["sources"],
-            "./{0}".format(source_path),
-            "ipfs://{0}".format(ipfs_data["Hash"]),
-        ),
+        ["sources", "./{0}".format(source_path)],
+        "ipfs://{0}".format(ipfs_data["Hash"]),
     )
 
 
@@ -177,40 +232,78 @@ def _pin_source(
 #
 
 
-def contract_type(name: str, compiler_output: Dict[str, Any], **kwargs) -> Manifest:
-    return _contract_type(name, compiler_output, kwargs)
+def contract_type(
+    name: str,
+    compiler_output: Dict[str, Any],
+    alias: Optional[str] = None,
+    abi: Optional[bool] = False,
+    compiler: Optional[bool] = False,
+    contract_type: Optional[bool] = False,
+    deployment_bytecode: Optional[bool] = False,
+    natspec: Optional[bool] = False,
+    runtime_bytecode: Optional[bool] = False,
+) -> Manifest:
+    """
+    Returns a copy of manifest with added contract_data field as specified by kwargs.
+    If no kwargs are present, all available contract_data found in the compiler output
+    will be included.
+
+    To include specific contract_data fields, add kwarg set to True (i.e. `abi=True`)
+    To alias a contract_type, include a kwarg `alias` (i.e. `alias="OwnedAlias"`)
+    If only an alias kwarg is provided, all available contract data will be included.
+    Kwargs must match fields as defined in the EthPM Spec (except "alias") if user
+        wants to include them in custom contract_type.
+    """
+    contract_type_fields = {
+        "contract_type": contract_type,
+        "deployment_bytecode": deployment_bytecode,
+        "runtime_bytecode": runtime_bytecode,
+        "abi": abi,
+        "natspec": natspec,
+        "compiler": compiler,
+    }
+    selected_fields = [k for k, v in contract_type_fields.items() if v]
+    return _contract_type(name, compiler_output, alias, selected_fields)
 
 
 @curry
 def _contract_type(
-    name: str, compiler_output: Dict[str, Any], kwargs, manifest: Manifest
+    name: str,
+    compiler_output: Dict[str, Any],
+    alias: Optional[str],
+    selected_fields: Optional[List[str]],
+    manifest: Manifest,
 ) -> Manifest:
     contracts_by_name = normalize_compiler_output(compiler_output)
-    if name not in contracts_by_name:
+    try:
+        all_type_data = contracts_by_name[name]
+    except KeyError:
         raise ManifestBuildingError(
-            "Contract by name of {0} was not found in the provided compiler output.".format(
-                name
-            )
+            "Contract name: {0} not found in the provided compiler output.".format(name)
         )
 
-    contract_type_data = contracts_by_name[name]
-    if kwargs:
+    if selected_fields:
         contract_type_data = {
-            k: v for k, v in contracts_by_name[name].items() if k in kwargs
+            k: v for k, v in all_type_data.items() if k in selected_fields
         }
+    else:
+        contract_type_data = all_type_data
 
-    if "alias" in kwargs:
-        # require 'contract_type' in kwargs?
-        contract_type_field = assoc(contract_type_data, "contract_type", name)
+    if alias:
         return assoc_in(
-            manifest, ["contract_types", kwargs["alias"]], contract_type_field
+            manifest,
+            ["contract_types", alias],
+            assoc(contract_type_data, "contract_type", name),
         )
-
     return assoc_in(manifest, ["contract_types", name], contract_type_data)
 
 
 @to_dict
 def normalize_compiler_output(compiler_output: Dict[str, Any]) -> Dict[str, str]:
+    """
+    Return compiler output with normalized fields for each contract type,
+    as specified in `normalize_contract_type`.
+    """
     paths_and_names = [
         (path, name)
         for path, sep, name in map(
@@ -219,7 +312,9 @@ def normalize_compiler_output(compiler_output: Dict[str, Any]) -> Dict[str, str]
     ]
     paths, names = zip(*paths_and_names)
     if len(names) != len(set(names)):
-        raise ManifestBuildingError("duplicate names!")
+        raise ManifestBuildingError(
+            "Duplicate contract names were found in the compiler output."
+        )
     return {
         name: normalize_contract_type(compiler_output[":".join((path, name))])
         for path, name in paths_and_names
@@ -230,6 +325,9 @@ def normalize_compiler_output(compiler_output: Dict[str, Any]) -> Dict[str, str]
 def normalize_contract_type(
     contract_type_data: Dict[str, Any]
 ) -> Generator[Dict[str, Any], None, None]:
+    """
+    Serialize contract_data found in compiler output to the defined fields.
+    """
     yield "abi", json.loads(contract_type_data["abi"])
     yield "deployment_bytecode", {"bytecode": add_0x_prefix(contract_type_data["bin"])}
     yield "natspec", json.loads(contract_type_data["devdoc"])
@@ -242,10 +340,16 @@ def normalize_contract_type(
 
 @curry
 def validate(manifest: Manifest) -> Manifest:
+    """
+    Return a validated manifest against the V2-specification schema.
+    """
     validate_manifest_against_schema(manifest)
     return manifest
 
 
 @curry
 def return_package(w3: Web3, manifest: Manifest) -> Package:
+    """
+    Return a Package object instantiated with the provided manifest and web3 instance.
+    """
     return Package(manifest, w3)
