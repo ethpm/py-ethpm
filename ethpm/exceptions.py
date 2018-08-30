@@ -45,3 +45,11 @@ class BytecodeLinkingError(PyEthPMError):
     """
 
     pass
+
+
+class ManifestBuildingError(PyEthPMError):
+    """
+    Raised when an attempt to build a manifest failed.
+    """
+
+    pass
