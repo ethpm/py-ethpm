@@ -2,7 +2,7 @@ import re
 from typing import Any
 from urllib import parse
 
-from eth_utils import is_address, is_canonical_address, is_checksum_address
+from eth_utils import is_address, is_canonical_address, is_checksum_address, is_text
 
 from ethpm.constants import PACKAGE_NAME_REGEX, REGISTRY_URI_SCHEME
 from ethpm.exceptions import ValidationError
@@ -20,6 +20,18 @@ def validate_address(address: Any) -> None:
         raise ValidationError(
             "Py-EthPM library only accepts canonicalized addresses. "
             "{0} is not in the accepted format.".format(address)
+        )
+
+
+def validate_package_version(version: Any) -> None:
+    """
+    Validates that a package version is of text type.
+    """
+    if not is_text(version):
+        raise ValidationError(
+            "Expected a version of text type, instead received {0}.".format(
+                type(version)
+            )
         )
 
 
@@ -45,6 +57,18 @@ def validate_package_name(pkg_name: str) -> None:
     """
     if not bool(re.match(PACKAGE_NAME_REGEX, pkg_name)):
         raise ValidationError("{0} is not a valid package name.".format(pkg_name))
+
+
+def validate_manifest_version(version: str) -> None:
+    """
+    Raise an exception if the version is not "2".
+    """
+    if not version == "2":
+        raise ValidationError(
+            "Py-EthPM does not support the provided specification version: {0}".format(
+                version
+            )
+        )
 
 
 def validate_ipfs_uri(uri: str) -> None:

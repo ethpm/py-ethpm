@@ -1,5 +1,6 @@
 import copy
 import json
+from pathlib import Path
 
 from eth_utils import to_hex
 import pytest
@@ -7,6 +8,12 @@ from web3 import Web3
 
 from ethpm import V2_PACKAGES_DIR, Package
 from ethpm.utils.chains import create_block_uri, get_chain_id
+
+
+@pytest.fixture
+def PACKAGING_EXAMPLES_DIR():
+    return Path(__file__).parent / "ethpm" / "packaging-examples"
+
 
 PACKAGE_NAMES = [
     "escrow",

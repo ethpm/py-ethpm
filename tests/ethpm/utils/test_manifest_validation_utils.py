@@ -8,6 +8,7 @@ from ethpm.utils.manifest_validation import (
     validate_manifest_deployments,
     validate_manifest_exists,
 )
+from ethpm.validation import validate_manifest_version
 
 
 def test_validate_manifest_exists_validates():
@@ -63,3 +64,15 @@ def test_validate_deployed_contracts_pr(manifest_with_no_deployments):
 def test_extract_contract_types_from_deployments(data, expected):
     actual = extract_contract_types_from_deployments(data)
     assert actual == expected
+
+
+@pytest.mark.parametrize("version", ("2"))
+def test_validate_manifest_version_validates_version_two_string(version):
+    validate = validate_manifest_version(version)
+    assert validate is None
+
+
+@pytest.mark.parametrize("version", (1, 2, "1" "3", b"3"))
+def test_validate_manifest_version_invalidates_incorrect_versions(version):
+    with pytest.raises(ValidationError):
+        validate_manifest_version(version)
