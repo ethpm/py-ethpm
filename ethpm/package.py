@@ -22,7 +22,6 @@ from ethpm.utils.contract import (
     validate_minimal_contract_factory_data,
     validate_w3_instance,
 )
-from ethpm.utils.deployment_validation import validate_single_matching_uri
 from ethpm.utils.filesystem import load_package_data_from_file
 from ethpm.utils.manifest_validation import (
     validate_build_dependencies_are_present,
@@ -30,7 +29,11 @@ from ethpm.utils.manifest_validation import (
     validate_manifest_against_schema,
     validate_manifest_deployments,
 )
-from ethpm.validation import validate_address, validate_build_dependency
+from ethpm.validation import (
+    validate_address,
+    validate_build_dependency,
+    validate_single_matching_uri,
+)
 
 
 class Package(object):
@@ -58,6 +61,11 @@ class Package(object):
         Set the default Web3 instance.
         """
         validate_w3_instance(w3)
+        # Mechanism to bust cached properties when switching chains.
+        if "deployments" in self.__dict__:
+            del self.deployments
+        if "build_dependencies" in self.__dict__:
+            del self.build_dependencies
         self.w3 = w3
         self.w3.eth.defaultContractFactory = LinkableContract
 
@@ -156,8 +164,8 @@ class Package(object):
     @cached_property
     def build_dependencies(self) -> "Dependencies":
         """
-        Return `Dependencies` instance containing the
-        build dependencies available on this Package.
+        Return `Dependencies` instance containing the build dependencies available on this Package.
+        Cached property (self.build_dependencies) busted everytime self.set_default_w3() is called.
         """
         validate_build_dependencies_are_present(self.package_data)
 
@@ -184,7 +192,8 @@ class Package(object):
     @cached_property
     def deployments(self) -> "Deployments":
         """
-        API to retrieve instance of deployed contract dependency.
+        API to retrieve package deployments available on the current w3-connected chain.
+        Cached property (self.deployments) gets busted everytime self.set_default_w3() is called.
         """
         validate_deployments_are_present(self.package_data)
 
