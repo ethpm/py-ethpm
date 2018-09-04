@@ -11,6 +11,7 @@ Welcome to Py-EthPM's documentation!
    :caption: Contents:
 
    overview.rst
+   builder.rst
    package.rst
    uri_backends.rst
 
