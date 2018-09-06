@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Type  # noqa: F401
 
 import cytoolz
-from eth_utils import is_canonical_address
+from eth_utils import is_canonical_address, to_checksum_address
 from web3.contract import Contract
 from web3.utils.decorators import combomethod
 
@@ -25,7 +25,9 @@ class LinkableContract(Contract):
                 "Contract cannot be instantiated until its bytecode is linked."
             )
         validate_address(address)
-        super(LinkableContract, self).__init__(address=address, **kwargs)
+        # todo: remove automatic checksumming of address once web3 dep is updated in pytest-ethereum
+        checksummed = to_checksum_address(address)
+        super(LinkableContract, self).__init__(address=checksummed, **kwargs)
 
     @combomethod
     def has_linkable_bytecode(self) -> bool:
