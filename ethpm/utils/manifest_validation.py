@@ -9,6 +9,39 @@ from ethpm.exceptions import ValidationError
 
 MANIFEST_SCHEMA_PATH = str(SPEC_DIR / "package.spec.json")
 
+META_FIELDS = {
+    "license": str,
+    "authors": list,
+    "description": str,
+    "keywords": list,
+    "links": dict,
+}
+
+
+def validate_meta_object(meta: Dict[str, Any], allow_extra_meta_fields: bool) -> None:
+    """
+    Validates that every key is one of `META_FIELDS` and has a value of the expected type.
+    """
+    for key, value in meta.items():
+        if key in META_FIELDS:
+            if type(value) is not META_FIELDS[key]:
+                raise ValidationError(
+                    "Values for {0} are expected to have the type {1}, instead got {2}.".format(
+                        key, META_FIELDS[key], type(value)
+                    )
+                )
+        elif allow_extra_meta_fields:
+            if key[:2] != "x-":
+                raise ValidationError(
+                    "Undefined meta fields need to begin with 'x-', "
+                    "{0} is not a valid undefined meta field.".format(key)
+                )
+        else:
+            raise ValidationError(
+                "{0} is not a permitted meta field. To allow undefined fields, "
+                "set `allow_extra_meta_fields` to True.".format(key)
+            )
+
 
 def _load_schema_data() -> Dict[str, Any]:
     with open(MANIFEST_SCHEMA_PATH) as schema:
