@@ -10,10 +10,15 @@ Cookbook
 To create a simple manifest
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For all manifests, the following fields are *required*.
-    - ``package_name``      (i.e. "owned")
-    - ``version``           (i.e. "1.0.0")
-    - ``manifest_version``  (i.e. "2")
+For all manifests, the following ingredients are *required*.
+
+.. code:: python
+
+   {}
+   package_name(str)
+   version(str)
+   manifest_version(str)
+
 
 The builder (i.e. ``build()``) expects a dict as the first argument. This dict can be empty, or populated if you want to extend an existing manifest.
 
@@ -45,6 +50,10 @@ The builder (i.e. ``build()``) expects a dict as the first argument. This dict c
 To return a ``Package``
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+.. code:: python
+
+   return_package(w3: Web3)
+
 By default, the manifest builder returns a dict representing the manifest. To return a ``Package`` instance (instantiated with the generated manifest) from the builder, add the ``return_package()`` builder function with a valid ``web3`` instance to the end of the builder.
 
 .. doctest::
@@ -63,9 +72,12 @@ By default, the manifest builder returns a dict representing the manifest. To re
    >>> assert isinstance(built_package, Package)
 
 
+To validate a manifest
+~~~~~~~~~~~~~~~~~~~~~~
 
-To validate the built manifest
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. code:: python
+
+   validate()
 
 By default, the manifest builder does *not* perform any validation that the generated fields are correctly formatted. There are two ways to validate that the built manifest conforms to the EthPM V2 Specification. 
     - Return a Package, which automatically runs validation.
@@ -92,16 +104,57 @@ By default, the manifest builder does *not* perform any validation that the gene
    ethpm.exceptions.ValidationError: Manifest invalid for schema version 2. Reason: '_InvalidPkgName' does not match '^[a-z][-a-z0-9]{0,255}$'
 
 
+To write a manifest to disk
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code:: python
+
+   to_disk(
+       manifest_root_dir: Optional[Path],
+       manifest_name: Optional[str],
+       prettify: Optional[bool],
+   )
+
+
+Writes the active manifest to disk. Will not overwrite an existing manifest with the same name and root directory.
+
+Defaults
+- Writes manifest to current working directory (as returned by `os.getcwd()`) unless a ``Path`` is provided as manifest_root_dir.
+- Writes manifest with a filename of "<version>.json" unless desired manifest name (which must end in ".json") is provided as manifest_name.
+- Writes the minified manifest version to disk unless prettify is set to True
+
+.. doctest::
+
+   >>> from pathlib import Path
+   >>> import tempfile
+   >>> p = Path(tempfile.mkdtemp("temp"))
+   >>> build(
+   ...     {},
+   ...     package_name("owned"),
+   ...     manifest_version("2"),
+   ...     version("1.0.0"),
+   ...     to_disk(manifest_root_dir=p, manifest_name="manifest.json", prettify=True),
+   ... )
+   {'package_name': 'owned', 'manifest_version': '2', 'version': '1.0.0'}
+   >>> with open(str(p / "manifest.json")) as f:
+   ...     actual_manifest = f.read()
+   >>> print(actual_manifest)
+   {
+        "manifest_version": "2",
+        "package_name": "owned",
+        "version": "1.0.0"
+   }
+
 To add meta fields
 ~~~~~~~~~~~~~~~~~~
 
-The following functions are available to populate the "meta" field of a manifest.
+.. code:: python
 
-    - ``description()`` accepts a single string
-    - ``license()``     accepts a single string
-    - ``authors()``     accepts any number of strings
-    - ``keywords()``    accepts any number of strings
-    - ``links()``       accepts any kind & number of keyword arguments
+   description(str)
+   license(str)
+   authors(*args: str)
+   keywords(*args: str)
+   links(*kwargs: str)
 
 .. doctest::
 
@@ -171,6 +224,20 @@ The ``compiler_output`` as used in the following examples is the entire value of
 To add a source
 ~~~~~~~~~~~~~~~
 
+.. code:: python
+  
+   inline_source(
+       contract_name: str,
+       compiler_output: Dict[str, Any],
+       package_root_dir: Optional[Path]
+   )
+   pin_source(
+       contract_name: str,
+       compiler_output: Dict[str, Any],
+       ipfs_backend: BaseIPFSBackend,
+       package_root_dir: Optional[Path]
+   )
+
 There are two ways to include a contract source in your manifest. 
 
 Both strategies require that either . . .
@@ -233,6 +300,20 @@ To include the source as a content-addressed URI, ``Py-EthPM`` can pin your sour
 
 To add a contract type
 ~~~~~~~~~~~~~~~~~~~~~~
+
+.. code:: python
+
+   contract_type(
+       contract_name: str,
+       compiler_output: Dict[str, Any],
+       alias: Optional[str],
+       abi: Optional[bool],
+       compiler: Optional[bool],
+       contract_type: Optional[bool],
+       deployment_bytecode: Optional[bool],
+       natspec: Optional[bool],
+       runtime_bytecode: Optional[bool]
+   )
 
 The default behavior of the manifest builder's ``contract_type()`` function is to populate the manifest with all of the contract type data found in the ``compiler_output``.
 

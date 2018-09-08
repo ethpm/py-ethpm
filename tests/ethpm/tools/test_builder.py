@@ -6,7 +6,7 @@ import pytest
 
 from ethpm import Package
 from ethpm.backends.ipfs import get_ipfs_backend
-from ethpm.exceptions import ValidationError
+from ethpm.exceptions import ManifestBuildingError, ValidationError
 from ethpm.tools.builder import (
     authors,
     build,
@@ -21,15 +21,12 @@ from ethpm.tools.builder import (
     package_name,
     pin_source,
     return_package,
+    to_disk,
     validate,
     version,
 )
 
 BASE_MANIFEST = {"package_name": "package", "manifest_version": "2", "version": "1.0.0"}
-"""
-solc --allow-paths /Users/nickgheorghita/ethereum/py-ethpm/ --standard-json <
-standard-json-input.json > owned_compiler_output.json
-"""
 
 
 @pytest.fixture
@@ -43,7 +40,7 @@ def owned_package(PACKAGING_EXAMPLES_DIR):
     return contracts_dir, manifest, compiler
 
 
-# todo validate no duplicate contracts in pkg
+# todo validate no duplicate contracts in package
 
 
 @pytest.fixture
@@ -68,6 +65,11 @@ def registry_package(PACKAGING_EXAMPLES_DIR):
     return contracts_dir, manifest, compiler
 
 
+@pytest.fixture
+def manifest_dir(tmpdir):
+    return Path(str(tmpdir.mkdir("sub")))
+
+
 def test_builder_simple_with_package(w3):
     package = build(
         {},
@@ -78,6 +80,86 @@ def test_builder_simple_with_package(w3):
     )
     assert isinstance(package, Package)
     assert package.version == "1.0.0"
+
+
+PRETTY_MANIFEST = """{
+    "manifest_version": "2",
+    "package_name": "package",
+    "version": "1.0.0"
+}"""
+
+MINIFIED_MANIFEST = (
+    '{"manifest_version":"2","package_name":"package","version":"1.0.0"}'
+)
+
+
+def test_builder_writes_manifest_to_disk(manifest_dir):
+    build(
+        {},
+        package_name("package"),
+        manifest_version("2"),
+        version("1.0.0"),
+        to_disk(
+            manifest_root_dir=manifest_dir, manifest_name="1.0.0.json", prettify=True
+        ),
+    )
+    with open(str(manifest_dir / "1.0.0.json")) as f:
+        actual_manifest = f.read()
+    assert actual_manifest == PRETTY_MANIFEST
+
+
+def test_builder_to_disk_uses_default_cwd(manifest_dir, monkeypatch):
+    monkeypatch.chdir(str(manifest_dir))
+    build(
+        {}, package_name("package"), manifest_version("2"), version("1.0.0"), to_disk()
+    )
+    with open(str(manifest_dir / "1.0.0.json")) as f:
+        actual_manifest = f.read()
+    assert actual_manifest == MINIFIED_MANIFEST
+
+
+def test_to_disk_writes_minified_manifest_as_default(manifest_dir):
+    build(
+        {},
+        package_name("package"),
+        manifest_version("2"),
+        version("1.0.0"),
+        to_disk(manifest_root_dir=manifest_dir, manifest_name="1.0.0.json"),
+    )
+    with open(str(manifest_dir / "1.0.0.json")) as f:
+        actual_manifest = f.read()
+    assert actual_manifest == MINIFIED_MANIFEST
+
+
+def test_to_disk_uses_default_manifest_name(manifest_dir):
+    build(
+        {},
+        package_name("package"),
+        manifest_version("2"),
+        version("1.0.0"),
+        to_disk(manifest_root_dir=manifest_dir),
+    )
+    with open(str(manifest_dir / "1.0.0.json")) as f:
+        actual_manifest = f.read()
+    assert actual_manifest == MINIFIED_MANIFEST
+
+
+@pytest.mark.parametrize(
+    "to_disk_fn",
+    (
+        to_disk(manifest_root_dir=Path("not/a/directory")),
+        to_disk(manifest_name="invalid_name"),
+    ),
+)
+def test_to_disk_with_invalid_args_raises_exception(manifest_dir, to_disk_fn):
+    with pytest.raises(ManifestBuildingError):
+        build(
+            {},
+            package_name("package"),
+            manifest_version("2"),
+            version("1.0.0"),
+            to_disk_fn,
+        )
 
 
 def test_builder_with_manifest_validation():
