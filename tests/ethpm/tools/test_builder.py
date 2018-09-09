@@ -26,29 +26,46 @@ from ethpm.tools.builder import (
 )
 
 BASE_MANIFEST = {"package_name": "package", "manifest_version": "2", "version": "1.0.0"}
+"""
+solc --allow-paths /Users/nickgheorghita/ethereum/py-ethpm/ --standard-json <
+standard-json-input.json > owned_compiler_output.json
+"""
 
 
 @pytest.fixture
 def owned_package(PACKAGING_EXAMPLES_DIR):
     root = PACKAGING_EXAMPLES_DIR / "owned"
     manifest = json.loads(Path(str(root / "1.0.0.json")).read_text())
-    compiler = json.loads(Path(str(root / "combined.json")).read_text())["contracts"]
-    return root, manifest, compiler
+    compiler = json.loads(Path(str(root / "owned_compiler_output.json")).read_text())[
+        "contracts"
+    ]
+    contracts_dir = root / "contracts"
+    return contracts_dir, manifest, compiler
+
+
+# todo validate no duplicate contracts in pkg
 
 
 @pytest.fixture
 def standard_token_package(PACKAGING_EXAMPLES_DIR):
     root = PACKAGING_EXAMPLES_DIR / "standard-token"
     manifest = json.loads(Path(str(root / "1.0.0.json")).read_text())
-    compiler = json.loads(Path(str(root / "combined.json")).read_text())["contracts"]
-    return root, manifest, compiler
+    compiler = json.loads(
+        Path(str(root / "standard_token_compiler_output.json")).read_text()
+    )["contracts"]
+    contracts_dir = root / "contracts"
+    return contracts_dir, manifest, compiler
 
 
-def test_builder_simple():
-    manifest = build(
-        {}, package_name("package"), manifest_version("2"), version("1.0.0"), validate()
-    )
-    assert manifest == BASE_MANIFEST
+@pytest.fixture
+def registry_package(PACKAGING_EXAMPLES_DIR):
+    root = PACKAGING_EXAMPLES_DIR / "registry"
+    compiler = json.loads(
+        Path(str(root / "registry_compiler_output.json")).read_text()
+    )["contracts"]
+    contracts_dir = root / "contracts"
+    manifest = json.loads(Path(str(root / "1.0.0.json")).read_text())
+    return contracts_dir, manifest, compiler
 
 
 def test_builder_simple_with_package(w3):
@@ -127,7 +144,7 @@ def test_builder_with_inline_source(owned_package, monkeypatch):
         BASE_MANIFEST,
         "sources",
         {
-            "./contracts/Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
+            "./Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
             """ owner;\n    \n    modifier onlyOwner { require(msg.sender == owner); _; }\n\n    """
             """constructor() public {\n        owner = msg.sender;\n    }\n}\n"""
         },
@@ -147,7 +164,7 @@ def test_builder_with_inline_source_with_package_root_dir_arg(owned_package):
         BASE_MANIFEST,
         "sources",
         {
-            "./contracts/Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
+            "./Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
             """ owner;\n    \n    modifier onlyOwner { require(msg.sender == owner); _; }\n\n    """
             """constructor() public {\n        owner = msg.sender;\n    }\n}\n"""
         },
@@ -183,7 +200,9 @@ def test_builder_with_default_contract_types(owned_package):
 
     manifest = build(BASE_MANIFEST, contract_type("Owned", compiler_output), validate())
 
-    contract_type_data = normalize_contract_type(tuple(compiler_output.values())[0])
+    contract_type_data = normalize_contract_type(
+        compiler_output["./Owned.sol"]["Owned"]
+    )
     expected = assoc(BASE_MANIFEST, "contract_types", {"Owned": contract_type_data})
     assert manifest == expected
 
@@ -197,7 +216,9 @@ def test_builder_with_single_alias_kwarg(owned_package):
         validate(),
     )
 
-    contract_type_data = normalize_contract_type(tuple(compiler_output.values())[0])
+    contract_type_data = normalize_contract_type(
+        compiler_output["./Owned.sol"]["Owned"]
+    )
     expected = assoc(
         BASE_MANIFEST,
         "contract_types",
@@ -215,7 +236,9 @@ def test_builder_without_alias_and_with_select_contract_types(owned_package):
         validate(),
     )
 
-    contract_type_data = normalize_contract_type(tuple(compiler_output.values())[0])
+    contract_type_data = normalize_contract_type(
+        compiler_output["./Owned.sol"]["Owned"]
+    )
     selected_data = {
         k: v for k, v in contract_type_data.items() if k != "deployment_bytecode"
     }
@@ -239,7 +262,9 @@ def test_builder_with_alias_and_select_contract_types(owned_package):
         validate(),
     )
 
-    contract_type_data = normalize_contract_type(tuple(compiler_output.values())[0])
+    contract_type_data = normalize_contract_type(
+        compiler_output["./Owned.sol"]["Owned"]
+    )
     expected = assoc(
         BASE_MANIFEST,
         "contract_types",
@@ -263,6 +288,40 @@ def test_builder_with_standard_token_manifest(
         pin_source("StandardToken", compiler_output, ipfs_backend),
         pin_source("Token", compiler_output, ipfs_backend),
         contract_type("StandardToken", compiler_output, abi=True, natspec=True),
+        validate(),
     )
+    assert manifest == expected_manifest
 
+
+def test_builder_with_link_references(
+    registry_package, dummy_ipfs_backend, monkeypatch
+):
+    root, expected_manifest, compiler_output = registry_package
+    ipfs_backend = get_ipfs_backend()
+    monkeypatch.chdir(str(root))
+    manifest = build(
+        {},
+        package_name("registry"),
+        manifest_version("2"),
+        version("1.0.0"),
+        pin_source("Authority", compiler_output, ipfs_backend),
+        pin_source("IndexedOrderedSetLib", compiler_output, ipfs_backend),
+        pin_source("PackageDB", compiler_output, ipfs_backend),
+        pin_source("PackageIndex", compiler_output, ipfs_backend),
+        pin_source("PackageIndexInterface", compiler_output, ipfs_backend),
+        pin_source("ReleaseDB", compiler_output, ipfs_backend),
+        pin_source("ReleaseValidator", compiler_output, ipfs_backend),
+        pin_source("SemVersionLib", compiler_output, ipfs_backend),
+        contract_type("Authorized", compiler_output, abi=True),
+        contract_type("IndexedOrderedSetLib", compiler_output, abi=True),
+        contract_type("PackageDB", compiler_output, abi=True, deployment_bytecode=True),
+        contract_type("PackageIndex", compiler_output, abi=True),
+        contract_type("PackageIndexInterface", compiler_output, abi=True),
+        contract_type("ReleaseDB", compiler_output, abi=True, deployment_bytecode=True),
+        contract_type("ReleaseValidator", compiler_output, abi=True),
+        contract_type(
+            "SemVersionLib", compiler_output, abi=True, deployment_bytecode=True
+        ),
+        validate(),
+    )
     assert manifest == expected_manifest

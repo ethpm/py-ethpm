@@ -63,7 +63,7 @@ setup(
         'protobuf>=3.0.0,<4',
         'py-solc>=2.1.0,<3',
         'rlp>=1.0.1,<2',
-        'web3>=4.5.0,<5',
+        'web3>=4.4.1,<5',
     ],
     setup_requires=['setuptools-markdown'],
     python_requires='>=3.5, <4',

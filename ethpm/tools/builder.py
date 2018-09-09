@@ -1,17 +1,16 @@
 import functools
-import json
-import operator
 import os
 from pathlib import Path
-from typing import Any, Dict, Generator, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
-from eth_utils import add_0x_prefix, to_dict
+import cytoolz
+from eth_utils import add_0x_prefix, to_dict, to_list
 from eth_utils.toolz import assoc, assoc_in, curry, pipe
 from web3 import Web3
 
 from ethpm import Package
 from ethpm.backends.ipfs import BaseIPFSBackend
-from ethpm.exceptions import ManifestBuildingError
+from ethpm.exceptions import ManifestBuildingError, ValidationError
 from ethpm.typing import Manifest
 from ethpm.utils.manifest_validation import validate_manifest_against_schema
 
@@ -19,7 +18,7 @@ from ethpm.utils.manifest_validation import validate_manifest_against_schema
 def build(obj, *fns):
     """
     Wrapper function to pipe manifest through build functions.
-    Does not validate the manifest by default.
+    Doesn't validate the manifest by default.
     """
     return pipe(obj, *fns)
 
@@ -123,10 +122,9 @@ def get_names_and_paths(compiler_output: Dict[str, Any]) -> Dict[str, str]:
     Return a mapping of contract name to relative path as defined in compiler output.
     """
     return {
-        name: path
-        for path, sep, name in map(
-            operator.methodcaller("partition", ":"), compiler_output
-        )
+        contract_name: path
+        for path in compiler_output
+        for contract_name in compiler_output[path].keys()
     }
 
 
@@ -147,7 +145,7 @@ def inline_source(
 def _inline_source(
     name: str,
     compiler_output: Dict[str, Any],
-    package_root_dir: Optional[str],
+    package_root_dir: Optional[Path],
     manifest: Manifest,
 ) -> Manifest:
     names_and_paths = get_names_and_paths(compiler_output)
@@ -171,9 +169,7 @@ def _inline_source(
             "directory is set to the correct directory or provide `package_root_dir`."
         )
 
-    return assoc_in(
-        manifest, ["sources", "./{0}".format(source_path_suffix)], source_data
-    )
+    return assoc_in(manifest, ["sources", source_path_suffix], source_data)
 
 
 def pin_source(
@@ -197,7 +193,7 @@ def _pin_source(
     name: str,
     compiler_output: Dict[str, Any],
     ipfs_backend: BaseIPFSBackend,
-    package_root_dir: Optional[str],
+    package_root_dir: Optional[Path],
     manifest: Manifest,
 ) -> Manifest:
     names_and_paths = get_names_and_paths(compiler_output)
@@ -221,9 +217,7 @@ def _pin_source(
         (ipfs_data,) = ipfs_backend.pin_assets(cwd / source_path)
 
     return assoc_in(
-        manifest,
-        ["sources", "./{0}".format(source_path)],
-        "ipfs://{0}".format(ipfs_data["Hash"]),
+        manifest, ["sources", source_path], "ipfs://{0}".format(ipfs_data["Hash"])
     )
 
 
@@ -281,7 +275,6 @@ def _contract_type(
         raise ManifestBuildingError(
             "Contract name: {0} not found in the provided compiler output.".format(name)
         )
-
     if selected_fields:
         contract_type_data = {
             k: v for k, v in all_type_data.items() if k in selected_fields
@@ -298,17 +291,15 @@ def _contract_type(
     return assoc_in(manifest, ["contract_types", name], contract_type_data)
 
 
-@to_dict
-def normalize_compiler_output(compiler_output: Dict[str, Any]) -> Dict[str, str]:
+def normalize_compiler_output(compiler_output: Dict[str, Any]) -> Dict[str, Any]:
     """
     Return compiler output with normalized fields for each contract type,
     as specified in `normalize_contract_type`.
     """
     paths_and_names = [
-        (path, name)
-        for path, sep, name in map(
-            operator.methodcaller("partition", ":"), compiler_output
-        )
+        (path, contract_name)
+        for path in compiler_output
+        for contract_name in compiler_output[path].keys()
     ]
     paths, names = zip(*paths_and_names)
     if len(names) != len(set(names)):
@@ -316,7 +307,7 @@ def normalize_compiler_output(compiler_output: Dict[str, Any]) -> Dict[str, str]
             "Duplicate contract names were found in the compiler output."
         )
     return {
-        name: normalize_contract_type(compiler_output[":".join((path, name))])
+        name: normalize_contract_type(compiler_output[path][name])
         for path, name in paths_and_names
     }
 
@@ -324,13 +315,92 @@ def normalize_compiler_output(compiler_output: Dict[str, Any]) -> Dict[str, str]
 @to_dict
 def normalize_contract_type(
     contract_type_data: Dict[str, Any]
-) -> Generator[Dict[str, Any], None, None]:
+) -> Iterable[Tuple[str, Any]]:
     """
     Serialize contract_data found in compiler output to the defined fields.
     """
-    yield "abi", json.loads(contract_type_data["abi"])
-    yield "deployment_bytecode", {"bytecode": add_0x_prefix(contract_type_data["bin"])}
-    yield "natspec", json.loads(contract_type_data["devdoc"])
+    yield "abi", contract_type_data["abi"]
+    yield "deployment_bytecode", normalize_bytecode_object(
+        contract_type_data["evm"]["bytecode"]
+    )
+    # todo support natspec, runtime_bytecode
+    yield "natspec", {}
+
+
+@to_dict
+def normalize_bytecode_object(obj: Dict[str, Any]) -> Iterable[Tuple[str, Any]]:
+    if obj["linkReferences"]:
+        yield "link_references", process_link_references(
+            obj["linkReferences"], obj["object"]
+        )
+        yield "bytecode", process_bytecode(obj["linkReferences"], obj["object"])
+    else:
+        yield "bytecode", add_0x_prefix(obj["object"])
+
+
+def process_bytecode(link_refs: Dict[str, Any], bytecode: bytes) -> bytes:
+    """
+    Replace link_refs in bytecode with 0's.
+    """
+    all_offsets = [y for x in link_refs.values() for y in x.values()]
+    # Link ref validation.
+    validate_link_ref_fns = (
+        validate_link_ref(ref["start"] * 2, ref["length"] * 2)
+        for ref in cytoolz.concat(all_offsets)
+    )
+    cytoolz.pipe(bytecode, *validate_link_ref_fns)
+    # Convert link_refs in bytecode to 0's
+    link_fns = (
+        replace_link_ref_in_bytecode(ref["start"] * 2, ref["length"] * 2)
+        for ref in cytoolz.concat(all_offsets)
+    )
+    processed_bytecode = cytoolz.pipe(bytecode, *link_fns)
+    return add_0x_prefix(processed_bytecode)
+
+
+@cytoolz.curry
+def replace_link_ref_in_bytecode(offset: int, length: int, bytecode: str) -> str:
+    new_bytes = (
+        bytecode[:offset] + "0" * length + bytecode[offset + length :]  # noqa: E203
+    )
+    return new_bytes
+
+
+# todo pull all bytecode linking/validating across py-ethpm into shared utils
+@to_list
+def process_link_references(
+    link_refs: Dict[str, Any], bytecode: str
+) -> Iterable[Dict[str, Any]]:
+    for link_ref in link_refs.values():
+        yield normalize_link_ref(link_ref, bytecode)
+
+
+def normalize_link_ref(link_ref: Dict[str, Any], bytecode: str) -> Dict[str, Any]:
+    name = list(link_ref.keys())[0]
+    return {
+        "name": name,
+        "length": 20,
+        "offsets": normalize_offsets(link_ref, bytecode),
+    }
+
+
+@to_list
+def normalize_offsets(data: Dict[str, Any], bytecode: str) -> Iterable[List[int]]:
+    for link_ref in data.values():
+        for ref in link_ref:
+            yield ref["start"]
+
+
+@cytoolz.curry
+def validate_link_ref(offset: int, length: int, bytecode: str) -> str:
+    slot_length = offset + length
+    slot = bytecode[offset:slot_length]
+    if slot[:2] != "__" and slot[-2:] != "__":
+        raise ValidationError(
+            "Slot: {0}, at offset: {1} of length: {2} is not a valid "
+            "link_ref that can be replaced.".format(slot, offset, length)
+        )
+    return bytecode
 
 
 #
