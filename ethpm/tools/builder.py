@@ -1,5 +1,5 @@
 import functools
-import os
+import json
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
@@ -18,7 +18,7 @@ from ethpm.utils.manifest_validation import validate_manifest_against_schema
 def build(obj, *fns):
     """
     Wrapper function to pipe manifest through build functions.
-    Doesn't validate the manifest by default.
+    Does not validate the manifest by default.
     """
     return pipe(obj, *fns)
 
@@ -129,7 +129,7 @@ def get_names_and_paths(compiler_output: Dict[str, Any]) -> Dict[str, str]:
 
 
 def inline_source(
-    name: str, compiler_output: Dict[str, Any], package_root_dir: Optional[str] = None
+    name: str, compiler_output: Dict[str, Any], package_root_dir: Optional[Path] = None
 ) -> Manifest:
     """
     Return a copy of manifest with added field to
@@ -149,7 +149,7 @@ def _inline_source(
     manifest: Manifest,
 ) -> Manifest:
     names_and_paths = get_names_and_paths(compiler_output)
-    cwd = Path(os.getcwd())
+    cwd = Path.cwd()
     source_path_suffix = names_and_paths[name]
 
     if package_root_dir:
@@ -176,7 +176,7 @@ def pin_source(
     name: str,
     compiler_output: Dict[str, Any],
     ipfs_backend: BaseIPFSBackend,
-    package_root_dir: Optional[str] = None,
+    package_root_dir: Optional[Path] = None,
 ) -> Manifest:
     """
     Pins source to IPFS and returns a copy of manifest with added field to
@@ -208,7 +208,7 @@ def _pin_source(
             )
         (ipfs_data,) = ipfs_backend.pin_assets(package_root_dir / source_path)
     else:
-        cwd = Path(os.getcwd())
+        cwd = Path.cwd()
         if not (cwd / source_path).is_file():
             raise ManifestBuildingError(
                 "Unable to find and pin contract source: {0} "
@@ -423,3 +423,64 @@ def return_package(w3: Web3, manifest: Manifest) -> Package:
     Return a Package object instantiated with the provided manifest and web3 instance.
     """
     return Package(manifest, w3)
+
+
+def to_disk(
+    manifest_root_dir: Optional[Path] = None,
+    manifest_name: Optional[str] = None,
+    prettify: Optional[bool] = False,
+) -> Manifest:
+    """
+    Write the active manifest to disk
+    Defaults
+    - Writes manifest to cwd unless Path is provided as manifest_root_dir.
+    - Writes manifest with a filename of Manifest[version].json unless a desired
+      manifest name (which must end in json) is provided as manifest_name.
+    - Writes the minified manifest version to disk unless prettify is set to True.
+    """
+    return _to_disk(manifest_root_dir, manifest_name, prettify)
+
+
+@curry
+def _to_disk(
+    manifest_root_dir: Optional[Path],
+    manifest_name: Optional[str],
+    prettify: Optional[bool],
+    manifest: Manifest,
+) -> Manifest:
+    if manifest_root_dir:
+        if manifest_root_dir.is_dir():
+            cwd = manifest_root_dir
+        else:
+            raise ManifestBuildingError(
+                "Manifest root directory: {0} cannot be found, please "
+                "provide a valid directory for writing the manifest to disk. "
+                "(Path obj // leave manifest_root_dir blank to default to cwd)".format(
+                    manifest_root_dir
+                )
+            )
+    else:
+        cwd = Path.cwd()
+
+    if manifest_name:
+        if not manifest_name.lower().endswith(".json"):
+            raise ManifestBuildingError(
+                "Invalid manifest name: {0}. All manifest names must end in .json".format(
+                    manifest_name
+                )
+            )
+        disk_manifest_name = manifest_name
+    else:
+        disk_manifest_name = manifest["version"] + ".json"
+
+    if prettify:
+        contents = json.dumps(manifest, sort_keys=True, indent=4)
+    else:
+        contents = json.dumps(manifest, sort_keys=True, separators=(",", ":"))
+
+    if (cwd / disk_manifest_name).is_file():
+        raise ManifestBuildingError(
+            "Manifest: {0} already exists in cwd: {1}".format(disk_manifest_name, cwd)
+        )
+    (cwd / disk_manifest_name).write_text(contents)
+    return manifest
