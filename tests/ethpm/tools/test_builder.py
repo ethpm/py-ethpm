@@ -8,10 +8,12 @@ from ethpm import Package
 from ethpm.backends.ipfs import get_ipfs_backend
 from ethpm.exceptions import ManifestBuildingError, ValidationError
 from ethpm.tools.builder import (
+    as_package,
     authors,
     build,
     contract_type,
     description,
+    init_manifest,
     inline_source,
     keywords,
     license,
@@ -20,7 +22,8 @@ from ethpm.tools.builder import (
     normalize_contract_type,
     package_name,
     pin_source,
-    return_package,
+    source_inliner,
+    source_pinner,
     to_disk,
     validate,
     version,
@@ -76,7 +79,7 @@ def test_builder_simple_with_package(w3):
         package_name("package"),
         manifest_version("2"),
         version("1.0.0"),
-        return_package(w3),
+        as_package(w3),
     )
     assert isinstance(package, Package)
     assert package.version == "1.0.0"
@@ -234,6 +237,25 @@ def test_builder_with_inline_source(owned_package, monkeypatch):
     assert manifest == expected
 
 
+def test_builder_with_source_inliner(owned_package, monkeypatch):
+    root, _, compiler_output = owned_package
+
+    monkeypatch.chdir(str(root))
+    inliner = source_inliner(compiler_output)
+    manifest = build(BASE_MANIFEST, inliner("Owned"), validate())
+
+    expected = assoc(
+        BASE_MANIFEST,
+        "sources",
+        {
+            "./Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
+            """ owner;\n    \n    modifier onlyOwner { require(msg.sender == owner); _; }\n\n    """
+            """constructor() public {\n        owner = msg.sender;\n    }\n}\n"""
+        },
+    )
+    assert manifest == expected
+
+
 def test_builder_with_inline_source_with_package_root_dir_arg(owned_package):
     root, _, compiler_output = owned_package
 
@@ -263,6 +285,49 @@ def test_builder_with_pin_source(owned_package, dummy_ipfs_backend):
         package_name("owned"),
         manifest_version("2"),
         version("1.0.0"),
+        authors("Piper Merriam <pipermerriam@gmail.com>"),
+        description(
+            "Reusable contracts which implement a privileged 'owner' model for authorization."
+        ),
+        keywords("authorization"),
+        license("MIT"),
+        links(documentation="ipfs://QmUYcVzTfSwJoigggMxeo2g5STWAgJdisQsqcXHws7b1FW"),
+        pin_source("Owned", compiler_output, ipfs_backend, root),
+        validate(),
+    )
+
+    assert manifest == expected_manifest
+
+
+def test_builder_with_pinner(owned_package, dummy_ipfs_backend):
+    root, expected_manifest, compiler_output = owned_package
+    ipfs_backend = get_ipfs_backend()
+    pinner = source_pinner(compiler_output, ipfs_backend, root)
+    manifest = build(
+        {},
+        package_name("owned"),
+        manifest_version("2"),
+        version("1.0.0"),
+        authors("Piper Merriam <pipermerriam@gmail.com>"),
+        description(
+            "Reusable contracts which implement a privileged 'owner' model for authorization."
+        ),
+        keywords("authorization"),
+        license("MIT"),
+        links(documentation="ipfs://QmUYcVzTfSwJoigggMxeo2g5STWAgJdisQsqcXHws7b1FW"),
+        pinner("Owned"),
+        validate(),
+    )
+
+    assert manifest == expected_manifest
+
+
+def test_builder_with_init_manifest(owned_package, dummy_ipfs_backend):
+    root, expected_manifest, compiler_output = owned_package
+    ipfs_backend = get_ipfs_backend()
+
+    manifest = build(
+        init_manifest(package_name="owned", version="1.0.0"),
         authors("Piper Merriam <pipermerriam@gmail.com>"),
         description(
             "Reusable contracts which implement a privileged 'owner' model for authorization."
@@ -381,19 +446,20 @@ def test_builder_with_link_references(
     root, expected_manifest, compiler_output = registry_package
     ipfs_backend = get_ipfs_backend()
     monkeypatch.chdir(str(root))
+    pinner = source_pinner(compiler_output, ipfs_backend)
     manifest = build(
         {},
         package_name("registry"),
         manifest_version("2"),
         version("1.0.0"),
-        pin_source("Authority", compiler_output, ipfs_backend),
-        pin_source("IndexedOrderedSetLib", compiler_output, ipfs_backend),
-        pin_source("PackageDB", compiler_output, ipfs_backend),
-        pin_source("PackageIndex", compiler_output, ipfs_backend),
-        pin_source("PackageIndexInterface", compiler_output, ipfs_backend),
-        pin_source("ReleaseDB", compiler_output, ipfs_backend),
-        pin_source("ReleaseValidator", compiler_output, ipfs_backend),
-        pin_source("SemVersionLib", compiler_output, ipfs_backend),
+        pinner("Authority"),
+        pinner("IndexedOrderedSetLib"),
+        pinner("PackageDB"),
+        pinner("PackageIndex"),
+        pinner("PackageIndexInterface"),
+        pinner("ReleaseDB"),
+        pinner("ReleaseValidator"),
+        pinner("SemVersionLib"),
         contract_type("Authorized", compiler_output, abi=True),
         contract_type("IndexedOrderedSetLib", compiler_output, abi=True),
         contract_type("PackageDB", compiler_output, abi=True, deployment_bytecode=True),

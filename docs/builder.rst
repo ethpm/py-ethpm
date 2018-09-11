@@ -14,10 +14,18 @@ For all manifests, the following ingredients are *required*.
 
 .. code:: python
 
-   {}
-   package_name(str)
-   version(str)
-   manifest_version(str)
+   build(
+       {},
+       package_name(str),
+       version(str),
+       manifest_version(str),
+       ...,
+   )
+   # Or
+   build(
+       init_manifest(package_name: str, version: str, manifest_version: str="2")
+       ...,
+   )
 
 
 The builder (i.e. ``build()``) expects a dict as the first argument. This dict can be empty, or populated if you want to extend an existing manifest.
@@ -46,15 +54,28 @@ The builder (i.e. ``build()``) expects a dict as the first argument. This dict c
    >>> assert built_manifest == expected_manifest
    >>> assert extended_manifest == expected_manifest
 
+With ``init_manifest()``, which populates "version" with "2" (the only supported EthPM specification version), unless provided with an alternative "version".
+
+.. doctest::
+
+   >>> build(
+   ...     init_manifest("owned", "1.0.0"),
+   ... )
+   {'package_name': 'owned', 'version': '1.0.0', 'manifest_version': '2'}
+
+
 
 To return a ``Package``
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python
 
-   return_package(w3: Web3)
+   build(
+       ...,
+       as_package(w3: Web3),
+   )
 
-By default, the manifest builder returns a dict representing the manifest. To return a ``Package`` instance (instantiated with the generated manifest) from the builder, add the ``return_package()`` builder function with a valid ``web3`` instance to the end of the builder.
+By default, the manifest builder returns a dict representing the manifest. To return a ``Package`` instance (instantiated with the generated manifest) from the builder, add the ``as_package()`` builder function with a valid ``web3`` instance to the end of the builder.
 
 .. doctest::
 
@@ -67,7 +88,7 @@ By default, the manifest builder returns a dict representing the manifest. To re
    ...     package_name("owned"),
    ...     manifest_version("2"),
    ...     version("1.0.0"),
-   ...     return_package(w3),
+   ...     as_package(w3),
    ... )
    >>> assert isinstance(built_package, Package)
 
@@ -77,7 +98,10 @@ To validate a manifest
 
 .. code:: python
 
-   validate()
+   build(
+       ...,
+       validate(),
+   )
 
 By default, the manifest builder does *not* perform any validation that the generated fields are correctly formatted. There are two ways to validate that the built manifest conforms to the EthPM V2 Specification. 
     - Return a Package, which automatically runs validation.
@@ -109,10 +133,13 @@ To write a manifest to disk
 
 .. code:: python
 
-   to_disk(
-       manifest_root_dir: Optional[Path],
-       manifest_name: Optional[str],
-       prettify: Optional[bool],
+   build(
+       ...,
+       to_disk(
+           manifest_root_dir: Optional[Path],
+           manifest_name: Optional[str],
+           prettify: Optional[bool],
+       ),
    )
 
 
@@ -150,11 +177,15 @@ To add meta fields
 
 .. code:: python
 
-   description(str)
-   license(str)
-   authors(*args: str)
-   keywords(*args: str)
-   links(*kwargs: str)
+   build(
+       ...,
+       description(str),
+       license(str),
+       authors(*args: str),
+       keywords(*args: str),
+       links(*kwargs: str),
+       ...,
+   )
 
 .. doctest::
 
@@ -226,16 +257,26 @@ To add a source
 
 .. code:: python
   
-   inline_source(
-       contract_name: str,
-       compiler_output: Dict[str, Any],
-       package_root_dir: Optional[Path]
+   # To inline a source
+   build(
+       ...,
+       inline_source(
+           contract_name: str,
+           compiler_output: Dict[str, Any],
+           package_root_dir: Optional[Path]
+       ),
+       ...,
    )
-   pin_source(
-       contract_name: str,
-       compiler_output: Dict[str, Any],
-       ipfs_backend: BaseIPFSBackend,
-       package_root_dir: Optional[Path]
+   # To pin a source
+   build(
+       ...,
+       pin_source(
+           contract_name: str,
+           compiler_output: Dict[str, Any],
+           ipfs_backend: BaseIPFSBackend,
+           package_root_dir: Optional[Path]
+       ),
+       ...,
    )
 
 There are two ways to include a contract source in your manifest. 
@@ -246,7 +287,7 @@ Both strategies require that either . . .
     - The package root directory is provided as an argument (``package_root_dir``)
 
 
-To inline the source code directly in the manifest, use the ``inline_source()`` function, which requires the contract name and compiler output as args. 
+To inline the source code directly in the manifest, use ``inline_source()`` or ``source_inliner()`` (to inline multiple sources from the same compiler_output), which requires the contract name and compiler output as args. 
 
 .. note::
    
@@ -269,9 +310,18 @@ To inline the source code directly in the manifest, use the ``inline_source()`` 
    ...     """constructor() public {\n        owner = msg.sender;\n    }\n}\n"""
    ...   }
    ... }
+   >>> # With `inline_source()`
    >>> built_manifest = build(
    ...     BASE_MANIFEST,
    ...     inline_source("Owned", compiler_output, package_root_dir=owned_dir),
+   ... )
+   >>> assert expected_manifest == built_manifest
+   >>> # With `source_inliner()` for multiple sources from the same compiler output
+   >>> inliner = source_inliner(compiler_output, package_root_dir=owned_dir)
+   >>> built_manifest = build(
+   ...     BASE_MANIFEST,
+   ...     inliner("Owned"),
+   ...     # inliner("other_source"), etc...
    ... )
    >>> assert expected_manifest == built_manifest
 
@@ -290,9 +340,18 @@ To include the source as a content-addressed URI, ``Py-EthPM`` can pin your sour
    ...     "./Owned.sol": "ipfs://Qme4otpS88NV8yQi8TfTP89EsQC5bko3F5N1yhRoi6cwGV"
    ...   }
    ... }
+   >>> # With `pin_source()`
    >>> built_manifest = build(
    ...     BASE_MANIFEST,
    ...     pin_source("Owned", compiler_output, ipfs_backend, package_root_dir=owned_dir),
+   ... )
+   >>> assert expected_manifest == built_manifest
+   >>> # With `source_pinner()` for multiple sources from the same compiler output
+   >>> pinner = source_pinner(compiler_output, ipfs_backend, package_root_dir=owned_dir)
+   >>> built_manifest = build(
+   ...     BASE_MANIFEST,
+   ...     pinner("Owned"),
+   ...     # pinner("other_source"), etc
    ... )
    >>> assert expected_manifest == built_manifest
 
@@ -303,16 +362,20 @@ To add a contract type
 
 .. code:: python
 
-   contract_type(
-       contract_name: str,
-       compiler_output: Dict[str, Any],
-       alias: Optional[str],
-       abi: Optional[bool],
-       compiler: Optional[bool],
-       contract_type: Optional[bool],
-       deployment_bytecode: Optional[bool],
-       natspec: Optional[bool],
-       runtime_bytecode: Optional[bool]
+   build(
+       ...,
+       contract_type(
+           contract_name: str,
+           compiler_output: Dict[str, Any],
+           alias: Optional[str],
+           abi: Optional[bool],
+           compiler: Optional[bool],
+           contract_type: Optional[bool],
+           deployment_bytecode: Optional[bool],
+           natspec: Optional[bool],
+           runtime_bytecode: Optional[bool]
+       ),
+       ...,
    )
 
 The default behavior of the manifest builder's ``contract_type()`` function is to populate the manifest with all of the contract type data found in the ``compiler_output``.

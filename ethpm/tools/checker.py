@@ -1,0 +1,262 @@
+import re
+
+import cytoolz
+from eth_utils.toolz import assoc, assoc_in
+
+from ethpm.constants import PACKAGE_NAME_REGEX
+from ethpm.tools.builder import build
+
+WARNINGS = {
+    "manifest_version_missing": "Manifest missing a required 'manifest_version' field.",
+    "manifest_version_invalid": "'manifest_version' is invalid. The only supported version is '2'.",
+    "package_name_missing": "Manifest missing a required 'package_name' field",
+    "package_name_invalid": "'package_name' is invalid. Doesn't match the regex: {0}".format(
+        PACKAGE_NAME_REGEX
+    ),
+    "version_missing": "Manifest missing a required 'version' field.",
+    "meta_missing": "Manifest missing a suggested 'meta' field.",
+    "authors_missing": "'meta' field missing suggested 'authors' field.",
+    "description_missing": "'meta' field missing suggested 'description' field.",
+    "links_missing": "'meta' field missing suggested 'links' field.",
+    "license_missing": "'meta' field missing suggested 'license' field.",
+    "keywords_missing": "'meta' field missing suggested 'keywords' field.",
+    "sources_missing": """Manifest is missing a sources field, which defines a source tree """
+    """that should comprise the full source tree necessary to recompile the contracts """
+    """contained in this release.""",
+    "contract_type_missing": """Manifest does not contain any 'contract_types'. Packages """
+    """should only include contract types that can be found in the source files for this """
+    """package. Packages should not include contract types from dependencies. Packages """
+    """should not include abstract contracts in the contract types section of a release.""",
+    "abi_missing": """Contract type: {0} is missing an abi field, which is essential for using """
+    """this package.""",
+    "deployment_bytecode_missing": """Contract type: {0} is missing a deployment_bytecode field,"""
+    """ which is essential for using this package.""",
+    "contract_type_subfield_missing": """Contract type: {0} is missing a contract_type field, """
+    """which is essential if an alias is being used to namespace this contract type.""",
+    "runtime_bytecode_missing": "Contract type: {0} is missing a runtime_bytecode field.",
+    "bytecode_subfield_missing": """Contract type: {0} is missing a required bytecode subfield """
+    """in its {1} bytecode object.""",
+    "natspec_missing": "Contract type: {0} is missing a natspec field.",
+    "compiler_missing": "Contract type: {0} is missing a compiler field.",
+}
+
+
+#
+# Validation
+#
+
+
+def check_manifest(manifest):
+    generate_warnings = (
+        check_manifest_version(manifest),
+        check_package_name(manifest),
+        check_version(manifest),
+        check_meta(manifest),
+        check_sources(manifest),
+        check_contract_types(manifest),
+    )
+    return build({}, *generate_warnings)
+
+
+#
+# Required fields
+#
+
+
+@cytoolz.curry
+def check_manifest_version(manifest, warnings):
+    if "manifest_version" not in manifest or not manifest["manifest_version"]:
+        return assoc(warnings, "manifest_version", WARNINGS["manifest_version_missing"])
+    if manifest["manifest_version"] != "2":
+        return assoc(warnings, "manifest_version", WARNINGS["manifest_version_invalid"])
+    return warnings
+
+
+@cytoolz.curry
+def check_package_name(manifest, warnings):
+    if "package_name" not in manifest or not manifest["package_name"]:
+        return assoc(warnings, "package_name", WARNINGS["package_name_missing"])
+    if not bool(re.match(PACKAGE_NAME_REGEX, manifest["package_name"])):
+        return assoc(warnings, "package_name", WARNINGS["package_name_invalid"])
+    return warnings
+
+
+@cytoolz.curry
+def check_version(manifest, warnings):
+    if "version" not in manifest or not manifest["version"]:
+        return assoc(warnings, "version", WARNINGS["version_missing"])
+    return warnings
+
+
+#
+# Meta fields
+#
+
+
+@cytoolz.curry
+def check_meta(manifest, warnings):
+    if "meta" not in manifest or not manifest["meta"]:
+        return assoc(warnings, "meta", WARNINGS["meta_missing"])
+    meta_validation = (
+        check_authors(manifest["meta"]),
+        check_license(manifest["meta"]),
+        check_description(manifest["meta"]),
+        check_keywords(manifest["meta"]),
+        check_links(manifest["meta"]),
+    )
+    return build(warnings, *meta_validation)
+
+
+@cytoolz.curry
+def check_authors(meta, warnings):
+    if "authors" not in meta:
+        return assoc(warnings, "meta.authors", WARNINGS["authors_missing"])
+    return warnings
+
+
+@cytoolz.curry
+def check_license(meta, warnings):
+    if "license" not in meta or not meta["license"]:
+        return assoc(warnings, "meta.license", WARNINGS["license_missing"])
+    return warnings
+
+
+@cytoolz.curry
+def check_description(meta, warnings):
+    if "description" not in meta or not meta["description"]:
+        return assoc(warnings, "meta.description", WARNINGS["description_missing"])
+    return warnings
+
+
+@cytoolz.curry
+def check_keywords(meta, warnings):
+    if "keywords" not in meta or not meta["keywords"]:
+        return assoc(warnings, "meta.keywords", WARNINGS["keywords_missing"])
+    return warnings
+
+
+@cytoolz.curry
+def check_links(meta, warnings):
+    if "links" not in meta or not meta["links"]:
+        return assoc(warnings, "meta.links", WARNINGS["links_missing"])
+    return warnings
+
+
+#
+# Sources
+#
+
+
+@cytoolz.curry
+def check_sources(manifest, warnings):
+    if "sources" not in manifest or not manifest["sources"]:
+        return assoc(warnings, "sources", WARNINGS["sources_missing"])
+    return warnings
+
+
+#
+# Contract Types
+#
+
+# todo: validate a contract type matches source
+@cytoolz.curry
+def check_contract_types(manifest, warnings):
+    if "contract_types" not in manifest or not manifest["contract_types"]:
+        return assoc(warnings, "contract_types", WARNINGS["contract_type_missing"])
+
+    all_contract_type_validations = (
+        (
+            check_abi(contract_name, data),
+            check_contract_type(contract_name, data),
+            check_deployment_bytecode(contract_name, data),
+            check_runtime_bytecode(contract_name, data),
+            check_natspec(contract_name, data),
+            check_compiler(contract_name, data),
+        )
+        for contract_name, data in manifest["contract_types"].items()
+    )
+    return build(warnings, *sum(all_contract_type_validations, ()))
+
+
+@cytoolz.curry
+def check_abi(contract_name, data, warnings):
+    if "abi" not in data or not data["abi"]:
+        return assoc_in(
+            warnings,
+            ["contract_types", contract_name, "abi"],
+            WARNINGS["abi_missing"].format(contract_name),
+        )
+    return warnings
+
+
+@cytoolz.curry
+def check_contract_type(contract_name, data, warnings):
+    if "contract_type" not in data or not data["contract_type"]:
+        return assoc_in(
+            warnings,
+            ["contract_types", contract_name, "contract_type"],
+            WARNINGS["contract_type_subfield_missing"].format(contract_name),
+        )
+    return warnings
+
+
+@cytoolz.curry
+def check_deployment_bytecode(contract_name, data, warnings):
+    if "deployment_bytecode" not in data or not data["deployment_bytecode"]:
+        return assoc_in(
+            warnings,
+            ["contract_types", contract_name, "deployment_bytecode"],
+            WARNINGS["deployment_bytecode_missing"].format(contract_name),
+        )
+    return build(
+        warnings,
+        check_bytecode_object(contract_name, "deployment", data["deployment_bytecode"]),
+    )
+
+
+@cytoolz.curry
+def check_runtime_bytecode(contract_name, data, warnings):
+    if "runtime_bytecode" not in data or not data["runtime_bytecode"]:
+        return assoc_in(
+            warnings,
+            ["contract_types", contract_name, "runtime_bytecode"],
+            WARNINGS["runtime_bytecode_missing"].format(contract_name),
+        )
+    return build(
+        warnings,
+        check_bytecode_object(contract_name, "runtime", data["runtime_bytecode"]),
+    )
+
+
+@cytoolz.curry
+def check_bytecode_object(contract_name, bytecode_type, bytecode_data, warnings):
+    # todo: check if bytecode has link_refs & validate link_refs present in object
+    if "bytecode" not in bytecode_data or not bytecode_data["bytecode"]:
+        return assoc_in(
+            warnings,
+            ["contract_types", contract_name, "{0}_bytecode".format(bytecode_type)],
+            WARNINGS["bytecode_subfield_missing"].format(contract_name, bytecode_type),
+        )
+    return warnings
+
+
+@cytoolz.curry
+def check_natspec(contract_name, data, warnings):
+    if "natspec" not in data or not data["natspec"]:
+        return assoc_in(
+            warnings,
+            ["contract_types", contract_name, "natspec"],
+            WARNINGS["natspec_missing"].format(contract_name),
+        )
+    return warnings
+
+
+@cytoolz.curry
+def check_compiler(contract_name, data, warnings):
+    if "compiler" not in data or not data["compiler"]:
+        return assoc_in(
+            warnings,
+            ["contract_types", contract_name, "compiler"],
+            WARNINGS["compiler_missing"].format(contract_name),
+        )
+    return warnings

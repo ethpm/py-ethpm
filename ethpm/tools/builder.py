@@ -128,6 +128,15 @@ def get_names_and_paths(compiler_output: Dict[str, Any]) -> Dict[str, str]:
     }
 
 
+def source_inliner(compiler_output, package_root_dir=None):
+    return _inline_sources(compiler_output, package_root_dir)
+
+
+@cytoolz.curry
+def _inline_sources(compiler_output, package_root_dir, name):
+    return _inline_source(name, compiler_output, package_root_dir)
+
+
 def inline_source(
     name: str, compiler_output: Dict[str, Any], package_root_dir: Optional[Path] = None
 ) -> Manifest:
@@ -170,6 +179,15 @@ def _inline_source(
         )
 
     return assoc_in(manifest, ["sources", source_path_suffix], source_data)
+
+
+def source_pinner(compiler_output, ipfs_backend, package_root_dir=None):
+    return _pin_sources(compiler_output, ipfs_backend, package_root_dir)
+
+
+@cytoolz.curry
+def _pin_sources(compiler_output, ipfs_backend, package_root_dir, name):
+    return _pin_source(name, compiler_output, ipfs_backend, package_root_dir)
 
 
 def pin_source(
@@ -404,6 +422,24 @@ def validate_link_ref(offset: int, length: int, bytecode: str) -> str:
 
 
 #
+# Helpers
+#
+
+
+@cytoolz.curry
+def init_manifest(package_name, version, manifest_version="2"):
+    """
+    Returns an initial dict with the minimal requried fields for a valid manifest.
+    Should only be used as the first fn to be piped into a `build()` pipeline.
+    """
+    return {
+        "package_name": package_name,
+        "version": version,
+        "manifest_version": manifest_version,
+    }
+
+
+#
 # Formatting
 #
 
@@ -418,7 +454,7 @@ def validate(manifest: Manifest) -> Manifest:
 
 
 @curry
-def return_package(w3: Web3, manifest: Manifest) -> Package:
+def as_package(w3: Web3, manifest: Manifest) -> Package:
     """
     Return a Package object instantiated with the provided manifest and web3 instance.
     """
