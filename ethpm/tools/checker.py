@@ -1,10 +1,12 @@
 import re
+from typing import Any, Dict
 
 import cytoolz
 from eth_utils.toolz import assoc, assoc_in
 
 from ethpm.constants import PACKAGE_NAME_REGEX
 from ethpm.tools.builder import build
+from ethpm.typing import Manifest
 
 WARNINGS = {
     "manifest_version_missing": "Manifest missing a required 'manifest_version' field.",
@@ -46,7 +48,7 @@ WARNINGS = {
 #
 
 
-def check_manifest(manifest):
+def check_manifest(manifest: Manifest) -> Dict[str, str]:
     generate_warnings = (
         check_manifest_version(manifest),
         check_package_name(manifest),
@@ -64,7 +66,9 @@ def check_manifest(manifest):
 
 
 @cytoolz.curry
-def check_manifest_version(manifest, warnings):
+def check_manifest_version(
+    manifest: Manifest, warnings: Dict[str, str]
+) -> Dict[str, str]:
     if "manifest_version" not in manifest or not manifest["manifest_version"]:
         return assoc(warnings, "manifest_version", WARNINGS["manifest_version_missing"])
     if manifest["manifest_version"] != "2":
@@ -73,7 +77,7 @@ def check_manifest_version(manifest, warnings):
 
 
 @cytoolz.curry
-def check_package_name(manifest, warnings):
+def check_package_name(manifest: Manifest, warnings: Dict[str, str]) -> Dict[str, str]:
     if "package_name" not in manifest or not manifest["package_name"]:
         return assoc(warnings, "package_name", WARNINGS["package_name_missing"])
     if not bool(re.match(PACKAGE_NAME_REGEX, manifest["package_name"])):
@@ -82,7 +86,7 @@ def check_package_name(manifest, warnings):
 
 
 @cytoolz.curry
-def check_version(manifest, warnings):
+def check_version(manifest: Manifest, warnings: Dict[str, str]) -> Dict[str, str]:
     if "version" not in manifest or not manifest["version"]:
         return assoc(warnings, "version", WARNINGS["version_missing"])
     return warnings
@@ -94,7 +98,7 @@ def check_version(manifest, warnings):
 
 
 @cytoolz.curry
-def check_meta(manifest, warnings):
+def check_meta(manifest: Manifest, warnings: Dict[str, str]) -> Dict[str, str]:
     if "meta" not in manifest or not manifest["meta"]:
         return assoc(warnings, "meta", WARNINGS["meta_missing"])
     meta_validation = (
@@ -108,35 +112,35 @@ def check_meta(manifest, warnings):
 
 
 @cytoolz.curry
-def check_authors(meta, warnings):
+def check_authors(meta: Dict[str, Any], warnings: Dict[str, str]) -> Dict[str, str]:
     if "authors" not in meta:
         return assoc(warnings, "meta.authors", WARNINGS["authors_missing"])
     return warnings
 
 
 @cytoolz.curry
-def check_license(meta, warnings):
+def check_license(meta: Dict[str, Any], warnings: Dict[str, str]) -> Dict[str, str]:
     if "license" not in meta or not meta["license"]:
         return assoc(warnings, "meta.license", WARNINGS["license_missing"])
     return warnings
 
 
 @cytoolz.curry
-def check_description(meta, warnings):
+def check_description(meta: Dict[str, Any], warnings: Dict[str, str]) -> Dict[str, str]:
     if "description" not in meta or not meta["description"]:
         return assoc(warnings, "meta.description", WARNINGS["description_missing"])
     return warnings
 
 
 @cytoolz.curry
-def check_keywords(meta, warnings):
+def check_keywords(meta: Dict[str, Any], warnings: Dict[str, str]) -> Dict[str, str]:
     if "keywords" not in meta or not meta["keywords"]:
         return assoc(warnings, "meta.keywords", WARNINGS["keywords_missing"])
     return warnings
 
 
 @cytoolz.curry
-def check_links(meta, warnings):
+def check_links(meta: Dict[str, Any], warnings: Dict[str, str]) -> Dict[str, str]:
     if "links" not in meta or not meta["links"]:
         return assoc(warnings, "meta.links", WARNINGS["links_missing"])
     return warnings
@@ -148,7 +152,7 @@ def check_links(meta, warnings):
 
 
 @cytoolz.curry
-def check_sources(manifest, warnings):
+def check_sources(manifest: Manifest, warnings: Dict[str, str]) -> Dict[str, str]:
     if "sources" not in manifest or not manifest["sources"]:
         return assoc(warnings, "sources", WARNINGS["sources_missing"])
     return warnings
@@ -160,7 +164,9 @@ def check_sources(manifest, warnings):
 
 # todo: validate a contract type matches source
 @cytoolz.curry
-def check_contract_types(manifest, warnings):
+def check_contract_types(
+    manifest: Manifest, warnings: Dict[str, str]
+) -> Dict[str, str]:
     if "contract_types" not in manifest or not manifest["contract_types"]:
         return assoc(warnings, "contract_types", WARNINGS["contract_type_missing"])
 
@@ -179,7 +185,9 @@ def check_contract_types(manifest, warnings):
 
 
 @cytoolz.curry
-def check_abi(contract_name, data, warnings):
+def check_abi(
+    contract_name: str, data: Dict[str, Any], warnings: Dict[str, str]
+) -> Dict[str, str]:
     if "abi" not in data or not data["abi"]:
         return assoc_in(
             warnings,
@@ -190,7 +198,9 @@ def check_abi(contract_name, data, warnings):
 
 
 @cytoolz.curry
-def check_contract_type(contract_name, data, warnings):
+def check_contract_type(
+    contract_name: str, data: Dict[str, Any], warnings: Dict[str, str]
+) -> Dict[str, str]:
     if "contract_type" not in data or not data["contract_type"]:
         return assoc_in(
             warnings,
@@ -201,7 +211,9 @@ def check_contract_type(contract_name, data, warnings):
 
 
 @cytoolz.curry
-def check_deployment_bytecode(contract_name, data, warnings):
+def check_deployment_bytecode(
+    contract_name: str, data: Dict[str, Any], warnings: Dict[str, str]
+) -> Dict[str, str]:
     if "deployment_bytecode" not in data or not data["deployment_bytecode"]:
         return assoc_in(
             warnings,
@@ -215,7 +227,9 @@ def check_deployment_bytecode(contract_name, data, warnings):
 
 
 @cytoolz.curry
-def check_runtime_bytecode(contract_name, data, warnings):
+def check_runtime_bytecode(
+    contract_name: str, data: Dict[str, Any], warnings: Dict[str, str]
+) -> Dict[str, str]:
     if "runtime_bytecode" not in data or not data["runtime_bytecode"]:
         return assoc_in(
             warnings,
@@ -229,7 +243,12 @@ def check_runtime_bytecode(contract_name, data, warnings):
 
 
 @cytoolz.curry
-def check_bytecode_object(contract_name, bytecode_type, bytecode_data, warnings):
+def check_bytecode_object(
+    contract_name: str,
+    bytecode_type: str,
+    bytecode_data: Dict[str, Any],
+    warnings: Dict[str, str],
+) -> Dict[str, str]:
     # todo: check if bytecode has link_refs & validate link_refs present in object
     if "bytecode" not in bytecode_data or not bytecode_data["bytecode"]:
         return assoc_in(
@@ -241,7 +260,9 @@ def check_bytecode_object(contract_name, bytecode_type, bytecode_data, warnings)
 
 
 @cytoolz.curry
-def check_natspec(contract_name, data, warnings):
+def check_natspec(
+    contract_name: str, data: Dict[str, Any], warnings: Dict[str, str]
+) -> Dict[str, str]:
     if "natspec" not in data or not data["natspec"]:
         return assoc_in(
             warnings,
@@ -252,7 +273,9 @@ def check_natspec(contract_name, data, warnings):
 
 
 @cytoolz.curry
-def check_compiler(contract_name, data, warnings):
+def check_compiler(
+    contract_name: str, data: Dict[str, Any], warnings: Dict[str, str]
+) -> Dict[str, str]:
     if "compiler" not in data or not data["compiler"]:
         return assoc_in(
             warnings,

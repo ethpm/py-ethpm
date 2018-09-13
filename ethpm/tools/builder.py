@@ -1,7 +1,7 @@
 import functools
 import json
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple
 
 import cytoolz
 from eth_utils import add_0x_prefix, to_dict, to_list
@@ -15,7 +15,7 @@ from ethpm.typing import Manifest
 from ethpm.utils.manifest_validation import validate_manifest_against_schema
 
 
-def build(obj, *fns):
+def build(obj: Dict[str, Any], *fns: Callable[..., Any]) -> Dict[str, Any]:
     """
     Wrapper function to pipe manifest through build functions.
     Does not validate the manifest by default.
@@ -57,7 +57,7 @@ def version(version: str, manifest: Manifest) -> Manifest:
 #
 
 
-def authors(*author_list):
+def authors(*author_list: str) -> Manifest:
     """
     Return a copy of manifest with a list of author posargs set to "meta": {"authors": author_list}
     """
@@ -66,7 +66,7 @@ def authors(*author_list):
 
 @curry
 @functools.wraps(authors)
-def _authors(authors: set, manifest: Manifest) -> Manifest:
+def _authors(authors: Set[str], manifest: Manifest) -> Manifest:
     return assoc_in(manifest, ("meta", "authors"), list(authors))
 
 
@@ -86,7 +86,7 @@ def description(description: str, manifest: Manifest) -> Manifest:
     return assoc_in(manifest, ("meta", "description"), description)
 
 
-def keywords(*keyword_list):
+def keywords(*keyword_list: str) -> Manifest:
     """
     Return a copy of manifest with a list of keyword posargs set to
     "meta": {"keywords": keyword_list}
@@ -96,11 +96,11 @@ def keywords(*keyword_list):
 
 @curry
 @functools.wraps(keywords)
-def _keywords(keywords: set, manifest: Manifest) -> Manifest:
+def _keywords(keywords: Set[str], manifest: Manifest) -> Manifest:
     return assoc_in(manifest, ("meta", "keywords"), list(keywords))
 
 
-def links(**link_dict):
+def links(**link_dict: str) -> Manifest:
     """
     Return a copy of manifest with a dict of link kwargs set to "meta": {"links": link_dict}
     """
@@ -128,12 +128,16 @@ def get_names_and_paths(compiler_output: Dict[str, Any]) -> Dict[str, str]:
     }
 
 
-def source_inliner(compiler_output, package_root_dir=None):
+def source_inliner(
+    compiler_output: Dict[str, Any], package_root_dir: Optional[Path] = None
+) -> Manifest:
     return _inline_sources(compiler_output, package_root_dir)
 
 
 @cytoolz.curry
-def _inline_sources(compiler_output, package_root_dir, name):
+def _inline_sources(
+    compiler_output: Dict[str, Any], package_root_dir: Optional[Path], name: str
+) -> Manifest:
     return _inline_source(name, compiler_output, package_root_dir)
 
 
@@ -181,12 +185,21 @@ def _inline_source(
     return assoc_in(manifest, ["sources", source_path_suffix], source_data)
 
 
-def source_pinner(compiler_output, ipfs_backend, package_root_dir=None):
+def source_pinner(
+    compiler_output: Dict[str, Any],
+    ipfs_backend: BaseIPFSBackend,
+    package_root_dir: Optional[Path] = None,
+) -> Manifest:
     return _pin_sources(compiler_output, ipfs_backend, package_root_dir)
 
 
 @cytoolz.curry
-def _pin_sources(compiler_output, ipfs_backend, package_root_dir, name):
+def _pin_sources(
+    compiler_output: Dict[str, Any],
+    ipfs_backend: BaseIPFSBackend,
+    package_root_dir: Optional[Path],
+    name: str,
+) -> Manifest:
     return _pin_source(name, compiler_output, ipfs_backend, package_root_dir)
 
 
@@ -427,7 +440,9 @@ def validate_link_ref(offset: int, length: int, bytecode: str) -> str:
 
 
 @cytoolz.curry
-def init_manifest(package_name, version, manifest_version="2"):
+def init_manifest(
+    package_name: str, version: str, manifest_version: Optional[str] = "2"
+) -> Dict[str, Any]:
     """
     Returns an initial dict with the minimal requried fields for a valid manifest.
     Should only be used as the first fn to be piped into a `build()` pipeline.
