@@ -44,7 +44,7 @@ extras_require['dev'] = (
 setup(
     name='ethpm',
     # *IMPORTANT*: Don't manually change the version here. Use the 'bumpversion' utility.
-    version='0.1.1-0.1',
+    version='0.1.1-alpha.1',
     description="""Python abstraction for ERC190 packages.""",
     long_description_markdown_filename='README.md',
     author='Piper Merriam',
