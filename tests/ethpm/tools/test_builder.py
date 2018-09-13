@@ -229,7 +229,7 @@ def test_builder_with_inline_source(owned_package, monkeypatch):
         BASE_MANIFEST,
         "sources",
         {
-            "./Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
+            "Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
             """ owner;\n    \n    modifier onlyOwner { require(msg.sender == owner); _; }\n\n    """
             """constructor() public {\n        owner = msg.sender;\n    }\n}\n"""
         },
@@ -248,7 +248,7 @@ def test_builder_with_source_inliner(owned_package, monkeypatch):
         BASE_MANIFEST,
         "sources",
         {
-            "./Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
+            "Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
             """ owner;\n    \n    modifier onlyOwner { require(msg.sender == owner); _; }\n\n    """
             """constructor() public {\n        owner = msg.sender;\n    }\n}\n"""
         },
@@ -268,7 +268,7 @@ def test_builder_with_inline_source_with_package_root_dir_arg(owned_package):
         BASE_MANIFEST,
         "sources",
         {
-            "./Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
+            "Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
             """ owner;\n    \n    modifier onlyOwner { require(msg.sender == owner); _; }\n\n    """
             """constructor() public {\n        owner = msg.sender;\n    }\n}\n"""
         },
@@ -347,9 +347,7 @@ def test_builder_with_default_contract_types(owned_package):
 
     manifest = build(BASE_MANIFEST, contract_type("Owned", compiler_output), validate())
 
-    contract_type_data = normalize_contract_type(
-        compiler_output["./Owned.sol"]["Owned"]
-    )
+    contract_type_data = normalize_contract_type(compiler_output["Owned.sol"]["Owned"])
     expected = assoc(BASE_MANIFEST, "contract_types", {"Owned": contract_type_data})
     assert manifest == expected
 
@@ -363,9 +361,7 @@ def test_builder_with_single_alias_kwarg(owned_package):
         validate(),
     )
 
-    contract_type_data = normalize_contract_type(
-        compiler_output["./Owned.sol"]["Owned"]
-    )
+    contract_type_data = normalize_contract_type(compiler_output["Owned.sol"]["Owned"])
     expected = assoc(
         BASE_MANIFEST,
         "contract_types",
@@ -383,9 +379,7 @@ def test_builder_without_alias_and_with_select_contract_types(owned_package):
         validate(),
     )
 
-    contract_type_data = normalize_contract_type(
-        compiler_output["./Owned.sol"]["Owned"]
-    )
+    contract_type_data = normalize_contract_type(compiler_output["Owned.sol"]["Owned"])
     selected_data = {
         k: v for k, v in contract_type_data.items() if k != "deployment_bytecode"
     }
@@ -409,9 +403,7 @@ def test_builder_with_alias_and_select_contract_types(owned_package):
         validate(),
     )
 
-    contract_type_data = normalize_contract_type(
-        compiler_output["./Owned.sol"]["Owned"]
-    )
+    contract_type_data = normalize_contract_type(compiler_output["Owned.sol"]["Owned"])
     expected = assoc(
         BASE_MANIFEST,
         "contract_types",
