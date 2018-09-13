@@ -42,7 +42,7 @@ def test_linkable_contract_class_handles_link_refs(
     assert factory.has_linkable_bytecode() is True
     assert factory.is_bytecode_linked is False
     assert linked_factory.is_bytecode_linked is True
-    # Can't link a factory that's already linked.
+    # Can't link a factory that's already linked
     with pytest.raises(BytecodeLinkingError):
         linked_factory.link_bytecode(attr_dict)
     offset = factory.deployment_link_refs[0]["offsets"][0]
@@ -172,6 +172,20 @@ def test_contract_factory_invalidates_incorrect_attr_dicts(get_factory, attr_dic
     with pytest.raises(BytecodeLinkingError):
         safe_send.link_bytecode(attr_dict)
     assert safe_send.is_bytecode_linked is False
+
+
+def test_linked_contract_types(get_factory):
+    escrow = get_factory("escrow", "Escrow")
+    linked_contract_types = escrow.linked_contract_types()
+    assert linked_contract_types == ["SafeSendLib"]
+
+
+def test_unlinked_factory_cannot_be_deployed(get_factory):
+    escrow = get_factory("escrow", "Escrow")
+    assert escrow.has_linkable_bytecode()
+    assert not escrow.is_bytecode_linked
+    with pytest.raises(BytecodeLinkingError):
+        escrow.constructor("0x4F5B11c860b37b68DE6D14Fb7e7b5f18A9A1bdC0").transact()
 
 
 @pytest.mark.parametrize(

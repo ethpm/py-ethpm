@@ -29,23 +29,33 @@ def test_deployed_escrow_and_safe_send(escrow_manifest, compiled_safe_send, w3):
     EscrowFactory = EscrowPackage.get_contract_factory("Escrow")
     assert EscrowFactory.has_linkable_bytecode()
     assert EscrowFactory.is_bytecode_linked is False
+    LinkedEscrowFactory = EscrowFactory.link_bytecode(
+        {"SafeSendLib": safe_send_address}
+    )
 
     # Deploy an Escrow Contract
-    escrow_tx_hash = EscrowFactory.constructor(
+    escrow_tx_hash = LinkedEscrowFactory.constructor(
         "0x4F5B11c860b37b68DE6D14Fb7e7b5f18A9A1bdC0"
     ).transact()
     escrow_tx_receipt = w3.eth.waitForTransactionReceipt(escrow_tx_hash)
     escrow_address = to_canonical_address(escrow_tx_receipt.contractAddress)
 
+    # Cannot deploy with an unlinked factory
+    with pytest.raises(BytecodeLinkingError):
+        escrow_tx_hash = EscrowFactory.constructor(
+            "0x4F5B11c860b37b68DE6D14Fb7e7b5f18A9A1bdC0"
+        ).transact()
+
     # Cannot instantiate a contract instance from an unlinked factory
     with pytest.raises(BytecodeLinkingError):
         EscrowFactory(escrow_address)
-    LinkedEscrow = EscrowFactory.link_bytecode({"SafeSendLib": safe_send_address})
-    contract_instance = LinkedEscrow(escrow_address)
+    contract_instance = LinkedEscrowFactory(escrow_address)
     assert EscrowFactory.is_bytecode_linked is False
-    assert LinkedEscrow.is_bytecode_linked is True
+    assert LinkedEscrowFactory.is_bytecode_linked is True
     assert isinstance(contract_instance, web3.contract.Contract)
-    assert to_canonical_address(safe_send_address) in LinkedEscrow.bytecode
-    assert to_canonical_address(safe_send_address) in LinkedEscrow.bytecode_runtime
+    assert to_canonical_address(safe_send_address) in LinkedEscrowFactory.bytecode
+    assert (
+        to_canonical_address(safe_send_address) in LinkedEscrowFactory.bytecode_runtime
+    )
     assert to_canonical_address(safe_send_address) not in EscrowFactory.bytecode
     assert to_canonical_address(safe_send_address) not in EscrowFactory.bytecode_runtime

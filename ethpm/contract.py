@@ -29,6 +29,14 @@ class LinkableContract(Contract):
         checksummed = to_checksum_address(address)
         super(LinkableContract, self).__init__(address=checksummed, **kwargs)
 
+    @classmethod
+    def constructor(self, *args: Any, **kwargs: Any) -> bool:
+        if self.has_linkable_bytecode() and not self.is_bytecode_linked:
+            raise BytecodeLinkingError(
+                "Contract cannot be deployed until its bytecode is linked."
+            )
+        return super(LinkableContract, self).constructor(*args, **kwargs)
+
     @combomethod
     def has_linkable_bytecode(self) -> bool:
         """
@@ -38,6 +46,16 @@ class LinkableContract(Contract):
         if self.deployment_link_refs or self.runtime_link_refs:
             return True
         return False
+
+    @combomethod
+    def linked_contract_types(self) -> List[str]:
+        """
+        Return dependent contract types that require linking for a factory, if present.
+        Remove if not useful in eventual pytest-ethereum linking strategy.
+        """
+        if not self.has_linkable_bytecode() and not self.deployment_link_refs:
+            return []
+        return [ref["name"] for ref in self.deployment_link_refs]
 
     @classmethod
     def link_bytecode(cls, attr_dict: Dict[str, str]) -> Type["LinkableContract"]:
