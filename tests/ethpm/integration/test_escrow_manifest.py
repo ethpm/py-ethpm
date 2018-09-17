@@ -27,8 +27,6 @@ def test_deployed_escrow_and_safe_send(escrow_manifest, compiled_safe_send, w3):
 
     EscrowPackage = Package(escrow_manifest, w3)
     EscrowFactory = EscrowPackage.get_contract_factory("Escrow")
-    assert EscrowFactory.has_linkable_bytecode()
-    assert EscrowFactory.is_bytecode_linked is False
     LinkedEscrowFactory = EscrowFactory.link_bytecode(
         {"SafeSendLib": safe_send_address}
     )
@@ -50,8 +48,8 @@ def test_deployed_escrow_and_safe_send(escrow_manifest, compiled_safe_send, w3):
     with pytest.raises(BytecodeLinkingError):
         EscrowFactory(escrow_address)
     contract_instance = LinkedEscrowFactory(escrow_address)
-    assert EscrowFactory.is_bytecode_linked is False
-    assert LinkedEscrowFactory.is_bytecode_linked is True
+    assert EscrowFactory.needs_bytecode_linking is True
+    assert LinkedEscrowFactory.needs_bytecode_linking is False
     assert isinstance(contract_instance, web3.contract.Contract)
     assert to_canonical_address(safe_send_address) in LinkedEscrowFactory.bytecode
     assert (

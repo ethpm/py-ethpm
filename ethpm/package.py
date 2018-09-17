@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict
+from typing import Any, Dict, Union
 
 from eth_utils import to_canonical_address, to_text
 from web3 import Web3
@@ -24,8 +24,8 @@ from ethpm.utils.contract import (
 )
 from ethpm.utils.filesystem import load_package_data_from_file
 from ethpm.utils.manifest_validation import (
+    check_for_deployments,
     validate_build_dependencies_are_present,
-    validate_deployments_are_present,
     validate_manifest_against_schema,
     validate_manifest_deployments,
 )
@@ -190,12 +190,13 @@ class Package(object):
     #
 
     @cached_property
-    def deployments(self) -> "Deployments":
+    def deployments(self) -> Union["Deployments", Dict[None, None]]:
         """
         API to retrieve package deployments available on the current w3-connected chain.
         Cached property (self.deployments) gets busted everytime self.set_default_w3() is called.
         """
-        validate_deployments_are_present(self.package_data)
+        if not check_for_deployments(self.package_data):
+            return {}
 
         all_blockchain_uris = self.package_data["deployments"].keys()
         matching_uri = validate_single_matching_uri(all_blockchain_uris, self.w3)
