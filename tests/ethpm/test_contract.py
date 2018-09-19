@@ -3,7 +3,7 @@ import pytest
 from web3.contract import Contract
 
 from ethpm import Package
-from ethpm.contract import LinkableContract, apply_all_link_references
+from ethpm.contract import LinkableContract, apply_all_link_refs
 from ethpm.exceptions import BytecodeLinkingError, ValidationError
 from ethpm.validation import validate_empty_bytes
 
@@ -35,13 +35,13 @@ def test_linkable_contract_class_handles_link_refs(
     package, factory, attr_dict, get_factory, w3
 ):
     factory = get_factory(package, factory)
+    assert factory.needs_bytecode_linking is True
     linked_factory = factory.link_bytecode(attr_dict)
     assert issubclass(LinkableContract, Contract)
     assert issubclass(factory, LinkableContract)
     assert issubclass(linked_factory, LinkableContract)
-    assert factory.has_linkable_bytecode() is True
-    assert factory.is_bytecode_linked is False
-    assert linked_factory.is_bytecode_linked is True
+    assert factory.needs_bytecode_linking is True
+    assert linked_factory.needs_bytecode_linking is False
     # Can't link a factory that's already linked
     with pytest.raises(BytecodeLinkingError):
         linked_factory.link_bytecode(attr_dict)
@@ -56,13 +56,11 @@ def test_linkable_contract_class_handles_missing_link_refs(get_manifest, w3):
     safe_math_manifest = get_manifest("safe-math-lib")
     SafeMathLib = Package(safe_math_manifest, w3)
     safe_math_lib = SafeMathLib.get_contract_factory("SafeMathLib")
-    assert safe_math_lib.has_linkable_bytecode() is False
-    assert safe_math_lib.is_bytecode_linked is False
+    assert safe_math_lib.needs_bytecode_linking is False
     with pytest.raises(BytecodeLinkingError):
         safe_math_lib.link_bytecode(
             {"SafeMathLib": "0xa66A05D6AB5c1c955F4D2c3FCC166AE6300b452B"}
         )
-    assert safe_math_lib.is_bytecode_linked is False
 
 
 SAFE_SEND_ADDRESS = "0x4F5B11c860b37b68DE6D14Fb7e7b5f18A9A1bdC0"
@@ -103,8 +101,8 @@ SAFE_MATH_CANON = to_canonical_address(SAFE_MATH_ADDRESS)
         ),
     ),
 )
-def test_apply_all_link_references(bytecode, link_refs, attr_dict, expected):
-    actual = apply_all_link_references(bytecode, link_refs, attr_dict)
+def test_apply_all_link_refs(bytecode, link_refs, attr_dict, expected):
+    actual = apply_all_link_refs(bytecode, link_refs, attr_dict)
     assert actual == expected
 
 
@@ -146,9 +144,9 @@ def test_apply_all_link_references(bytecode, link_refs, attr_dict, expected):
         ),
     ),
 )
-def test_apply_all_link_references_with_incorrect_args(bytecode, link_refs, attr_dict):
+def test_apply_all_link_refs_with_incorrect_args(bytecode, link_refs, attr_dict):
     with pytest.raises(BytecodeLinkingError):
-        apply_all_link_references(bytecode, link_refs, attr_dict)
+        apply_all_link_refs(bytecode, link_refs, attr_dict)
 
 
 @pytest.mark.parametrize(
@@ -169,21 +167,14 @@ def test_apply_all_link_references_with_incorrect_args(bytecode, link_refs, attr
 )
 def test_contract_factory_invalidates_incorrect_attr_dicts(get_factory, attr_dict):
     safe_send = get_factory("escrow", "SafeSendLib")
+    assert safe_send.needs_bytecode_linking is False
     with pytest.raises(BytecodeLinkingError):
         safe_send.link_bytecode(attr_dict)
-    assert safe_send.is_bytecode_linked is False
-
-
-def test_linked_contract_types(get_factory):
-    escrow = get_factory("escrow", "Escrow")
-    linked_contract_types = escrow.linked_contract_types()
-    assert linked_contract_types == ["SafeSendLib"]
 
 
 def test_unlinked_factory_cannot_be_deployed(get_factory):
     escrow = get_factory("escrow", "Escrow")
-    assert escrow.has_linkable_bytecode()
-    assert not escrow.is_bytecode_linked
+    assert escrow.needs_bytecode_linking
     with pytest.raises(BytecodeLinkingError):
         escrow.constructor("0x4F5B11c860b37b68DE6D14Fb7e7b5f18A9A1bdC0").transact()
 

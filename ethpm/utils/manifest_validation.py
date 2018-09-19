@@ -72,12 +72,10 @@ def validate_manifest_against_schema(manifest: Dict[str, Any]) -> None:
         )
 
 
-def validate_deployments_are_present(manifest: Dict[str, Any]) -> None:
-    if "deployments" not in manifest:
-        raise ValidationError("Manifest doesn't have a deployments key.")
-
-    if not manifest["deployments"]:
-        raise ValidationError("Manifest's deployments key is empty.")
+def check_for_deployments(manifest: Dict[str, Any]) -> bool:
+    if "deployments" not in manifest or not manifest["deployments"]:
+        return False
+    return True
 
 
 def validate_build_dependencies_are_present(manifest: Dict[str, Any]) -> None:

@@ -1,7 +1,9 @@
 from typing import Any, Dict, List, Type  # noqa: F401
 
 import cytoolz
-from eth_utils import is_canonical_address, to_checksum_address
+from eth_utils import is_canonical_address, to_bytes, to_checksum_address
+from eth_utils.toolz import assoc
+from web3 import Web3
 from web3.contract import Contract
 from web3.utils.decorators import combomethod
 
@@ -17,49 +19,42 @@ class LinkableContract(Contract):
 
     deployment_link_refs = []  # type: List[Dict[str, Any]]
     runtime_link_refs = []  # type: List[Dict[str, Any]]
-    is_bytecode_linked = False
+    needs_bytecode_linking = None
 
-    def __init__(self, address: bytes = None, **kwargs: Dict[str, Any]) -> None:
-        if self.has_linkable_bytecode() and not self.is_bytecode_linked:
+    def __init__(self, address: bytes = None, **kwargs: Any) -> None:
+        if self.needs_bytecode_linking:
             raise BytecodeLinkingError(
                 "Contract cannot be instantiated until its bytecode is linked."
             )
         validate_address(address)
         # todo: remove automatic checksumming of address once web3 dep is updated in pytest-ethereum
-        checksummed = to_checksum_address(address)
-        super(LinkableContract, self).__init__(address=checksummed, **kwargs)
+        super(LinkableContract, self).__init__(
+            address=to_checksum_address(address), **kwargs
+        )
 
     @classmethod
-    def constructor(self, *args: Any, **kwargs: Any) -> bool:
-        if self.has_linkable_bytecode() and not self.is_bytecode_linked:
+    def factory(
+        cls, web3: Web3, class_name: str = None, **kwargs: Any
+    ) -> "LinkableContract":
+        dep_link_refs = kwargs.get("deployment_link_refs")
+        bytecode = kwargs.get("bytecode")
+        needs_bytecode_linking = False
+        if dep_link_refs and bytecode:
+            if not is_prelinked_bytecode(to_bytes(hexstr=bytecode), dep_link_refs):
+                needs_bytecode_linking = True
+        kwargs = assoc(kwargs, "needs_bytecode_linking", needs_bytecode_linking)
+        return super(LinkableContract, cls).factory(web3, class_name, **kwargs)
+
+    @classmethod
+    def constructor(cls, *args: Any, **kwargs: Any) -> bool:
+        if cls.needs_bytecode_linking:
             raise BytecodeLinkingError(
                 "Contract cannot be deployed until its bytecode is linked."
             )
-        return super(LinkableContract, self).constructor(*args, **kwargs)
-
-    @combomethod
-    def has_linkable_bytecode(self) -> bool:
-        """
-        Return a boolean indicating the presence of linkable bytecode
-        on this contract factory or instance.
-        """
-        if self.deployment_link_refs or self.runtime_link_refs:
-            return True
-        return False
-
-    @combomethod
-    def linked_contract_types(self) -> List[str]:
-        """
-        Return dependent contract types that require linking for a factory, if present.
-        Remove if not useful in eventual pytest-ethereum linking strategy.
-        """
-        if not self.has_linkable_bytecode() and not self.deployment_link_refs:
-            return []
-        return [ref["name"] for ref in self.deployment_link_refs]
+        return super(LinkableContract, cls).constructor(*args, **kwargs)
 
     @classmethod
     def link_bytecode(cls, attr_dict: Dict[str, str]) -> Type["LinkableContract"]:
-
         """
         Return a cloned contract factory with the deploymeny / runtime bytecode linked.
 
@@ -67,19 +62,24 @@ class LinkableContract(Contract):
         """
         if not cls.deployment_link_refs and not cls.runtime_link_refs:
             raise BytecodeLinkingError("Contract factory has no linkable bytecode.")
-        if cls.is_bytecode_linked:
+        if not cls.needs_bytecode_linking:
             raise BytecodeLinkingError(
-                "Bytecode for this contract factory has already been linked."
+                "Bytecode for this contract factory does not require bytecode linking."
             )
-        linked_class = cls.factory(cls.web3)
-        linked_class.validate_attr_dict(attr_dict)
-        linked_class.bytecode = apply_all_link_references(
-            linked_class.bytecode, linked_class.deployment_link_refs, attr_dict
+        cls.validate_attr_dict(attr_dict)
+        bytecode = apply_all_link_refs(
+            cls.bytecode, cls.deployment_link_refs, attr_dict
         )
-        linked_class.bytecode_runtime = apply_all_link_references(
-            linked_class.bytecode_runtime, linked_class.runtime_link_refs, attr_dict
+        runtime = apply_all_link_refs(
+            cls.bytecode_runtime, cls.runtime_link_refs, attr_dict
         )
-        linked_class.is_bytecode_linked = True
+        linked_class = cls.factory(
+            cls.web3, bytecode_runtime=runtime, bytecode=bytecode
+        )
+        if linked_class.needs_bytecode_linking:
+            raise BytecodeLinkingError(
+                "Expected class to be fully linked, but class still needs bytecode linking."
+            )
         return linked_class
 
     @combomethod
@@ -105,7 +105,21 @@ class LinkableContract(Contract):
                 )
 
 
-def apply_all_link_references(
+def is_prelinked_bytecode(bytecode: bytes, link_refs: List[Dict[str, Any]]) -> bool:
+    """
+    Returns False if all expected link_refs are unlinked, otherwise returns True.
+    todo support partially pre-linked bytecode (currently all or nothing)
+    """
+    for link_ref in link_refs:
+        for offset in link_ref["offsets"]:
+            try:
+                validate_empty_bytes(offset, link_ref["length"], bytecode)
+            except ValidationError:
+                return True
+    return False
+
+
+def apply_all_link_refs(
     bytecode: bytes, link_refs: List[Dict[str, Any]], attr_dict: Dict[str, str]
 ) -> bytes:
     """
@@ -114,7 +128,7 @@ def apply_all_link_references(
     if link_refs is None:
         return bytecode
     link_fns = (
-        apply_link_reference(offset, ref["length"], attr_dict[ref["name"]])
+        apply_link_ref(offset, ref["length"], attr_dict[ref["name"]])
         for ref in link_refs
         for offset in ref["offsets"]
     )
@@ -123,9 +137,7 @@ def apply_all_link_references(
 
 
 @cytoolz.curry
-def apply_link_reference(
-    offset: int, length: int, value: bytes, bytecode: bytes
-) -> bytes:
+def apply_link_ref(offset: int, length: int, value: bytes, bytecode: bytes) -> bytes:
     """
     Returns the new bytecode with `value` put into the location indicated by `offset` and `length`.
     """

@@ -11,20 +11,16 @@ def matching_package(manifest_with_matching_deployment, w3):
     return Package(manifest, w3)
 
 
-def test_get_deployments_with_empty_deployment_raise_exception(
-    w3, manifest_with_empty_deployments
-):
+def test_get_deployments_with_no_deployments(w3, manifest_with_empty_deployments):
     package = Package(manifest_with_empty_deployments, w3)
-    with pytest.raises(ValidationError):
-        package.deployments
+    assert package.deployments == {}
 
 
 def test_get_deployments_with_no_deployments_raises_exception(
     w3, manifest_with_no_deployments
 ):
     package = Package(manifest_with_no_deployments, w3)
-    with pytest.raises(ValidationError):
-        package.deployments
+    assert package.deployments == {}
 
 
 def test_get_deployments_with_no_match_raises_exception(
