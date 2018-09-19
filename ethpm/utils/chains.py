@@ -9,7 +9,7 @@ from web3 import Web3
 from ethpm.typing import URI
 
 
-def get_chain_id(web3: Web3) -> str:
+def get_genesis_block_hash(web3: Web3) -> str:
     return web3.eth.getBlock(0)["hash"]
 
 
