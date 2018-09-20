@@ -363,6 +363,7 @@ def normalize_contract_type(
             yield "runtime_bytecode", normalize_bytecode_object(
                 contract_type_data["evm"]["deployedBytecode"]
             )
+    # todo support natspec.
     yield "natspec", {}
 
 

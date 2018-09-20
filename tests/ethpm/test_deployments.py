@@ -2,7 +2,6 @@ from eth_utils import to_bytes
 import pytest
 from web3.eth import Contract
 
-from ethpm import Package
 from ethpm.contract import LinkableContract
 from ethpm.deployments import Deployments
 from ethpm.exceptions import BytecodeLinkingError, ValidationError
@@ -23,9 +22,8 @@ DEPLOYMENT_DATA = {
 
 
 @pytest.fixture
-def contract_factory(manifest_with_matching_deployment):
-    p = Package(manifest_with_matching_deployment)
-    return p.get_contract_type("SafeMathLib")
+def contract_factory(safe_math_lib_package):
+    return safe_math_lib_package.get_contract_type("SafeMathLib")
 
 
 VALID_CONTRACT_TYPES = {"SafeMathLib": contract_factory}
@@ -120,37 +118,29 @@ def test_get_instance_without_reference_in_contract_factories_raises(
         invalid_deployment.get_instance("SafeMathLib")
 
 
-def test_deployments_get_instance(manifest_with_matching_deployment, w3):
-    manifest, address = manifest_with_matching_deployment
-    safe_math_package = Package(manifest, w3)
-    deps = safe_math_package.deployments
+def test_deployments_get_instance(safe_math_lib_package):
+    deps = safe_math_lib_package.deployments
     safe_math_instance = deps.get_instance("SafeMathLib")
     assert isinstance(safe_math_instance, Contract)
-    assert safe_math_instance.address == address
     assert safe_math_instance.bytecode == to_bytes(
-        hexstr=safe_math_package.manifest["contract_types"]["SafeMathLib"][
+        hexstr=safe_math_lib_package.manifest["contract_types"]["SafeMathLib"][
             "deployment_bytecode"
         ]["bytecode"]
     )
 
 
-def test_deployments_get_contract_instance_with_link_dependency(
-    escrow_manifest_with_matching_deployment, w3
-):
-    manifest, link_ref = escrow_manifest_with_matching_deployment
-    EscrowPackage = Package(manifest, w3)
-    deployments = EscrowPackage.deployments
-    escrow_deployment = deployments.get_deployment_instance("Escrow")
+def test_deployments_get_contract_instance_with_link_dependency(escrow_package):
+    deployments = escrow_package.deployments
+    escrow_deployment = deployments.get_instance("Escrow")
     assert isinstance(escrow_deployment, LinkableContract)
+    assert not escrow_deployment.needs_bytecode_linking
 
 
-def test_get_linked_deployments(escrow_manifest_with_matching_deployment):
-    all_deployments = list(
-        escrow_manifest_with_matching_deployment[0]["deployments"].values()
-    )[0]
-    escrow_deployment = all_deployments["Escrow"]
+def test_get_linked_deployments(escrow_package):
+    escrow_manifest = escrow_package.manifest
+    all_deployments = list(escrow_manifest["deployments"].values())[0]
     actual_linked_deployments = get_linked_deployments(all_deployments)
-    assert actual_linked_deployments == {"Escrow": escrow_deployment}
+    assert actual_linked_deployments == {"Escrow": all_deployments["Escrow"]}
 
 
 @pytest.mark.parametrize(

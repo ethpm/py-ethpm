@@ -1,7 +1,7 @@
 import json
 from typing import Any, Dict, Generator, Tuple, Union
 
-from eth_utils import to_canonical_address, to_text, to_tuple
+from eth_utils import to_canonical_address, to_checksum_address, to_text, to_tuple
 from web3 import Web3
 from web3.eth import Contract
 
@@ -226,7 +226,9 @@ class Package(object):
         linked_deployments = get_linked_deployments(deployments)
         if linked_deployments:
             for deployment_data in linked_deployments.values():
-                on_chain_bytecode = self.w3.eth.getCode(deployment_data["address"])
+                on_chain_bytecode = self.w3.eth.getCode(
+                    to_checksum_address(deployment_data["address"])
+                )
                 unresolved_link_deps = normalize_link_dependencies(
                     deployment_data["runtime_bytecode"]["link_dependencies"]
                 )
