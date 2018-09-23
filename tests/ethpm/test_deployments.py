@@ -126,7 +126,7 @@ def test_deployments_get_contract_instance(manifest_with_matching_deployment, w3
     assert isinstance(safe_math_instance, Contract)
     assert safe_math_instance.address == address
     assert safe_math_instance.bytecode == to_bytes(
-        hexstr=safe_math_package.package_data["contract_types"]["SafeMathLib"][
+        hexstr=safe_math_package.manifest["contract_types"]["SafeMathLib"][
             "deployment_bytecode"
         ]["bytecode"]
     )

@@ -18,9 +18,7 @@ def test_get_build_dependencies(dummy_ipfs_backend, piper_coin_pkg, w3):
 def test_get_build_dependencies_with_invalid_uris(
     dummy_ipfs_backend, piper_coin_pkg, w3
 ):
-    piper_coin_pkg.package_data["build_dependencies"][
-        "standard-token"
-    ] = "invalid_ipfs_uri"
+    piper_coin_pkg.manifest["build_dependencies"]["standard-token"] = "invalid_ipfs_uri"
     with pytest.raises(FailureToFetchIPFSAssetsError):
         piper_coin_pkg.build_dependencies
 
