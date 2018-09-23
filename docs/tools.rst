@@ -1,11 +1,10 @@
-Manifest Builder
-================
+Tools
+=====
 
-The Manifest Builder is a tool designed to help construct custom manifests. The builder is still under active development, and can only handle simple use-cases for now. 
+Builder
+-------
 
-
-Cookbook
---------
+The manifest Builder is a tool designed to help construct custom manifests. The builder is still under active development, and can only handle simple use-cases for now. 
 
 To create a simple manifest
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -18,8 +17,7 @@ For all manifests, the following ingredients are *required*.
        {},
        package_name(str),
        version(str),
-       manifest_version(str),
-       ...,
+       manifest_version(str), ...,
    )
    # Or
    build(
@@ -450,3 +448,20 @@ If you would like to alias your contract type, provide the desired alias as a kw
    ...     contract_type("Owned", compiler_output, alias="OwnedAlias", abi=True, natspec=True)
    ... )
    >>> assert expected_manifest == built_manifest
+
+
+Checker
+-------
+
+The manifest Checker is a tool designed to help validate manifests according to the natural language spec (link). 
+
+To validate a manifest
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. doctest::
+
+   >>> from ethpm.tools.checker import check_manifest
+
+   >>> basic_manifest = {"package_name": "example", "version": "1.0.0", "manifest_version": "2"}
+   >>> check_manifest(basic_manifest)
+   {'meta': "Manifest missing a suggested 'meta' field.", 'sources': 'Manifest is missing a sources field, which defines a source tree that should comprise the full source tree necessary to recompile the contracts contained in this release.', 'contract_types': "Manifest does not contain any 'contract_types'. Packages should only include contract types that can be found in the source files for this package. Packages should not include contract types from dependencies. Packages should not include abstract contracts in the contract types section of a release."}
