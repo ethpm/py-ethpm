@@ -61,7 +61,7 @@ class Package(object):
         Set the default Web3 instance.
         """
         validate_w3_instance(w3)
-        # Mechanism to bust cached properties when switching chains
+        # Mechanism to bust cached properties when switching chains.
         if "deployments" in self.__dict__:
             del self.deployments
         if "build_dependencies" in self.__dict__:

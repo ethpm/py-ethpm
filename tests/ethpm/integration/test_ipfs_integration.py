@@ -1,7 +1,8 @@
 import pytest
 
 from ethpm import V2_PACKAGES_DIR
-from ethpm.backends.ipfs import get_ipfs_backend
+from ethpm.backends.ipfs import InfuraIPFSBackend, LocalIPFSBackend, get_ipfs_backend
+from ethpm.tools import builder as b
 
 OWNED_MANIFEST_PATH = V2_PACKAGES_DIR / "owned" / "1.0.0.json"
 
@@ -26,3 +27,28 @@ def test_local_ipfs_backend_integration_round_trip(monkeypatch):
         local_manifest = f.read()
     ipfs_manifest = backend.fetch_uri_contents(asset_data["Hash"])
     assert ipfs_manifest == local_manifest
+
+
+@pytest.fixture(params=[LocalIPFSBackend, InfuraIPFSBackend])
+def backend(request):
+    return request.param()
+
+
+def test_builder_pins_manifest_to_provided_ipfs_backend(backend):
+    if not pytest.config.getoption("--integration"):
+        pytest.skip("Not asked to run integration tests")
+
+    minified_manifest_hash = "QmVwwpt2BAkmWQt4eNnswhWd6bYgLbnUQDMHdVMHotwiqz"
+    (manifest,) = b.build(
+        {},
+        b.package_name("package"),
+        b.manifest_version("2"),
+        b.version("1.0.0"),
+        b.pin_to_ipfs(backend=backend),
+    )
+    assert manifest["Hash"] == minified_manifest_hash
+    pinned_manifest = backend.fetch_uri_contents(manifest["Hash"])
+    assert (
+        pinned_manifest
+        == b'{"manifest_version":"2","package_name":"package","version":"1.0.0"}'
+    )

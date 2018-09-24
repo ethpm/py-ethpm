@@ -5,7 +5,6 @@ from typing import Dict, List, Type
 
 from eth_utils import import_string, to_bytes
 import ipfsapi
-import requests
 
 from ethpm import V2_PACKAGES_DIR
 from ethpm.backends.base import BaseURIBackend
@@ -52,49 +51,17 @@ class IPFSOverHTTPBackend(BaseIPFSBackend):
     All subclasses must implement: base_uri
     """
 
-    # TODO change to use ipfsapi.Client
+    def __init__(self) -> None:
+        self.client = ipfsapi.connect(self.base_uri, 5001)
+
     def fetch_uri_contents(self, uri: str) -> bytes:
         ipfs_hash = extract_ipfs_path_from_uri(uri)
-        gateway_uri = self.base_uri + ipfs_hash
-        response = requests.get(gateway_uri)
-        response.raise_for_status()
-        return response.content
+        return self.client.cat(ipfs_hash)
 
     @property
     @abstractmethod
     def base_uri(self) -> str:
         pass
-
-    def pin_assets(self, file_or_dir_path: Path) -> List[Dict[str, str]]:
-        pass
-
-
-class IPFSGatewayBackend(IPFSOverHTTPBackend):
-    """
-    Backend class for all IPFS URIs served over the IPFS gateway.
-    """
-
-    @property
-    def base_uri(self) -> str:
-        return IPFS_GATEWAY_PREFIX
-
-    def pin_assets(self, file_or_dir_path: Path) -> List[Dict[str, str]]:
-        raise NotImplementedError(
-            "pin_assets has not been implemented yet for IPFSGatewayBackend"
-        )
-
-
-class InfuraIPFSBackend(IPFSOverHTTPBackend):
-    """
-    Backend class for all IPFS URIs served over the Infura IFPS gateway.
-    """
-
-    def __init__(self) -> None:
-        self.client = ipfsapi.Client(self.base_uri, 5001)
-
-    @property
-    def base_uri(self) -> str:
-        return INFURA_GATEWAY_PREFIX
 
     def pin_assets(self, file_or_dir_path: Path) -> List[Dict[str, str]]:
         if file_or_dir_path.is_dir():
@@ -107,6 +74,49 @@ class InfuraIPFSBackend(IPFSOverHTTPBackend):
             raise TypeError(
                 "{0} is not a valid file or directory path.".format(file_or_dir_path)
             )
+
+
+class IPFSGatewayBackend(IPFSOverHTTPBackend):
+    """
+    Backend class for all IPFS URIs served over the IPFS gateway.
+    """
+
+    # todo update this gateway to work r&w
+    # https://discuss.ipfs.io/t/writeable-http-gateways/210
+    @property
+    def base_uri(self) -> str:
+        return IPFS_GATEWAY_PREFIX
+
+    def pin_assets(self, file_or_dir_path: Path) -> List[Dict[str, str]]:
+        raise CannotHandleURI(
+            "IPFS gateway is currently disabled, please use a different IPFS backend."
+        )
+
+    def fetch_uri_contents(self, uri: str) -> bytes:
+        raise CannotHandleURI(
+            "IPFS gateway is currently disabled, please use a different IPFS backend."
+        )
+
+
+class InfuraIPFSBackend(IPFSOverHTTPBackend):
+    """
+    Backend class for all IPFS URIs served over the Infura IFPS gateway.
+    """
+
+    @property
+    def base_uri(self) -> str:
+        return INFURA_GATEWAY_PREFIX
+
+
+class LocalIPFSBackend(IPFSOverHTTPBackend):
+    """
+    Backend class for all IPFS URIs served through a direct connection to an IPFS node.
+    Default IPFS port = 5001
+    """
+
+    @property
+    def base_uri(self) -> str:
+        return "localhost"
 
 
 MANIFEST_URIS = {
@@ -148,38 +158,6 @@ class DummyIPFSBackend(BaseIPFSBackend):
                 "{0} is not a valid file or directory path.".format(file_or_dir_path)
             )
         return asset_data
-
-
-class LocalIPFSBackend(BaseIPFSBackend):
-    """
-    Backend class for all IPFS URIs served through a direct connection to an IPFS node.
-    Default IPFS port = 5001
-    """
-
-    def __init__(self) -> None:
-        self.client = ipfsapi.Client("localhost", "5001")
-
-    def fetch_uri_contents(self, ipfs_uri: str) -> bytes:
-        ipfs_hash = extract_ipfs_path_from_uri(ipfs_uri)
-        try:
-            contents = self.client.cat(ipfs_hash)
-        except ipfsapi.exceptions.ConnectionError:
-            raise CannotHandleURI(
-                "Cannot connect to local IPFS node to serve URI: {0}".format(ipfs_uri)
-            )
-        return contents
-
-    def pin_assets(self, file_or_dir_path: Path) -> List[Dict[str, str]]:
-        if file_or_dir_path.is_dir():
-            dir_data = self.client.add(str(file_or_dir_path), recursive=True)
-            return dir_data
-        elif file_or_dir_path.is_file():
-            file_data = self.client.add(str(file_or_dir_path))
-            return [file_data]
-        else:
-            raise TypeError(
-                "{0} is not a valid file or directory path.".format(file_or_dir_path)
-            )
 
 
 def get_ipfs_backend(import_path: str = None) -> BaseIPFSBackend:

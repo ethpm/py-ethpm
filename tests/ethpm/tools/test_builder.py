@@ -24,9 +24,9 @@ from ethpm.tools.builder import (
     pin_source,
     source_inliner,
     source_pinner,
-    to_disk,
     validate,
     version,
+    write_to_disk,
 )
 
 BASE_MANIFEST = {"package_name": "package", "manifest_version": "2", "version": "1.0.0"}
@@ -102,7 +102,7 @@ def test_builder_writes_manifest_to_disk(manifest_dir):
         package_name("package"),
         manifest_version("2"),
         version("1.0.0"),
-        to_disk(
+        write_to_disk(
             manifest_root_dir=manifest_dir, manifest_name="1.0.0.json", prettify=True
         ),
     )
@@ -114,7 +114,11 @@ def test_builder_writes_manifest_to_disk(manifest_dir):
 def test_builder_to_disk_uses_default_cwd(manifest_dir, monkeypatch):
     monkeypatch.chdir(str(manifest_dir))
     build(
-        {}, package_name("package"), manifest_version("2"), version("1.0.0"), to_disk()
+        {},
+        package_name("package"),
+        manifest_version("2"),
+        version("1.0.0"),
+        write_to_disk(),
     )
     with open(str(manifest_dir / "1.0.0.json")) as f:
         actual_manifest = f.read()
@@ -127,7 +131,7 @@ def test_to_disk_writes_minified_manifest_as_default(manifest_dir):
         package_name("package"),
         manifest_version("2"),
         version("1.0.0"),
-        to_disk(manifest_root_dir=manifest_dir, manifest_name="1.0.0.json"),
+        write_to_disk(manifest_root_dir=manifest_dir, manifest_name="1.0.0.json"),
     )
     with open(str(manifest_dir / "1.0.0.json")) as f:
         actual_manifest = f.read()
@@ -140,7 +144,7 @@ def test_to_disk_uses_default_manifest_name(manifest_dir):
         package_name("package"),
         manifest_version("2"),
         version("1.0.0"),
-        to_disk(manifest_root_dir=manifest_dir),
+        write_to_disk(manifest_root_dir=manifest_dir),
     )
     with open(str(manifest_dir / "1.0.0.json")) as f:
         actual_manifest = f.read()
@@ -148,20 +152,20 @@ def test_to_disk_uses_default_manifest_name(manifest_dir):
 
 
 @pytest.mark.parametrize(
-    "to_disk_fn",
+    "write_to_disk_fn",
     (
-        to_disk(manifest_root_dir=Path("not/a/directory")),
-        to_disk(manifest_name="invalid_name"),
+        write_to_disk(manifest_root_dir=Path("not/a/directory")),
+        write_to_disk(manifest_name="invalid_name"),
     ),
 )
-def test_to_disk_with_invalid_args_raises_exception(manifest_dir, to_disk_fn):
+def test_to_disk_with_invalid_args_raises_exception(manifest_dir, write_to_disk_fn):
     with pytest.raises(ManifestBuildingError):
         build(
             {},
             package_name("package"),
             manifest_version("2"),
             version("1.0.0"),
-            to_disk_fn,
+            write_to_disk_fn,
         )
 
 

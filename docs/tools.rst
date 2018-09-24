@@ -133,7 +133,7 @@ To write a manifest to disk
 
    build(
        ...,
-       to_disk(
+       write_to_disk(
            manifest_root_dir: Optional[Path],
            manifest_name: Optional[str],
            prettify: Optional[bool],
@@ -158,7 +158,7 @@ Defaults
    ...     package_name("owned"),
    ...     manifest_version("2"),
    ...     version("1.0.0"),
-   ...     to_disk(manifest_root_dir=p, manifest_name="manifest.json", prettify=True),
+   ...     write_to_disk(manifest_root_dir=p, manifest_name="manifest.json", prettify=True),
    ... )
    {'package_name': 'owned', 'manifest_version': '2', 'version': '1.0.0'}
    >>> with open(str(p / "manifest.json")) as f:
@@ -169,6 +169,23 @@ Defaults
         "package_name": "owned",
         "version": "1.0.0"
    }
+
+
+To pin a manifest to IPFS
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code:: python
+
+   build(
+       ...,
+       pin_to_ipfs(
+           backend: BaseIPFSBackend,
+           prettify: Optional[bool],
+       ),
+   )
+
+Pins the active manfiest to disk. Must be the concluding function in a builder set since it returns the IPFS pin data rather than returning the manifest for further processing.
+
 
 To add meta fields
 ~~~~~~~~~~~~~~~~~~

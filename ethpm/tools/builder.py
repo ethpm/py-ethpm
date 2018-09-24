@@ -1,10 +1,10 @@
 import functools
-import json
 from pathlib import Path
+import tempfile
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple
 
 import cytoolz
-from eth_utils import add_0x_prefix, to_dict, to_list
+from eth_utils import add_0x_prefix, to_bytes, to_dict, to_list
 from eth_utils.toolz import assoc, assoc_in, curry, pipe
 from web3 import Web3
 
@@ -12,7 +12,10 @@ from ethpm import Package
 from ethpm.backends.ipfs import BaseIPFSBackend
 from ethpm.exceptions import ManifestBuildingError, ValidationError
 from ethpm.typing import Manifest
-from ethpm.utils.manifest_validation import validate_manifest_against_schema
+from ethpm.utils.manifest_validation import (
+    format_manifest,
+    validate_manifest_against_schema,
+)
 
 
 def build(obj: Dict[str, Any], *fns: Callable[..., Any]) -> Dict[str, Any]:
@@ -476,7 +479,7 @@ def as_package(w3: Web3, manifest: Manifest) -> Package:
     return Package(manifest, w3)
 
 
-def to_disk(
+def write_to_disk(
     manifest_root_dir: Optional[Path] = None,
     manifest_name: Optional[str] = None,
     prettify: Optional[bool] = False,
@@ -489,11 +492,11 @@ def to_disk(
       manifest name (which must end in json) is provided as manifest_name.
     - Writes the minified manifest version to disk unless prettify is set to True.
     """
-    return _to_disk(manifest_root_dir, manifest_name, prettify)
+    return _write_to_disk(manifest_root_dir, manifest_name, prettify)
 
 
 @curry
-def _to_disk(
+def _write_to_disk(
     manifest_root_dir: Optional[Path],
     manifest_name: Optional[str],
     prettify: Optional[bool],
@@ -524,10 +527,7 @@ def _to_disk(
     else:
         disk_manifest_name = manifest["version"] + ".json"
 
-    if prettify:
-        contents = json.dumps(manifest, sort_keys=True, indent=4)
-    else:
-        contents = json.dumps(manifest, sort_keys=True, separators=(",", ":"))
+    contents = format_manifest(manifest, prettify=prettify)
 
     if (cwd / disk_manifest_name).is_file():
         raise ManifestBuildingError(
@@ -535,3 +535,21 @@ def _to_disk(
         )
     (cwd / disk_manifest_name).write_text(contents)
     return manifest
+
+
+@cytoolz.curry
+def pin_to_ipfs(
+    manifest: Manifest, *, backend: BaseIPFSBackend, prettify: Optional[bool] = False
+) -> List[Dict[str, str]]:
+    """
+    Returns the IPFS pin data after pinning the manifest to the provided IPFS Backend.
+
+    `pin_to_ipfs()` Should *always* be the last argument in a builder, as it will return the pin
+    data and not the manifest.
+    """
+    contents = format_manifest(manifest, prettify=prettify)
+
+    with tempfile.NamedTemporaryFile() as temp:
+        temp.write(to_bytes(text=contents))
+        temp.seek(0)
+        return backend.pin_assets(Path(temp.name))

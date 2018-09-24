@@ -9,12 +9,11 @@ from ethpm import V2_PACKAGES_DIR
 from ethpm.backends.ipfs import (
     DummyIPFSBackend,
     InfuraIPFSBackend,
-    IPFSGatewayBackend,
     LocalIPFSBackend,
     get_ipfs_backend,
     get_ipfs_backend_class,
 )
-from ethpm.constants import INFURA_GATEWAY_PREFIX, IPFS_GATEWAY_PREFIX
+from ethpm.constants import INFURA_GATEWAY_PREFIX
 
 OWNED_MANIFEST_PATH = V2_PACKAGES_DIR / "owned" / "1.0.0.json"
 
@@ -37,11 +36,7 @@ def fake_client():
 
 
 @pytest.mark.parametrize(
-    "base_uri,backend",
-    (
-        (IPFS_GATEWAY_PREFIX, IPFSGatewayBackend()),
-        (INFURA_GATEWAY_PREFIX, InfuraIPFSBackend()),
-    ),
+    "base_uri,backend", ((INFURA_GATEWAY_PREFIX, InfuraIPFSBackend()),)
 )
 def test_ipfs_and_infura_gateway_backends_fetch_uri_contents(
     base_uri, backend, safe_math_manifest
@@ -79,7 +74,7 @@ def test_local_ipfs_backend(monkeypatch, fake_client):
     ),
 )
 def test_base_ipfs_gateway_backend_correctly_handles_uri_schemes(uri, expected):
-    backend = IPFSGatewayBackend()
+    backend = InfuraIPFSBackend()
     assert backend.can_resolve_uri(uri) is expected
 
 
