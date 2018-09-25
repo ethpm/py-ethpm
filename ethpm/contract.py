@@ -1,11 +1,10 @@
 from typing import Any, Dict, List, Type  # noqa: F401
 
 import cytoolz
-from eth_utils import is_canonical_address, to_bytes, to_checksum_address
+from eth_utils import combomethod, is_canonical_address, to_bytes, to_checksum_address
 from eth_utils.toolz import assoc
 from web3 import Web3
 from web3.contract import Contract
-from web3.utils.decorators import combomethod
 
 from ethpm.exceptions import BytecodeLinkingError, ValidationError
 from ethpm.validation import validate_address, validate_empty_bytes
