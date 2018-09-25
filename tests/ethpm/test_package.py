@@ -42,7 +42,7 @@ def test_get_contract_factory_with_default_web3(safe_math_package, w3):
 
 
 def test_get_contract_factory_with_missing_contract_types(safe_math_package, w3):
-    safe_math_package.package_data.pop("contract_types", None)
+    safe_math_package.manifest.pop("contract_types", None)
     with pytest.raises(InsufficientAssetsError):
         assert safe_math_package.get_contract_factory("SafeMathLib")
 
@@ -63,7 +63,7 @@ def test_get_contract_instance_throws_with_insufficient_assets(deployed_safe_mat
     safe_math_package, address = deployed_safe_math
     with pytest.raises(InsufficientAssetsError):
         assert safe_math_package.get_contract_instance("IncorrectLib", address)
-    safe_math_package.package_data["contract_types"]["SafeMathLib"].pop("abi")
+    safe_math_package.manifest["contract_types"]["SafeMathLib"].pop("abi")
     with pytest.raises(InsufficientAssetsError):
         assert safe_math_package.get_contract_instance("SafeMathLib", address)
 

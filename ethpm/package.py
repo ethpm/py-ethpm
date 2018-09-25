@@ -22,7 +22,7 @@ from ethpm.utils.contract import (
     validate_minimal_contract_factory_data,
     validate_w3_instance,
 )
-from ethpm.utils.filesystem import load_package_data_from_file
+from ethpm.utils.filesystem import load_manifest_from_file
 from ethpm.utils.manifest_validation import (
     check_for_deployments,
     validate_build_dependencies_are_present,
@@ -54,7 +54,7 @@ class Package(object):
 
         self.w3 = w3
         self.w3.eth.defaultContractFactory = LinkableContract
-        self.package_data = manifest
+        self.manifest = manifest
 
     def set_default_w3(self, w3: Web3) -> None:
         """
@@ -76,15 +76,15 @@ class Package(object):
 
     @property
     def name(self) -> str:
-        return self.package_data["package_name"]
+        return self.manifest["package_name"]
 
     @property
     def version(self) -> str:
-        return self.package_data["version"]
+        return self.manifest["version"]
 
     @property
     def manifest_version(self) -> str:
-        return self.package_data["manifest_version"]
+        return self.manifest["manifest_version"]
 
     @classmethod
     def from_file(cls, file_path_or_obj: str, w3: Web3) -> "Package":
@@ -93,16 +93,16 @@ class Package(object):
         """
         if isinstance(file_path_or_obj, str):
             with open(file_path_or_obj) as file_obj:
-                package_data = load_package_data_from_file(file_obj)
+                manifest = load_manifest_from_file(file_obj)
         elif hasattr(file_path_or_obj, "read") and callable(file_path_or_obj.read):
-            package_data = load_package_data_from_file(file_path_or_obj)
+            manifest = load_manifest_from_file(file_path_or_obj)
         else:
             raise TypeError(
                 "The Package.from_file method takes either a filesystem path or a file-like object."
                 "Got {0} instead.".format(type(file_path_or_obj))
             )
 
-        return cls(package_data, w3)
+        return cls(manifest, w3)
 
     @classmethod
     def from_uri(cls, uri: str, w3: Web3) -> "Package":
@@ -114,8 +114,8 @@ class Package(object):
             - Registry      `ercXXX://registry.eth/greeter?version=1.0.0`
         """
         contents = resolve_uri_contents(uri)
-        package_data = json.loads(to_text(contents))
-        return cls(package_data, w3)
+        manifest = json.loads(to_text(contents))
+        return cls(manifest, w3)
 
     def get_contract_factory(self, name: ContractName) -> Contract:
         """
@@ -123,7 +123,7 @@ class Package(object):
         """
         validate_contract_name(name)
         try:
-            contract_data = self.package_data["contract_types"][name]
+            contract_data = self.manifest["contract_types"][name]
             validate_minimal_contract_factory_data(contract_data)
         except KeyError:
             raise InsufficientAssetsError(
@@ -142,14 +142,14 @@ class Package(object):
         validate_address(address)
         validate_contract_name(name)
         try:
-            self.package_data["contract_types"][name]["abi"]
+            self.manifest["contract_types"][name]["abi"]
         except KeyError:
             raise InsufficientAssetsError(
                 "Package does not have the ABI required to generate a contract instance "
                 "for contract: {0} at address: {1}.".format(name, address)
             )
         contract_kwargs = generate_contract_factory_kwargs(
-            self.package_data["contract_types"][name]
+            self.manifest["contract_types"][name]
         )
         canonical_address = to_canonical_address(address)
         contract_instance = self.w3.eth.contract(
@@ -167,9 +167,9 @@ class Package(object):
         Return `Dependencies` instance containing the build dependencies available on this Package.
         Cached property (self.build_dependencies) busted everytime self.set_default_w3() is called.
         """
-        validate_build_dependencies_are_present(self.package_data)
+        validate_build_dependencies_are_present(self.manifest)
 
-        dependencies = self.package_data["build_dependencies"]
+        dependencies = self.manifest["build_dependencies"]
         dependency_packages = {}
         for name, uri in dependencies.items():
             try:
@@ -195,13 +195,13 @@ class Package(object):
         API to retrieve package deployments available on the current w3-connected chain.
         Cached property (self.deployments) gets busted everytime self.set_default_w3() is called.
         """
-        if not check_for_deployments(self.package_data):
+        if not check_for_deployments(self.manifest):
             return {}
 
-        all_blockchain_uris = self.package_data["deployments"].keys()
+        all_blockchain_uris = self.manifest["deployments"].keys()
         matching_uri = validate_single_matching_uri(all_blockchain_uris, self.w3)
 
-        deployments = self.package_data["deployments"][matching_uri]
+        deployments = self.manifest["deployments"][matching_uri]
         all_contract_factories = {
             deployment_data["contract_type"]: self.get_contract_factory(
                 deployment_data["contract_type"]
