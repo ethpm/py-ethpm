@@ -1,8 +1,34 @@
 URI Schemes and Backends
 ========================
 
-Registry URI
-------------
+IPFS
+----
+
+``Py-EthPM`` has multiple backends available to fetch/pin files to IPFS. The desired backend can be set via the environment variable: ``ETHPM_IPFS_BACKEND_CLASS``.
+
+- ``InfuraIPFSBackend`` (default)
+    - `https://ipfs.infura.io`
+- ``IPFSGatewayBackend``
+    - `https://ipfs.io/ipfs/`
+- ``LocalIPFSBacked``
+    - connects to a local IPFS API gateway running on port 5001.
+- ``DummyIPFSBackend``
+    - Won't pin/fetch files to an actual IPFS node, but mocks out this behavior.
+
+.. py:method:: BaseIPFSBackend.can_resolve_uri(uri)
+
+   Returns a bool indicating whether or not this backend is capable of handling the given URI.
+
+.. py:method:: BaseIPFSBackend.fetch_uri_contents(uri)
+
+   Fetches the contents stored at a URI.
+
+.. py:method:: BaseIPFSBackend.pin_assets(file_or_directory_path)
+
+   Pins asset(s) found at the given path and returns the pinned asset data.
+
+Registry URIs
+-------------
 
 The URI to lookup a package from a registry should follow the following
 format. (subject to change as the Registry Contract Standard makes it’s
