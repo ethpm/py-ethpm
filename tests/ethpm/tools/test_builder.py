@@ -4,7 +4,7 @@ from pathlib import Path
 from eth_utils.toolz import assoc
 import pytest
 
-from ethpm import Package
+from ethpm import ASSETS_DIR, Package
 from ethpm.backends.ipfs import get_ipfs_backend
 from ethpm.exceptions import ManifestBuildingError, ValidationError
 from ethpm.tools.builder import (
@@ -33,8 +33,8 @@ BASE_MANIFEST = {"package_name": "package", "manifest_version": "2", "version": 
 
 
 @pytest.fixture
-def owned_package(PACKAGING_EXAMPLES_DIR):
-    root = PACKAGING_EXAMPLES_DIR / "owned"
+def owned_package():
+    root = ASSETS_DIR / "owned"
     manifest = json.loads(Path(str(root / "1.0.0.json")).read_text())
     compiler = json.loads(Path(str(root / "owned_compiler_output.json")).read_text())[
         "contracts"
@@ -47,8 +47,8 @@ def owned_package(PACKAGING_EXAMPLES_DIR):
 
 
 @pytest.fixture
-def standard_token_package(PACKAGING_EXAMPLES_DIR):
-    root = PACKAGING_EXAMPLES_DIR / "standard-token"
+def standard_token_package():
+    root = ASSETS_DIR / "standard-token"
     manifest = json.loads(Path(str(root / "1.0.0.json")).read_text())
     compiler = json.loads(
         Path(str(root / "standard_token_compiler_output.json")).read_text()
@@ -58,8 +58,8 @@ def standard_token_package(PACKAGING_EXAMPLES_DIR):
 
 
 @pytest.fixture
-def registry_package(PACKAGING_EXAMPLES_DIR):
-    root = PACKAGING_EXAMPLES_DIR / "registry"
+def registry_package():
+    root = ASSETS_DIR / "registry"
     compiler = json.loads(
         Path(str(root / "registry_compiler_output.json")).read_text()
     )["contracts"]

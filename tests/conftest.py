@@ -7,13 +7,8 @@ import pytest
 from web3 import Web3
 
 from ethpm import V2_PACKAGES_DIR, Package
+from ethpm.assets import get_manifest
 from ethpm.utils.chains import create_block_uri, get_genesis_block_hash
-
-
-@pytest.fixture
-def PACKAGING_EXAMPLES_DIR():
-    return Path(__file__).parent / "ethpm" / "packaging-examples"
-
 
 PACKAGE_NAMES = [
     "escrow",
@@ -32,8 +27,7 @@ def pytest_addoption(parser):
 
 
 def fetch_manifest(name):
-    with open(str(V2_PACKAGES_DIR / name / "1.0.0.json")) as file_obj:
-        return json.load(file_obj)
+    return get_manifest(name, "1.0.0.json")
 
 
 MANIFESTS = {name: fetch_manifest(name) for name in PACKAGE_NAMES}

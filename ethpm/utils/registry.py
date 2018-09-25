@@ -21,5 +21,5 @@ def fetch_standard_registry_abi() -> Dict[str, Any]:
     Return the standard Registry ABI to interact with a deployed Registry.
     TODO: Update once the standard is finalized via ERC process.
     """
-    with open(str(ASSETS_DIR / "registry_abi.json")) as file_obj:
+    with open(str(ASSETS_DIR / "registry" / "registry_abi.json")) as file_obj:
         return json.load(file_obj)
