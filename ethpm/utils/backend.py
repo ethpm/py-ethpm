@@ -6,7 +6,6 @@ from ethpm.backends.base import BaseURIBackend
 from ethpm.backends.ipfs import (
     DummyIPFSBackend,
     InfuraIPFSBackend,
-    IPFSGatewayBackend,
     LocalIPFSBackend,
     get_ipfs_backend_class,
 )
@@ -14,7 +13,6 @@ from ethpm.backends.registry import RegistryURIBackend
 from ethpm.exceptions import CannotHandleURI
 
 URI_BACKENDS = [
-    IPFSGatewayBackend,
     InfuraIPFSBackend,
     DummyIPFSBackend,
     LocalIPFSBackend,

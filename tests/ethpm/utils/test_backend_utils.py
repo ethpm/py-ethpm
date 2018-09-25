@@ -1,6 +1,6 @@
 import pytest
 
-from ethpm.backends.ipfs import InfuraIPFSBackend, IPFSGatewayBackend, LocalIPFSBackend
+from ethpm.backends.ipfs import InfuraIPFSBackend, LocalIPFSBackend
 from ethpm.backends.registry import RegistryURIBackend
 from ethpm.exceptions import CannotHandleURI
 from ethpm.utils.backend import (
@@ -15,7 +15,7 @@ from ethpm.utils.backend import (
     (
         (
             "ipfs://QmTKB75Y73zhNbD3Y73xeXGjYrZHmaXXNxoZqGCagu7r8u/",
-            (IPFSGatewayBackend, InfuraIPFSBackend, LocalIPFSBackend),
+            (InfuraIPFSBackend, LocalIPFSBackend),
         ),
         ("ercXXX://packages.zeppelinos.eth/erc20?version=1.0.0", ()),
     ),
