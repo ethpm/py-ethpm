@@ -1,8 +1,6 @@
 import json
 from typing import Any, Dict
 
-from ethpm import ASSETS_DIR
-
 
 def is_ens_domain(authority: str) -> bool:
     """
@@ -21,5 +19,8 @@ def fetch_standard_registry_abi() -> Dict[str, Any]:
     Return the standard Registry ABI to interact with a deployed Registry.
     TODO: Update once the standard is finalized via ERC process.
     """
-    with open(str(ASSETS_DIR / "registry" / "registry_abi.json")) as file_obj:
-        return json.load(file_obj)
+    # In-lining abi here since it needs to be updated to a registry conforming to
+    # https://github.com/ethereum/EIPs/issues/1319
+    return json.loads(
+        '[{"constant":true,"inputs":[{"name":"_name","type":"bytes32"}],"name":"lookupPackage","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"bytes32"}],"name":"index","outputs":[{"name":"uri","type":"string"},{"name":"version","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_name","type":"bytes32"},{"name":"_version","type":"string"},{"name":"_uri","type":"string"}],"name":"registerPackage","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}]'  # noqa: E501
+    )
