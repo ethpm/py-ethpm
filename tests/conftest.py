@@ -7,7 +7,7 @@ import pytest
 from web3 import Web3
 
 from ethpm import V2_PACKAGES_DIR, Package
-from ethpm.assets import get_manifest
+from ethpm.tools import get_manifest
 from ethpm.utils.chains import create_block_uri, get_genesis_block_hash
 
 PACKAGE_NAMES = [
