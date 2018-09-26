@@ -314,13 +314,13 @@ To inline the source code directly in the manifest, use ``inline_source()`` or `
    >>> from ethpm import ASSETS_DIR, V2_PACKAGES_DIR
    >>> owned_dir = V2_PACKAGES_DIR / "owned" / "contracts"
    >>> owned_contract_source = owned_dir / "Owned.sol"
-   >>> compiler_output = json.loads((ASSETS_DIR / "owned_compiler_output.json").read_text())['contracts']
+   >>> compiler_output = json.loads((ASSETS_DIR / "owned" / "owned_compiler_output.json").read_text())['contracts']
    >>> expected_manifest = {
    ...   "package_name": "owned",
    ...   "version": "1.0.0",
    ...   "manifest_version": "2",
    ...   "sources": {
-   ...     "./Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
+   ...     "Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
    ...     """ owner;\n    \n    modifier onlyOwner { require(msg.sender == owner); _; }\n\n    """
    ...     """constructor() public {\n        owner = msg.sender;\n    }\n}\n"""
    ...   }
@@ -352,7 +352,7 @@ To include the source as a content-addressed URI, ``Py-EthPM`` can pin your sour
    ...   "version": "1.0.0",
    ...   "manifest_version": "2",
    ...   "sources": {
-   ...     "./Owned.sol": "ipfs://Qme4otpS88NV8yQi8TfTP89EsQC5bko3F5N1yhRoi6cwGV"
+   ...     "Owned.sol": "ipfs://Qme4otpS88NV8yQi8TfTP89EsQC5bko3F5N1yhRoi6cwGV"
    ...   }
    ... }
    >>> # With `pin_source()`
@@ -405,7 +405,7 @@ The default behavior of the manifest builder's ``contract_type()`` function is t
    ...     'Owned': {
    ...       'abi': [{'inputs': [], 'payable': False, 'stateMutability': 'nonpayable', 'type': 'constructor'}],
    ...       'deployment_bytecode': {
-   ...         'bytecode': '0x6080604052348015600f57600080fd5b50336000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550603580605d6000396000f3006080604052600080fd00a165627a7a723058205b37f1a2213f25d063f356b0357d90ed9518d34e3af8feb0ac86586cdc1246d20029'
+   ...         'bytecode': '0x6080604052348015600f57600080fd5b50336000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550603580605d6000396000f3006080604052600080fd00a165627a7a72305820d6ab9e295aa1d1adb0fca69ce42c2c73e991afe290852e8247a208a78b352ff00029'
    ...       },
    ...       'natspec': {}
    ...     }
