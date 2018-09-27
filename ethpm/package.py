@@ -122,15 +122,22 @@ class Package(object):
         Return a contract factory for a given contract type.
         """
         validate_contract_name(name)
-        try:
-            contract_data = self.manifest["contract_types"][name]
-            validate_minimal_contract_factory_data(contract_data)
-        except KeyError:
+
+        if "contract_types" not in self.manifest:
             raise InsufficientAssetsError(
-                "This package has insufficient package data to generate "
-                "a contract factory for contract: {0}.".format(name)
+                "This package does not contain any contract type data."
             )
 
+        try:
+            contract_data = self.manifest["contract_types"][name]
+        except KeyError:
+            raise InsufficientAssetsError(
+                "This package does not contain any package data to generate "
+                "a contract factory for contract type: {0}. Available contract types include: "
+                "{1}".format(name, list(self.manifest["contract_types"].keys()))
+            )
+
+        validate_minimal_contract_factory_data(contract_data)
         contract_kwargs = generate_contract_factory_kwargs(contract_data)
         contract_factory = self.w3.eth.contract(**contract_kwargs)
         return contract_factory
