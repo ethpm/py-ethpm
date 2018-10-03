@@ -64,7 +64,7 @@ def registry_package():
         Path(str(root / "registry_compiler_output.json")).read_text()
     )["contracts"]
     contracts_dir = root / "contracts"
-    manifest = json.loads(Path(str(root / "1.0.0.json")).read_text())
+    manifest = json.loads(Path(str(root / "1.0.2.json")).read_text())
     return contracts_dir, manifest, compiler
 
 
@@ -447,24 +447,54 @@ def test_builder_with_link_references(
         {},
         package_name("registry"),
         manifest_version("2"),
-        version("1.0.0"),
-        pinner("Authority"),
+        version("1.0.1"),
         pinner("IndexedOrderedSetLib"),
         pinner("PackageDB"),
-        pinner("PackageIndex"),
-        pinner("PackageIndexInterface"),
+        pinner("PackageRegistry"),
+        pinner("PackageRegistryInterface"),
         pinner("ReleaseDB"),
         pinner("ReleaseValidator"),
-        pinner("SemVersionLib"),
-        contract_type("Authorized", compiler_output, abi=True),
-        contract_type("IndexedOrderedSetLib", compiler_output, abi=True),
-        contract_type("PackageDB", compiler_output, abi=True, deployment_bytecode=True),
-        contract_type("PackageIndex", compiler_output, abi=True),
-        contract_type("PackageIndexInterface", compiler_output, abi=True),
-        contract_type("ReleaseDB", compiler_output, abi=True, deployment_bytecode=True),
-        contract_type("ReleaseValidator", compiler_output, abi=True),
         contract_type(
-            "SemVersionLib", compiler_output, abi=True, deployment_bytecode=True
+            "IndexedOrderedSetLib",
+            compiler_output,
+            abi=True,
+            deployment_bytecode=True,
+            runtime_bytecode=True,
+        ),
+        contract_type(
+            "PackageDB",
+            compiler_output,
+            abi=True,
+            deployment_bytecode=True,
+            runtime_bytecode=True,
+        ),
+        contract_type(
+            "PackageRegistry",
+            compiler_output,
+            abi=True,
+            deployment_bytecode=True,
+            runtime_bytecode=True,
+        ),
+        contract_type(
+            "PackageRegistryInterface",
+            compiler_output,
+            abi=True,
+            deployment_bytecode=True,
+            runtime_bytecode=True,
+        ),
+        contract_type(
+            "ReleaseDB",
+            compiler_output,
+            abi=True,
+            deployment_bytecode=True,
+            runtime_bytecode=True,
+        ),
+        contract_type(
+            "ReleaseValidator",
+            compiler_output,
+            abi=True,
+            deployment_bytecode=True,
+            runtime_bytecode=True,
         ),
         validate(),
     )

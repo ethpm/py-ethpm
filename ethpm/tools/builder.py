@@ -354,10 +354,15 @@ def normalize_contract_type(
     Serialize contract_data found in compiler output to the defined fields.
     """
     yield "abi", contract_type_data["abi"]
-    yield "deployment_bytecode", normalize_bytecode_object(
-        contract_type_data["evm"]["bytecode"]
-    )
-    # todo support natspec, runtime_bytecode
+    if "evm" in contract_type_data:
+        if "bytecode" in contract_type_data["evm"]:
+            yield "deployment_bytecode", normalize_bytecode_object(
+                contract_type_data["evm"]["bytecode"]
+            )
+        if "deployedBytecode" in contract_type_data["evm"]:
+            yield "runtime_bytecode", normalize_bytecode_object(
+                contract_type_data["evm"]["deployedBytecode"]
+            )
     yield "natspec", {}
 
 

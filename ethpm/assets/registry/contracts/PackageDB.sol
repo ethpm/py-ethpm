@@ -1,17 +1,29 @@
 pragma solidity ^0.4.24;
 pragma experimental "v0.5.0";
 
-import {SemVersionLib} from "./SemVersionLib.sol";
 import {IndexedOrderedSetLib} from "./IndexedOrderedSetLib.sol";
-import {Authorized} from "./Authority.sol";
 
 
 /// @title Database contract for a package index package data.
 /// @author Tim Coulter <tim.coulter@consensys.net>, Piper Merriam <pipermerriam@gmail.com>
-contract PackageDB is Authorized {
-  using SemVersionLib for SemVersionLib.SemVersion;
+contract PackageDB {
   using IndexedOrderedSetLib for IndexedOrderedSetLib.IndexedOrderedSet;
 
+  address public owner;
+  
+  modifier auth {
+    require(msg.sender == owner ,"PackageDB:caller-not-authorized");
+    _;
+  }
+  
+  function setOwner(address new_owner) public {
+      owner = new_owner;
+  }
+  
+  constructor() public {
+      owner = msg.sender;
+  }
+  
   struct Package {
     bool exists;
     uint createdAt;
@@ -169,6 +181,47 @@ contract PackageDB is Authorized {
     returns (string)
   {
     return _recordedPackages[nameHash].name;
+  }
+
+  /// @dev Returns a slice of the array of all package hashes for the named package.
+  /// @param offset The starting index for the slice.
+  /// @param limit  The length of the slice
+  function getAllPackageIds(uint _offset, uint limit)
+    public
+    view
+    returns (
+      bytes32[] packageIds,
+      uint offset
+    )
+  {
+    bytes32[] memory hashes;                 // Array of package ids to return
+    uint cursor = _offset;                   // Index counter to traverse DB array
+    uint remaining;                          // Counter to collect `limit` packages
+    uint totalPackages = getNumPackages();   // Total number of packages in registry
+
+    // Is request within range?
+    if (cursor < totalPackages){
+
+      // Get total remaining records
+      remaining = totalPackages - cursor;
+
+      // Number of records to collect is lesser of `remaining` and `limit`
+      if (remaining > limit ){
+        remaining = limit;
+      }
+
+      // Allocate return array
+      hashes = new bytes32[](remaining);
+
+      // Collect records. (IndexedOrderedSet manages deletions.)
+      while(remaining > 0){
+        bytes32 hash = getPackageNameHash(cursor);
+        hashes[remaining - 1] = hash;
+        remaining--;
+        cursor++;
+      }
+    }
+    return (hashes, cursor);
   }
 
   /*

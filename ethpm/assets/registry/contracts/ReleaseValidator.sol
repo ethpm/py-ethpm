@@ -12,18 +12,14 @@ contract ReleaseValidator {
   /// @param releaseDb The address of the ReleaseDB
   /// @param callerAddress The address which is attempting to create the release.
   /// @param name The name of the package.
-  /// @param majorMinorPatch The major/minor/patch portion of the version string.
-  /// @param preRelease The pre-release portion of the version string.
-  /// @param build The build portion of the version string.
+  /// @param version The version string of the package (ex: `1.0.0`)
   /// @param manifestURI The URI of the release manifest.
   function validateRelease(
     PackageDB packageDb,
     ReleaseDB releaseDb,
     address callerAddress,
     string name,
-    uint32[3] majorMinorPatch,
-    string preRelease,
-    string build,
+    string version,
     string manifestURI
   )
     public
@@ -39,16 +35,16 @@ contract ReleaseValidator {
     } else if (!validateAuthorization(packageDb, callerAddress, name)) {
       // package exists and msg.sender is not the owner not the package owner.
       revert("escape:ReleaseValidator:caller-not-authorized");
-    } else if (!validateIsNewRelease(packageDb, releaseDb, name, majorMinorPatch, preRelease, build)) {
+    } else if (!validateIsNewRelease(packageDb, releaseDb, name, version)) {
       // this version has already been released.
       revert("escape:ReleaseValidator:version-exists");
     } else if (!validatePackageName(packageDb, name)) {
       // invalid package name.
       revert("escape:ReleaseValidator:invalid-package-name");
-    } else if (!validateManifestURI(manifestURI)) {
+    } else if (!validateStringIdentifier(manifestURI)) {
       // disallow empty release manifest URI
       revert("escape:ReleaseValidator:invalid-manifest-uri");
-    } else if (!validateReleaseVersion(majorMinorPatch)) {
+    } else if (!validateStringIdentifier(version)) {
       // disallow version 0.0.0
       revert("escape:ReleaseValidator:invalid-release-version");
     }
@@ -86,23 +82,19 @@ contract ReleaseValidator {
   /// @param packageDb The address of the PackageDB
   /// @param releaseDb The address of the ReleaseDB
   /// @param name The name of the package.
-  /// @param majorMinorPatch The major/minor/patch portion of the version string.
-  /// @param preRelease The pre-release portion of the version string.
-  /// @param build The build portion of the version string.
+  /// @param version The version string for the release
   function validateIsNewRelease(
     PackageDB packageDb,
     ReleaseDB releaseDb,
     string name,
-    uint32[3] majorMinorPatch,
-    string preRelease,
-    string build
+    string version
   )
     public
     view
     returns (bool)
   {
     bytes32 nameHash = packageDb.hashName(name);
-    bytes32 versionHash = releaseDb.hashVersion(majorMinorPatch[0], majorMinorPatch[1], majorMinorPatch[2], preRelease, build);
+    bytes32 versionHash = releaseDb.hashVersion(version);
     bytes32 releaseHash = releaseDb.hashRelease(nameHash, versionHash);
     return !releaseDb.releaseExists(releaseHash);
   }
@@ -145,35 +137,16 @@ contract ReleaseValidator {
     return true;
   }
 
-  /// @dev Returns boolean whether the provided release manifest URI is valid.
-  /// @param manifestURI The URI for a release manifest.
-  function validateManifestURI(string manifestURI)
+  /// @dev Returns boolean whether the input string has a length
+  /// @param value The string to validate.
+  function validateStringIdentifier(string value)
     public
     pure
     returns (bool)
   {
-    if (bytes(manifestURI).length == 0) {
+    if (bytes(value).length == 0) {
       return false;
     }
     return true;
   }
-
-  /// @dev Validate that the version is not 0.0.0.
-  /// @param majorMinorPatch The major/minor/patch portion of the version string.
-  function validateReleaseVersion(uint32[3] majorMinorPatch)
-    public
-    pure
-    returns (bool)
-  {
-    if (majorMinorPatch[0] > 0) {
-      return true;
-    } else if (majorMinorPatch[1] > 0) {
-      return true;
-    } else if (majorMinorPatch[2] > 0) {
-      return true;
-    } else {
-      return false;
-    }
-  }
 }
-
