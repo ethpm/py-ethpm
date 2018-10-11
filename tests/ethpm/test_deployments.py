@@ -97,32 +97,28 @@ def test_deployment_implements_key_lookup_with_nonexistent_key_raises_exception(
 
 
 @pytest.mark.parametrize("invalid_name", ("", "-abc", "A=bc", "X" * 257))
-def test_get_contract_instance_with_invalid_name_raises_exception(
-    deployment, invalid_name
-):
+def test_get_instance_with_invalid_name_raises_exception(deployment, invalid_name):
     with pytest.raises(ValidationError):
-        deployment.get_contract_instance(invalid_name)
+        deployment.get_instance(invalid_name)
 
 
-def test_get_contract_instance_without_reference_in_deployments_raises_exception(
-    deployment
-):
+def test_get_instance_without_reference_in_deployments_raises_exception(deployment):
     with pytest.raises(KeyError):
-        deployment.get_contract_instance("InvalidContract")
+        deployment.get_instance("InvalidContract")
 
 
-def test_get_contract_instance_without_reference_in_contract_factories_raises(
+def test_get_instance_without_reference_in_contract_factories_raises(
     invalid_deployment
 ):
     with pytest.raises(ValidationError):
-        invalid_deployment.get_contract_instance("SafeMathLib")
+        invalid_deployment.get_instance("SafeMathLib")
 
 
-def test_deployments_get_contract_instance(manifest_with_matching_deployment, w3):
+def test_deployments_get_instance(manifest_with_matching_deployment, w3):
     manifest, address = manifest_with_matching_deployment
     safe_math_package = Package(manifest, w3)
     deps = safe_math_package.deployments
-    safe_math_instance = deps.get_contract_instance("SafeMathLib")
+    safe_math_instance = deps.get_instance("SafeMathLib")
     assert isinstance(safe_math_instance, Contract)
     assert safe_math_instance.address == address
     assert safe_math_instance.bytecode == to_bytes(
