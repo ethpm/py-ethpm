@@ -2,13 +2,14 @@ import copy
 import json
 from pathlib import Path
 
-from eth_utils import to_hex
+from eth_utils import to_canonical_address, to_hex
 import pytest
 from web3 import Web3
 
-from ethpm import V2_PACKAGES_DIR, Package
+from ethpm import ASSETS_DIR, V2_PACKAGES_DIR, Package
 from ethpm.tools import get_manifest
 from ethpm.utils.chains import create_block_uri, get_genesis_block_hash
+from pytest_ethereum import linker as l
 
 PACKAGE_NAMES = [
     "escrow",
@@ -124,37 +125,23 @@ def manifest_with_empty_deployments(tmpdir, safe_math_manifest):
 
 
 @pytest.fixture
-def manifest_with_matching_deployment(w3, tmpdir, safe_math_manifest):
-    w3.testing.mine(5)
-    genesis_hash = get_genesis_block_hash(w3)
-    safe_math_bin = safe_math_manifest["contract_types"]["SafeMathLib"][
-        "deployment_bytecode"
-    ]["bytecode"]
-    safe_math_abi = safe_math_manifest["contract_types"]["SafeMathLib"]["abi"]
-    # deploy safe-math-lib
-    SML = w3.eth.contract(abi=safe_math_abi, bytecode=safe_math_bin)
-    tx_hash = SML.constructor().transact()
-    tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
-    address = tx_receipt.contractAddress
-    block = w3.eth.getBlock("earliest")
-    block_uri = create_block_uri(w3.toHex(genesis_hash), w3.toHex(block.hash))
-    manifest = copy.deepcopy(safe_math_manifest)
-    manifest["deployments"] = {}
-    manifest["deployments"][block_uri] = {
-        "SafeMathLib": {
-            "contract_type": "SafeMathLib",
-            "address": address,
-            "transaction": to_hex(tx_receipt.transactionHash),
-            "block": to_hex(tx_receipt.blockHash),
-        }
-    }
-    return manifest, address
+def escrow_package(solc_deployer, w3):
+    escrow_manifest = ASSETS_DIR / "escrow" / "1.0.3.json"
+    deployer = solc_deployer(escrow_manifest)
+    escrow_strategy = l.linker(
+        l.deploy("SafeSendLib"),
+        l.link("Escrow", "SafeSendLib"),
+        l.deploy("Escrow", w3.eth.accounts[0]),
+    )
+    deployer.register_strategy("Escrow", escrow_strategy)
+    return deployer.deploy("Escrow")
 
 
 @pytest.fixture
-def matching_package(manifest_with_matching_deployment):
-    manifest, _ = manifest_with_matching_deployment
-    return Package(manifest)
+def safe_math_lib_package(solc_deployer, w3):
+    safe_math_lib_manifest = ASSETS_DIR / "safe-math-lib" / "1.0.1.json"
+    deployer = solc_deployer(safe_math_lib_manifest)
+    return deployer.deploy("SafeMathLib")
 
 
 @pytest.fixture

@@ -2,9 +2,14 @@ from eth_utils import to_bytes
 import pytest
 from web3.eth import Contract
 
-from ethpm import Package
+from ethpm.contract import LinkableContract
 from ethpm.deployments import Deployments
-from ethpm.exceptions import ValidationError
+from ethpm.exceptions import BytecodeLinkingError, ValidationError
+from ethpm.utils.deployments import (
+    get_linked_deployments,
+    normalize_linked_references,
+    validate_linked_references,
+)
 
 DEPLOYMENT_DATA = {
     "SafeMathLib": {
@@ -17,9 +22,8 @@ DEPLOYMENT_DATA = {
 
 
 @pytest.fixture
-def contract_factory(manifest_with_matching_deployment):
-    p = Package(manifest_with_matching_deployment)
-    return p.get_contract_type("SafeMathLib")
+def contract_factory(safe_math_lib_package):
+    return safe_math_lib_package.get_contract_type("SafeMathLib")
 
 
 VALID_CONTRACT_TYPES = {"SafeMathLib": contract_factory}
@@ -114,15 +118,106 @@ def test_get_instance_without_reference_in_contract_factories_raises(
         invalid_deployment.get_instance("SafeMathLib")
 
 
-def test_deployments_get_instance(manifest_with_matching_deployment, w3):
-    manifest, address = manifest_with_matching_deployment
-    safe_math_package = Package(manifest, w3)
-    deps = safe_math_package.deployments
+def test_deployments_get_instance(safe_math_lib_package):
+    deps = safe_math_lib_package.deployments
     safe_math_instance = deps.get_instance("SafeMathLib")
     assert isinstance(safe_math_instance, Contract)
-    assert safe_math_instance.address == address
     assert safe_math_instance.bytecode == to_bytes(
-        hexstr=safe_math_package.manifest["contract_types"]["SafeMathLib"][
+        hexstr=safe_math_lib_package.manifest["contract_types"]["SafeMathLib"][
             "deployment_bytecode"
         ]["bytecode"]
     )
+
+
+def test_deployments_get_instance_with_link_dependency(escrow_package):
+    deployments = escrow_package.deployments
+    escrow_deployment = deployments.get_instance("Escrow")
+    assert isinstance(escrow_deployment, LinkableContract)
+    assert not escrow_deployment.needs_bytecode_linking
+
+
+def test_get_linked_deployments(escrow_package):
+    escrow_manifest = escrow_package.manifest
+    all_deployments = list(escrow_manifest["deployments"].values())[0]
+    actual_linked_deployments = get_linked_deployments(all_deployments)
+    assert actual_linked_deployments == {"Escrow": all_deployments["Escrow"]}
+    # integration via package.deployments
+    deployments = escrow_package.deployments
+    assert len(deployments.contract_factories) is 2
+
+
+@pytest.mark.parametrize(
+    "deployments",
+    (
+        (
+            {
+                "Escrow": {
+                    "contract_type": "Escrow",
+                    "address": "0x8c1968deB27251A3f1F4508df32dA4dfD1b7b57f",
+                    "transaction": "0xc60e32c63abf34579390ef65d83cc5eb52225de38c3eeca2e5afa961d71c16d0",  # noqa: E501
+                    "block": "0x4d1a618802bb87752d95db453dddeea622820424a2f836bedf8769a67ee276b8",
+                    "runtime_bytecode": {
+                        "link_dependencies": [
+                            {"offsets": [200], "type": "reference", "value": "filler"},
+                            {
+                                "offsets": [301, 495],
+                                "type": "reference",
+                                "value": "Escrow",
+                            },
+                        ]
+                    },
+                }
+            },
+        )
+    ),
+)
+def test_get_linked_deployments_raises_exception_with_self_reference(deployments):
+    with pytest.raises(BytecodeLinkingError):
+        get_linked_deployments(deployments)
+
+
+@pytest.mark.parametrize(
+    "link_data,expected",
+    (
+        (
+            [
+                {"offsets": [1], "type": "reference", "value": "123"},
+                {"offsets": [2, 3], "type": "literal", "value": "abc"},
+            ],
+            ((1, "reference", "123"), (2, "literal", "abc"), (3, "literal", "abc")),
+        ),
+        (
+            [{"offsets": [1, 2, 3], "type": "literal", "value": "123"}],
+            ((1, "literal", "123"), (2, "literal", "123"), (3, "literal", "123")),
+        ),
+    ),
+)
+def test_normalize_linked_references(link_data, expected):
+    link_deps = normalize_linked_references(link_data)
+    assert link_deps == expected
+
+
+@pytest.mark.parametrize(
+    "link_deps,bytecode",
+    (
+        (((1, b"abc"),), b"xabc"),
+        (((1, b"a"), (5, b"xx"), (15, b"1")), b"0a000xx000000001"),
+    ),
+)
+def test_validate_linked_references(link_deps, bytecode):
+    result = validate_linked_references(link_deps, bytecode)
+    assert result is None
+
+
+@pytest.mark.parametrize(
+    "link_deps,bytecode",
+    (
+        (((0, b"abc"),), b"xabc"),
+        (((2, b"abc"),), b"xabc"),
+        (((8, b"abc"),), b"xabc"),
+        (((1, b"a"), (5, b"xxx"), (15, b"1")), b"0a000xx000000001"),
+    ),
+)
+def test_validate_linked_references_invalidates(link_deps, bytecode):
+    with pytest.raises(ValidationError):
+        validate_linked_references(link_deps, bytecode)

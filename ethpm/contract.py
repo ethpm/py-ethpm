@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type  # noqa: F401
+from typing import Any, Dict, List, Tuple, Type  # noqa: F401
 
 import cytoolz
 from eth_utils import combomethod, is_canonical_address, to_bytes, to_checksum_address
@@ -16,8 +16,8 @@ class LinkableContract(Contract):
     contract factories with link references in their package's manifest.
     """
 
-    deployment_link_refs: List[Dict[str, Any]] = []
-    runtime_link_refs: List[Dict[str, Any]] = []
+    unlinked_references: Tuple[Dict[str, Any]] = None
+    linked_references: Tuple[Dict[str, Any]] = None
     needs_bytecode_linking = None
 
     def __init__(self, address: bytes = None, **kwargs: Any) -> None:
@@ -35,7 +35,7 @@ class LinkableContract(Contract):
     def factory(
         cls, web3: Web3, class_name: str = None, **kwargs: Any
     ) -> "LinkableContract":
-        dep_link_refs = kwargs.get("deployment_link_refs")
+        dep_link_refs = kwargs.get("unlinked_references")
         bytecode = kwargs.get("bytecode")
         needs_bytecode_linking = False
         if dep_link_refs and bytecode:
@@ -55,22 +55,20 @@ class LinkableContract(Contract):
     @classmethod
     def link_bytecode(cls, attr_dict: Dict[str, str]) -> Type["LinkableContract"]:
         """
-        Return a cloned contract factory with the deploymeny / runtime bytecode linked.
+        Return a cloned contract factory with the deployment / runtime bytecode linked.
 
         :attr_dict: Dict[`ContractType`: `Address`] for all deployment and runtime link references.
         """
-        if not cls.deployment_link_refs and not cls.runtime_link_refs:
+        if not cls.unlinked_references and not cls.linked_references:
             raise BytecodeLinkingError("Contract factory has no linkable bytecode.")
         if not cls.needs_bytecode_linking:
             raise BytecodeLinkingError(
                 "Bytecode for this contract factory does not require bytecode linking."
             )
         cls.validate_attr_dict(attr_dict)
-        bytecode = apply_all_link_refs(
-            cls.bytecode, cls.deployment_link_refs, attr_dict
-        )
+        bytecode = apply_all_link_refs(cls.bytecode, cls.unlinked_references, attr_dict)
         runtime = apply_all_link_refs(
-            cls.bytecode_runtime, cls.runtime_link_refs, attr_dict
+            cls.bytecode_runtime, cls.linked_references, attr_dict
         )
         linked_class = cls.factory(
             cls.web3, bytecode_runtime=runtime, bytecode=bytecode
@@ -87,9 +85,20 @@ class LinkableContract(Contract):
         Validates that ContractType keys in attr_dict reference existing manifest ContractTypes.
         """
         attr_dict_names = list(attr_dict.keys())
-        all_link_refs: List[Dict[str, Any]] = (
-            self.deployment_link_refs + self.runtime_link_refs
-        )
+
+        if not self.unlinked_references and not self.linked_references:
+            raise BytecodeLinkingError(
+                "Unable to validate attr dict, this contract has no linked/unlinked references."
+            )
+
+        all_link_refs: Tuple[Any, ...]
+        if self.unlinked_references and self.linked_references:
+            all_link_refs = self.unlinked_references + self.linked_references
+        elif not self.unlinked_references:
+            all_link_refs = self.linked_references
+        else:
+            all_link_refs = self.unlinked_references
+
         all_link_names = [ref["name"] for ref in all_link_refs]
         if set(attr_dict_names) != set(all_link_names):
             raise BytecodeLinkingError(

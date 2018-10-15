@@ -45,7 +45,7 @@ def test_linkable_contract_class_handles_link_refs(
     # Can't link a factory that's already linked
     with pytest.raises(BytecodeLinkingError):
         linked_factory.link_bytecode(attr_dict)
-    offset = factory.deployment_link_refs[0]["offsets"][0]
+    offset = factory.unlinked_references[0]["offsets"][0]
     link_address = to_canonical_address(list(attr_dict.values())[0])
     # Ignore lint error b/c black conflict
     assert factory.bytecode[offset : offset + 20] == b"\00" * 20  # noqa: E203

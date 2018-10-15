@@ -1,7 +1,7 @@
 import json
-from typing import Any, Dict, Union
+from typing import Any, Dict, Generator, Tuple, Union
 
-from eth_utils import to_canonical_address, to_text
+from eth_utils import to_canonical_address, to_text, to_tuple
 from web3 import Web3
 from web3.eth import Contract
 
@@ -9,6 +9,7 @@ from ethpm.contract import LinkableContract
 from ethpm.dependencies import Dependencies
 from ethpm.deployments import Deployments
 from ethpm.exceptions import (
+    BytecodeLinkingError,
     FailureToFetchIPFSAssetsError,
     InsufficientAssetsError,
     PyEthPMError,
@@ -21,6 +22,12 @@ from ethpm.utils.contract import (
     validate_contract_name,
     validate_minimal_contract_factory_data,
     validate_w3_instance,
+)
+from ethpm.utils.deployments import (
+    get_linked_deployments,
+    normalize_linked_references,
+    validate_deployments_tx_receipt,
+    validate_linked_references,
 )
 from ethpm.utils.filesystem import load_manifest_from_file
 from ethpm.utils.manifest_validation import (
@@ -215,5 +222,51 @@ class Package(object):
             )
             for deployment_data in deployments.values()
         }
+        validate_deployments_tx_receipt(deployments, self.w3)
+        linked_deployments = get_linked_deployments(deployments)
+        if linked_deployments:
+            for deployment_data in linked_deployments.values():
+                on_chain_bytecode = self.w3.eth.getCode(
+                    to_canonical_address(deployment_data["address"])
+                )
+                unresolved_linked_refs = normalize_linked_references(
+                    deployment_data["runtime_bytecode"]["link_dependencies"]
+                )
+                resolved_linked_refs = tuple(
+                    self._resolve_linked_references(link_ref, deployments)
+                    for link_ref in unresolved_linked_refs
+                )
+                for linked_ref in resolved_linked_refs:
+                    validate_linked_references(linked_ref, on_chain_bytecode)
 
         return Deployments(deployments, all_contract_factories, self.w3)
+
+    @to_tuple
+    def _resolve_linked_references(
+        self, link_ref: Tuple[int, str, str], deployments: Dict[str, Any]
+    ) -> Generator[Tuple[int, bytes], None, None]:
+        # No nested deployment: i.e. 'Owned'
+        offset, link_type, value = link_ref
+        if link_type == "literal":
+            yield offset, to_canonical_address(value)
+        elif value in deployments:
+            yield offset, to_canonical_address(deployments[value]["address"])
+        # No nested deployment, but invalid ref
+        elif ":" not in value:
+            raise BytecodeLinkingError(
+                "Contract instance reference: {0} not found in package's deployment data.".format(
+                    value
+                )
+            )
+        # Expects child pkg in build_dependencies
+        elif value.split(":")[0] not in self.build_dependencies:
+            raise BytecodeLinkingError(
+                "Expected build dependency: {0} not found in package's build dependencies.".format(
+                    value.split(":")[0]
+                )
+            )
+        # Find and return resolved, nested ref
+        else:
+            unresolved_linked_ref = value.split(":", 1)[-1]
+            build_dependency = self.build_dependencies[value.split(":")[0]]
+            yield build_dependency._resolve_link_dependencies(unresolved_linked_ref)

@@ -1,8 +1,8 @@
 from typing import Dict, ItemsView, List
 
 from eth_utils import to_canonical_address
+from web3 import Web3
 from web3.eth import Contract
-from web3.main import Web3
 
 from ethpm.exceptions import ValidationError
 from ethpm.utils.contract import validate_contract_name

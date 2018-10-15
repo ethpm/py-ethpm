@@ -67,7 +67,7 @@ def test_validate_contract_name_invalidates(name):
                     ],
                 },
             },
-            ["abi", "bytecode", "deployment_link_refs"],
+            ["abi", "bytecode", "unlinked_references"],
         ),
     ),
 )
