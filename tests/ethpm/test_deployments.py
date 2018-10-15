@@ -7,8 +7,8 @@ from ethpm.deployments import Deployments
 from ethpm.exceptions import BytecodeLinkingError, ValidationError
 from ethpm.utils.deployments import (
     get_linked_deployments,
-    normalize_link_dependencies,
-    validate_link_dependencies,
+    normalize_linked_references,
+    validate_linked_references,
 )
 
 DEPLOYMENT_DATA = {
@@ -129,7 +129,7 @@ def test_deployments_get_instance(safe_math_lib_package):
     )
 
 
-def test_deployments_get_contract_instance_with_link_dependency(escrow_package):
+def test_deployments_get_instance_with_link_dependency(escrow_package):
     deployments = escrow_package.deployments
     escrow_deployment = deployments.get_instance("Escrow")
     assert isinstance(escrow_deployment, LinkableContract)
@@ -141,6 +141,9 @@ def test_get_linked_deployments(escrow_package):
     all_deployments = list(escrow_manifest["deployments"].values())[0]
     actual_linked_deployments = get_linked_deployments(all_deployments)
     assert actual_linked_deployments == {"Escrow": all_deployments["Escrow"]}
+    # integration via package.deployments
+    deployments = escrow_package.deployments
+    assert len(deployments.contract_factories) is 2
 
 
 @pytest.mark.parametrize(
@@ -155,11 +158,12 @@ def test_get_linked_deployments(escrow_package):
                     "block": "0x4d1a618802bb87752d95db453dddeea622820424a2f836bedf8769a67ee276b8",
                     "runtime_bytecode": {
                         "link_dependencies": [
+                            {"offsets": [200], "type": "reference", "value": "filler"},
                             {
                                 "offsets": [301, 495],
                                 "type": "reference",
                                 "value": "Escrow",
-                            }
+                            },
                         ]
                     },
                 }
@@ -188,8 +192,8 @@ def test_get_linked_deployments_raises_exception_with_self_reference(deployments
         ),
     ),
 )
-def test_normalize_link_dependencies(link_data, expected):
-    link_deps = normalize_link_dependencies(link_data)
+def test_normalize_linked_references(link_data, expected):
+    link_deps = normalize_linked_references(link_data)
     assert link_deps == expected
 
 
@@ -200,8 +204,8 @@ def test_normalize_link_dependencies(link_data, expected):
         (((1, b"a"), (5, b"xx"), (15, b"1")), b"0a000xx000000001"),
     ),
 )
-def test_validate_link_dependencies(link_deps, bytecode):
-    result = validate_link_dependencies(link_deps, bytecode)
+def test_validate_linked_references(link_deps, bytecode):
+    result = validate_linked_references(link_deps, bytecode)
     assert result is None
 
 
@@ -214,6 +218,6 @@ def test_validate_link_dependencies(link_deps, bytecode):
         (((1, b"a"), (5, b"xxx"), (15, b"1")), b"0a000xx000000001"),
     ),
 )
-def test_validate_link_dependencies_invalidates(link_deps, bytecode):
+def test_validate_linked_references_invalidates(link_deps, bytecode):
     with pytest.raises(ValidationError):
-        validate_link_dependencies(link_deps, bytecode)
+        validate_linked_references(link_deps, bytecode)

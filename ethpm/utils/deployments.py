@@ -1,6 +1,7 @@
 from typing import Any, Dict, Generator, List, Tuple
 
-from eth_utils import to_bytes, to_canonical_address, to_tuple
+import cytoolz
+from eth_utils import is_same_address, to_bytes, to_tuple
 from web3 import Web3
 
 from ethpm.exceptions import BytecodeLinkingError, ValidationError
@@ -13,11 +14,13 @@ def get_linked_deployments(deployments: Dict[str, Any]) -> Dict[str, Any]:
     linked_deployments = {
         dep: data
         for dep, data in deployments.items()
-        if "runtime_bytecode" in data
-        and "link_dependencies" in data["runtime_bytecode"]
+        if cytoolz.get_in(("runtime_bytecode", "link_dependencies"), data)
     }
     for deployment, data in linked_deployments.items():
-        if deployment == data["runtime_bytecode"]["link_dependencies"][0]["value"]:
+        if any(
+            link_dep["value"] == deployment
+            for link_dep in data["runtime_bytecode"]["link_dependencies"]
+        ):
             raise BytecodeLinkingError(
                 "Link dependency found in {0} deployment that references it's own contract "
                 "instance, which is disallowed".format(deployment)
@@ -25,11 +28,11 @@ def get_linked_deployments(deployments: Dict[str, Any]) -> Dict[str, Any]:
     return linked_deployments
 
 
-def validate_link_dependencies(
+def validate_linked_references(
     link_deps: Tuple[Tuple[int, str]], bytecode: bytes
 ) -> None:
     """
-    Validates that normalized link_dependencies (offset, expected_bytes)
+    Validates that normalized linked_references (offset, expected_bytes)
     match the corresponding bytecode.
     """
     offsets, values = zip(*link_deps)
@@ -43,7 +46,7 @@ def validate_link_dependencies(
         actual_bytes = bytecode[offset_value:end_of_bytes]  # noqa: E203
         if actual_bytes != values[idx]:
             raise ValidationError(
-                "Error validating link dependency. "
+                "Error validating linked reference. "
                 "Offset: {0} "
                 "Value: {1} "
                 "Bytecode: {2} .".format(offset, values[idx], bytecode)
@@ -51,11 +54,11 @@ def validate_link_dependencies(
 
 
 @to_tuple
-def normalize_link_dependencies(
+def normalize_linked_references(
     data: List[Dict[str, Any]]
 ) -> Generator[Tuple[int, str, str], None, None]:
     """
-    Return a tuple of information representing all insertions of a link dependency.
+    Return a tuple of information representing all insertions of a linked reference.
     (offset, type, value)
     """
     for deployment in data:
@@ -63,19 +66,28 @@ def normalize_link_dependencies(
             yield offset, deployment["type"], deployment["value"]
 
 
-def validate_deployments_tx_receipt(deployments: Dict[str, Any], w3: Web3) -> None:
+def validate_deployments_tx_receipt(
+    deployments: Dict[str, Any], w3: Web3, allow_missing_data: bool = False
+) -> None:
     """
     Validate that address and block hash found in deployment data match what is found on-chain.
     """
+    # todo: provide hook to lazily look up tx receipt via binary search if missing data
     for name, data in deployments.items():
         if "transaction" in data:
             tx_hash = data["transaction"]
             tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
             tx_address = tx_receipt["contractAddress"]
 
-            if to_canonical_address(tx_address) != to_canonical_address(
-                data["address"]
-            ):
+            # case when on-chain factory used to deploy a contract
+            if "contractAddress" not in tx_receipt and allow_missing_data is False:
+                raise ValidationError(
+                    "No contract address found in tx receipt. "
+                    "Unable to verify address in deployment data. "
+                    "If this validation is not necessary, please enable `allow_missing_data` arg."
+                )
+
+            if not is_same_address(tx_address, data["address"]):
                 raise ValidationError(
                     "Error validating tx_receipt for {0} deployment. "
                     "Address found in deployment: {1} "
@@ -95,3 +107,15 @@ def validate_deployments_tx_receipt(deployments: Dict[str, Any], w3: Web3) -> No
                             name, data["block"], tx_receipt["blockHash"]
                         )
                     )
+            elif allow_missing_data is False:
+                raise ValidationError(
+                    "No block hash found in deployment data. "
+                    "Unable to verify block hash on tx receipt. "
+                    "If this validation is not necessary, please enable `allow_missing_data` arg."
+                )
+        elif allow_missing_data is False:
+            raise ValidationError(
+                "No transaction hash found in deployment data. "
+                "Unable to validate tx_receipt. "
+                "If this validation is not necessary, please enable `allow_missing_data` arg."
+            )

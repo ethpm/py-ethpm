@@ -1,7 +1,7 @@
 import json
 from typing import Any, Dict, Generator, Tuple, Union
 
-from eth_utils import to_canonical_address, to_checksum_address, to_text, to_tuple
+from eth_utils import to_canonical_address, to_text, to_tuple
 from web3 import Web3
 from web3.eth import Contract
 
@@ -25,9 +25,9 @@ from ethpm.utils.contract import (
 )
 from ethpm.utils.deployments import (
     get_linked_deployments,
-    normalize_link_dependencies,
+    normalize_linked_references,
     validate_deployments_tx_receipt,
-    validate_link_dependencies,
+    validate_linked_references,
 )
 from ethpm.utils.filesystem import load_manifest_from_file
 from ethpm.utils.manifest_validation import (
@@ -227,25 +227,26 @@ class Package(object):
         if linked_deployments:
             for deployment_data in linked_deployments.values():
                 on_chain_bytecode = self.w3.eth.getCode(
-                    to_checksum_address(deployment_data["address"])
+                    to_canonical_address(deployment_data["address"])
                 )
-                unresolved_link_deps = normalize_link_dependencies(
+                unresolved_linked_refs = normalize_linked_references(
                     deployment_data["runtime_bytecode"]["link_dependencies"]
                 )
-                resolved_link_deps = tuple(
-                    self._resolve_link_dependencies(link_dep, deployments)
-                    for link_dep in unresolved_link_deps
+                resolved_linked_refs = tuple(
+                    self._resolve_linked_references(link_ref, deployments)
+                    for link_ref in unresolved_linked_refs
                 )
-                validate_link_dependencies(resolved_link_deps[0], on_chain_bytecode)
+                for linked_ref in resolved_linked_refs:
+                    validate_linked_references(linked_ref, on_chain_bytecode)
 
         return Deployments(deployments, all_contract_factories, self.w3)
 
     @to_tuple
-    def _resolve_link_dependencies(
-        self, link_dep: Tuple[int, str, str], deployments: Dict[str, Any]
+    def _resolve_linked_references(
+        self, link_ref: Tuple[int, str, str], deployments: Dict[str, Any]
     ) -> Generator[Tuple[int, bytes], None, None]:
         # No nested deployment: i.e. 'Owned'
-        offset, link_type, value = link_dep
+        offset, link_type, value = link_ref
         if link_type == "literal":
             yield offset, to_canonical_address(value)
         elif value in deployments:
@@ -266,6 +267,6 @@ class Package(object):
             )
         # Find and return resolved, nested ref
         else:
-            unresolved_link_dep = value.split(":", 1)[-1]
+            unresolved_linked_ref = value.split(":", 1)[-1]
             build_dependency = self.build_dependencies[value.split(":")[0]]
-            return build_dependency._resolve_link_dependencies(unresolved_link_dep)
+            yield build_dependency._resolve_link_dependencies(unresolved_linked_ref)

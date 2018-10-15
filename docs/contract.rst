@@ -37,11 +37,11 @@ LinkableContract
 Properties
 ----------
 
-.. py:attribute:: LinkableContract.deployment_link_refs
+.. py:attribute:: LinkableContract.unlinked_references
 
    A list of link reference data for the deployment bytecode, if present in the manifest data used to generate a ``LinkableContract`` factory. Deployment bytecode link reference data must be present in a manifest in order to generate a factory for a contract which requires bytecode linking.
 
-.. py:attribute:: LinkableContract.runtime_link_refs
+.. py:attribute:: LinkableContract.linked_references
 
    A list of link reference data for the runtime bytecode, if present in the manifest data used to generate a ``LinkableContract`` factory. Runtime bytecode link reference data must be present in a manifest in order to use ``pytest-ethereum``'s ``Deployer`` for a contract which requires bytecode linking.
 
