@@ -69,8 +69,9 @@ def safe_math_manifest(get_manifest):
 
 @pytest.fixture
 def piper_coin_manifest():
-    with open(str(V2_PACKAGES_DIR / "piper-coin" / "1.0.0-pretty.json")) as file_obj:
-        return json.load(file_obj)
+    return json.loads(
+        (V2_PACKAGES_DIR / "piper-coin" / "1.0.0-pretty.json").read_text()
+    )
 
 
 ESCROW_DEPLOYMENT_BYTECODE = {

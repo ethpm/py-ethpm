@@ -35,8 +35,8 @@ BASE_MANIFEST = {"package_name": "package", "manifest_version": "2", "version": 
 @pytest.fixture
 def owned_package():
     root = ASSETS_DIR / "owned"
-    manifest = json.loads(Path(str(root / "1.0.0.json")).read_text())
-    compiler = json.loads(Path(str(root / "owned_compiler_output.json")).read_text())[
+    manifest = json.loads((root / "1.0.0.json").read_text())
+    compiler = json.loads((root / "owned_compiler_output.json").read_text())[
         "contracts"
     ]
     contracts_dir = root / "contracts"
@@ -49,10 +49,10 @@ def owned_package():
 @pytest.fixture
 def standard_token_package():
     root = ASSETS_DIR / "standard-token"
-    manifest = json.loads(Path(str(root / "1.0.0.json")).read_text())
-    compiler = json.loads(
-        Path(str(root / "standard_token_compiler_output.json")).read_text()
-    )["contracts"]
+    manifest = json.loads((root / "1.0.0.json").read_text())
+    compiler = json.loads((root / "standard_token_compiler_output.json").read_text())[
+        "contracts"
+    ]
     contracts_dir = root / "contracts"
     return contracts_dir, manifest, compiler
 
@@ -60,17 +60,17 @@ def standard_token_package():
 @pytest.fixture
 def registry_package():
     root = ASSETS_DIR / "registry"
-    compiler = json.loads(
-        Path(str(root / "registry_compiler_output.json")).read_text()
-    )["contracts"]
+    compiler = json.loads(Path(root / "registry_compiler_output.json").read_text())[
+        "contracts"
+    ]
     contracts_dir = root / "contracts"
-    manifest = json.loads(Path(str(root / "1.0.2.json")).read_text())
+    manifest = json.loads((root / "1.0.2.json").read_text())
     return contracts_dir, manifest, compiler
 
 
 @pytest.fixture
 def manifest_dir(tmpdir):
-    return Path(str(tmpdir.mkdir("sub")))
+    return Path(tmpdir.mkdir("sub"))
 
 
 def test_builder_simple_with_package(w3):
@@ -106,13 +106,12 @@ def test_builder_writes_manifest_to_disk(manifest_dir):
             manifest_root_dir=manifest_dir, manifest_name="1.0.0.json", prettify=True
         ),
     )
-    with open(str(manifest_dir / "1.0.0.json")) as f:
-        actual_manifest = f.read()
+    actual_manifest = (manifest_dir / "1.0.0.json").read_text()
     assert actual_manifest == PRETTY_MANIFEST
 
 
 def test_builder_to_disk_uses_default_cwd(manifest_dir, monkeypatch):
-    monkeypatch.chdir(str(manifest_dir))
+    monkeypatch.chdir(manifest_dir)
     build(
         {},
         package_name("package"),
@@ -120,8 +119,7 @@ def test_builder_to_disk_uses_default_cwd(manifest_dir, monkeypatch):
         version("1.0.0"),
         write_to_disk(),
     )
-    with open(str(manifest_dir / "1.0.0.json")) as f:
-        actual_manifest = f.read()
+    actual_manifest = (manifest_dir / "1.0.0.json").read_text()
     assert actual_manifest == MINIFIED_MANIFEST
 
 
@@ -133,8 +131,7 @@ def test_to_disk_writes_minified_manifest_as_default(manifest_dir):
         version("1.0.0"),
         write_to_disk(manifest_root_dir=manifest_dir, manifest_name="1.0.0.json"),
     )
-    with open(str(manifest_dir / "1.0.0.json")) as f:
-        actual_manifest = f.read()
+    actual_manifest = (manifest_dir / "1.0.0.json").read_text()
     assert actual_manifest == MINIFIED_MANIFEST
 
 
@@ -146,8 +143,7 @@ def test_to_disk_uses_default_manifest_name(manifest_dir):
         version("1.0.0"),
         write_to_disk(manifest_root_dir=manifest_dir),
     )
-    with open(str(manifest_dir / "1.0.0.json")) as f:
-        actual_manifest = f.read()
+    actual_manifest = (manifest_dir / "1.0.0.json").read_text()
     assert actual_manifest == MINIFIED_MANIFEST
 
 
@@ -226,7 +222,7 @@ def test_builder_simple_with_multi_meta_field():
 def test_builder_with_inline_source(owned_package, monkeypatch):
     root, _, compiler_output = owned_package
 
-    monkeypatch.chdir(str(root))
+    monkeypatch.chdir(root)
     manifest = build(BASE_MANIFEST, inline_source("Owned", compiler_output), validate())
 
     expected = assoc(
@@ -244,7 +240,7 @@ def test_builder_with_inline_source(owned_package, monkeypatch):
 def test_builder_with_source_inliner(owned_package, monkeypatch):
     root, _, compiler_output = owned_package
 
-    monkeypatch.chdir(str(root))
+    monkeypatch.chdir(root)
     inliner = source_inliner(compiler_output)
     manifest = build(BASE_MANIFEST, inliner("Owned"), validate())
 
@@ -422,7 +418,7 @@ def test_builder_with_standard_token_manifest(
     root, expected_manifest, compiler_output = standard_token_package
     ipfs_backend = get_ipfs_backend()
 
-    monkeypatch.chdir(str(root))
+    monkeypatch.chdir(root)
     manifest = build(
         {},
         package_name("standard-token"),
@@ -441,7 +437,7 @@ def test_builder_with_link_references(
 ):
     root, expected_manifest, compiler_output = registry_package
     ipfs_backend = get_ipfs_backend()
-    monkeypatch.chdir(str(root))
+    monkeypatch.chdir(root)
     pinner = source_pinner(compiler_output, ipfs_backend)
     manifest = build(
         {},

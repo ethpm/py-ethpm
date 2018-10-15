@@ -1,5 +1,4 @@
 import json
-import os
 from typing import Any, Dict, List, Set
 
 from jsonschema import ValidationError as jsonValidationError, validate
@@ -8,7 +7,7 @@ from ethpm import SPEC_DIR, V2_PACKAGES_DIR
 from ethpm.exceptions import ValidationError
 from ethpm.typing import Manifest
 
-MANIFEST_SCHEMA_PATH = str(SPEC_DIR / "package.spec.json")
+MANIFEST_SCHEMA_PATH = SPEC_DIR / "package.spec.json"
 
 META_FIELDS = {
     "license": str,
@@ -110,8 +109,7 @@ def validate_manifest_exists(manifest_id: str) -> None:
     """
     Validate that manifest with manifest_id exists in V2_PACKAGES_DIR
     """
-    manifest_path = str(V2_PACKAGES_DIR / manifest_id)
-    if not os.path.exists(manifest_path):
+    if not (V2_PACKAGES_DIR / manifest_id).is_file():
         raise ValidationError(
             "Manifest not found in V2_PACKAGES_DIR with id: {0}".format(manifest_id)
         )

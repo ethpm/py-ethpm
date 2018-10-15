@@ -71,12 +71,6 @@ jobs:
       - image: circleci/python:3.6
         environment:
           TOXENV: doctest
-  py35:
-    <<: *common
-    docker:
-      - image: circleci/python:3.5
-        environment:
-          TOXENV: py35
   py36:
     <<: *common
     docker:
@@ -95,6 +89,5 @@ workflows:
   test:
     jobs:
       - doctest
-      - py35
       - py36
       - lint

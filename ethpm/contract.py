@@ -16,8 +16,8 @@ class LinkableContract(Contract):
     contract factories with link references in their package's manifest.
     """
 
-    deployment_link_refs = []  # type: List[Dict[str, Any]]
-    runtime_link_refs = []  # type: List[Dict[str, Any]]
+    deployment_link_refs: List[Dict[str, Any]] = []
+    runtime_link_refs: List[Dict[str, Any]] = []
     needs_bytecode_linking = None
 
     def __init__(self, address: bytes = None, **kwargs: Any) -> None:
@@ -87,9 +87,9 @@ class LinkableContract(Contract):
         Validates that ContractType keys in attr_dict reference existing manifest ContractTypes.
         """
         attr_dict_names = list(attr_dict.keys())
-        all_link_refs = (
+        all_link_refs: List[Dict[str, Any]] = (
             self.deployment_link_refs + self.runtime_link_refs
-        )  # type: List[Dict[str, Any]]
+        )
         all_link_names = [ref["name"] for ref in all_link_refs]
         if set(attr_dict_names) != set(all_link_names):
             raise BytecodeLinkingError(
