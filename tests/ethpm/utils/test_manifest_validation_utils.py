@@ -13,7 +13,7 @@ from ethpm.validation import validate_manifest_version
 
 def test_validate_manifest_exists_validates():
     assert (
-        validate_manifest_exists(str(V2_PACKAGES_DIR / "safe-math-lib" / "1.0.0.json"))
+        validate_manifest_exists(V2_PACKAGES_DIR / "safe-math-lib" / "1.0.0.json")
         is None
     )
 

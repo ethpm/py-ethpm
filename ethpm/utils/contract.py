@@ -64,8 +64,8 @@ def compile_contracts(contract_name: str, alias: str, paths: List[str]) -> str:
     Compile multiple contracts to bytecode.
     """
     bin_id = "{0}.sol:{0}".format(contract_name)
-    contract_paths = [str(V2_PACKAGES_DIR / alias / path[1:]) for path in paths]
+    contract_paths = [(V2_PACKAGES_DIR / alias / path[1:]) for path in paths]
     compiled_source = compile_files(contract_paths)
-    bin_lookup = str(V2_PACKAGES_DIR / alias / bin_id)
+    bin_lookup = V2_PACKAGES_DIR / alias / bin_id
     compiled_source_bin = compiled_source[bin_lookup]["bin"]
     return compiled_source_bin

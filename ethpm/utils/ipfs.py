@@ -70,7 +70,7 @@ def multihash(value: bytes) -> bytes:
 
 
 def serialize_file(file_path: Path) -> PBNode:
-    file_data = open(str(file_path), "rb").read()
+    file_data = open(file_path, "rb").read()
     file_size = len(file_data)
 
     data_protobuf = Data(

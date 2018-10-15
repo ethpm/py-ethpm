@@ -138,9 +138,8 @@ class DummyIPFSBackend(BaseIPFSBackend):
 
     def fetch_uri_contents(self, ipfs_uri: str) -> bytes:
         pkg_name = MANIFEST_URIS[ipfs_uri]
-        with open(str(V2_PACKAGES_DIR / pkg_name / "1.0.0.json")) as file_obj:
-            contents = file_obj.read()
-        return to_bytes(text=contents)
+        pkg_contents = (V2_PACKAGES_DIR / pkg_name / "1.0.0.json").read_text()
+        return to_bytes(text=pkg_contents)
 
     def can_resolve_uri(self, uri: str) -> bool:
         return uri in MANIFEST_URIS
