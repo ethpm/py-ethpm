@@ -12,7 +12,7 @@ def dummy_ipfs_pin(path: Path) -> Dict[str, str]:
     Return IPFS data as if file was pinned to an actual node.
     """
     ipfs_return = {
-        "Hash": generate_file_hash(path),
+        "Hash": generate_file_hash(path.read_bytes()),
         "Name": path.name,
         "Size": str(path.stat().st_size),
     }
@@ -69,12 +69,11 @@ def multihash(value: bytes) -> bytes:
     return multihash_bytes
 
 
-def serialize_file(file_path: Path) -> PBNode:
-    file_data = open(file_path, "rb").read()
-    file_size = len(file_data)
+def serialize_bytes(file_bytes: bytes) -> PBNode:
+    file_size = len(file_bytes)
 
     data_protobuf = Data(
-        Type=Data.DataType.Value("File"), Data=file_data, filesize=file_size
+        Type=Data.DataType.Value("File"), Data=file_bytes, filesize=file_size
     )
     data_protobuf_bytes = data_protobuf.SerializeToString()
 
@@ -83,8 +82,8 @@ def serialize_file(file_path: Path) -> PBNode:
     return file_protobuf
 
 
-def generate_file_hash(file_path: Path) -> str:
-    file_protobuf = serialize_file(file_path)
+def generate_file_hash(content_bytes: bytes) -> str:
+    file_protobuf = serialize_bytes(content_bytes)
     file_protobuf_bytes = file_protobuf.SerializeToString()
     file_multihash = multihash(file_protobuf_bytes)
     return b58encode(file_multihash)

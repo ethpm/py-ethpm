@@ -41,7 +41,7 @@ def test_get_dependency_package(dependencies):
     assert result.name == "standard-token"
 
 
-def test_validate_build_dependencies(dummy_ipfs_backend, piper_coin_manifest):
+def test_validate_build_dependencies(dummy_ipfs_backend):
     result = validate_build_dependency(
         "standard-token", "ipfs://QmVu9zuza5mkJwwcFdh2SXBugm1oSgZVuEKkph9XLsbUwg"
     )

@@ -22,7 +22,6 @@ class BaseURIBackend(ABC):
         """
         Return a bool indicating whether this backend class can
         translate the given URI to a corresponding content-addressed URI.
-        i.e. a registry URI pointing to another content-addressed URI onchain
         """
         pass
 

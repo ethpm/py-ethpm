@@ -3,6 +3,7 @@ from typing import Generator, Type
 from eth_utils import to_tuple
 
 from ethpm.backends.base import BaseURIBackend
+from ethpm.backends.http import GithubOverHTTPSBackend
 from ethpm.backends.ipfs import (
     DummyIPFSBackend,
     InfuraIPFSBackend,
@@ -16,6 +17,7 @@ URI_BACKENDS = [
     InfuraIPFSBackend,
     DummyIPFSBackend,
     LocalIPFSBackend,
+    GithubOverHTTPSBackend,
     RegistryURIBackend,
 ]
 

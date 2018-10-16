@@ -13,4 +13,6 @@ INFURA_API_KEY = "4f1a358967c7474aae6f8f4a7698aefc"
 
 INFURA_GATEWAY_PREFIX = "https://ipfs.infura.io"
 
-GITHUB_AUTHORITY = "https://raw.githubusercontent.com/"
+INTERNET_SCHEMES = ["http", "https"]
+
+RAW_GITHUB_AUTHORITY = "raw.githubusercontent.com"
