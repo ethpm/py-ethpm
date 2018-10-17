@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from ethpm.utils.ipfs import extract_ipfs_path_from_uri, generate_file_hash, is_ipfs_uri
@@ -111,5 +113,5 @@ def test_is_ipfs_uri(value, expected):
 def test_generate_file_hash(tmpdir, file_name, file_contents, expected):
     p = tmpdir.mkdir("sub").join(file_name)
     p.write(file_contents)
-    ipfs_multihash = generate_file_hash(p)
+    ipfs_multihash = generate_file_hash(Path(p).read_bytes())
     assert ipfs_multihash == expected

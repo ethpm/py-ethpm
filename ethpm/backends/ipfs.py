@@ -13,8 +13,13 @@ from ethpm.constants import (
     INFURA_GATEWAY_PREFIX,
     IPFS_GATEWAY_PREFIX,
 )
-from ethpm.exceptions import CannotHandleURI
-from ethpm.utils.ipfs import dummy_ipfs_pin, extract_ipfs_path_from_uri, is_ipfs_uri
+from ethpm.exceptions import CannotHandleURI, ValidationError
+from ethpm.utils.ipfs import (
+    dummy_ipfs_pin,
+    extract_ipfs_path_from_uri,
+    generate_file_hash,
+    is_ipfs_uri,
+)
 
 
 class BaseIPFSBackend(BaseURIBackend):
@@ -56,7 +61,13 @@ class IPFSOverHTTPBackend(BaseIPFSBackend):
 
     def fetch_uri_contents(self, uri: str) -> bytes:
         ipfs_hash = extract_ipfs_path_from_uri(uri)
-        return self.client.cat(ipfs_hash)
+        contents = self.client.cat(ipfs_hash)
+        validation_hash = generate_file_hash(contents)
+        if validation_hash != ipfs_hash:
+            raise ValidationError(
+                f"Hashed IPFS contents retrieved from uri: {uri} do not match its content hash."
+            )
+        return contents
 
     @property
     @abstractmethod

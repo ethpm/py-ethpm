@@ -3,7 +3,6 @@ from pathlib import Path
 
 from eth_utils import to_text
 import pytest
-import requests_mock
 
 from ethpm import V2_PACKAGES_DIR
 from ethpm.backends.ipfs import (
@@ -38,24 +37,18 @@ def fake_client():
 @pytest.mark.parametrize(
     "base_uri,backend", ((INFURA_GATEWAY_PREFIX, InfuraIPFSBackend()),)
 )
-def test_ipfs_and_infura_gateway_backends_fetch_uri_contents(
-    base_uri, backend, safe_math_manifest
-):
+def test_ipfs_and_infura_gateway_backends_fetch_uri_contents(base_uri, backend):
     uri = "ipfs://Qme4otpS88NV8yQi8TfTP89EsQC5bko3F5N1yhRoi6cwGV"
     assert backend.base_uri == base_uri
-    with requests_mock.Mocker() as m:
-        m.get(requests_mock.ANY, text=json.dumps(safe_math_manifest))
-        contents = backend.fetch_uri_contents(uri)
-        contents_dict = json.loads(to_text(contents))
-        assert contents_dict["package_name"] == "safe-math-lib"
+    contents = backend.fetch_uri_contents(uri)
+    assert contents.startswith(b"pragma solidity")
 
 
-def test_local_ipfs_backend(monkeypatch, fake_client):
+def test_local_ipfs_backend():
     uri = "ipfs://Qme4otpS88NV8yQi8TfTP89EsQC5bko3F5N1yhRoi6cwGV"
     backend = LocalIPFSBackend()
-    backend.client = fake_client
     contents = backend.fetch_uri_contents(uri)
-    assert contents.startswith("Qm")
+    assert contents.startswith(b"pragma")
 
 
 @pytest.mark.parametrize(
