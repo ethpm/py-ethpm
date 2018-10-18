@@ -108,8 +108,8 @@ class LinkableContract(Contract):
         for address in attr_dict.values():
             if not is_canonical_address(address):
                 raise BytecodeLinkingError(
-                    "Address: {0} as specified in the attr_dict is not "
-                    "a valid canoncial address.".format(address)
+                    f"Address: {address} as specified in the attr_dict is not "
+                    "a valid canoncial address."
                 )
 
 

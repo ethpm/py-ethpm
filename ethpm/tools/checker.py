@@ -12,9 +12,8 @@ WARNINGS = {
     "manifest_version_missing": "Manifest missing a required 'manifest_version' field.",
     "manifest_version_invalid": "'manifest_version' is invalid. The only supported version is '2'.",
     "package_name_missing": "Manifest missing a required 'package_name' field",
-    "package_name_invalid": "'package_name' is invalid. Doesn't match the regex: {0}".format(
-        PACKAGE_NAME_REGEX
-    ),
+    "package_name_invalid": "'package_name' is invalid. "
+    f"Doesn't match the regex: {PACKAGE_NAME_REGEX}",
     "version_missing": "Manifest missing a required 'version' field.",
     "meta_missing": "Manifest missing a suggested 'meta' field.",
     "authors_missing": "'meta' field missing suggested 'authors' field.",
@@ -253,7 +252,7 @@ def check_bytecode_object(
     if "bytecode" not in bytecode_data or not bytecode_data["bytecode"]:
         return assoc_in(
             warnings,
-            ["contract_types", contract_name, "{0}_bytecode".format(bytecode_type)],
+            ["contract_types", contract_name, f"{bytecode_type}_bytecode"],
             WARNINGS["bytecode_subfield_missing"].format(contract_name, bytecode_type),
         )
     return warnings

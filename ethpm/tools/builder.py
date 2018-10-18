@@ -173,9 +173,8 @@ def _inline_source(
             source_data = (package_root_dir / source_path_suffix).read_text()
         else:
             raise ManifestBuildingError(
-                "Contract source: {0} cannot be found in provided package_root_dir: {1}.".format(
-                    source_path_suffix, package_root_dir
-                )
+                f"Contract source: {source_path_suffix} cannot be found in "
+                f"provided package_root_dir: {package_root_dir}."
             )
     elif (cwd / source_path_suffix).is_file():
         source_data = (cwd / source_path_suffix).read_text()
@@ -235,24 +234,20 @@ def _pin_source(
     if package_root_dir:
         if not (package_root_dir / source_path).is_file():
             raise ManifestBuildingError(
-                "Unable to find and pin contract source: {0} "
-                "under specified package_root_dir: {1}.".format(
-                    source_path, package_root_dir
-                )
+                f"Unable to find and pin contract source: {source_path} "
+                f"under specified package_root_dir: {package_root_dir}."
             )
         (ipfs_data,) = ipfs_backend.pin_assets(package_root_dir / source_path)
     else:
         cwd = Path.cwd()
         if not (cwd / source_path).is_file():
             raise ManifestBuildingError(
-                "Unable to find and pin contract source: {0} "
-                "current working directory: {1}.".format(source_path, cwd)
+                f"Unable to find and pin contract source: {source_path} "
+                f"current working directory: {cwd}."
             )
         (ipfs_data,) = ipfs_backend.pin_assets(cwd / source_path)
 
-    return assoc_in(
-        manifest, ["sources", source_path], "ipfs://{0}".format(ipfs_data["Hash"])
-    )
+    return assoc_in(manifest, ["sources", source_path], f"ipfs://{ipfs_data['Hash']}")
 
 
 #
@@ -307,7 +302,7 @@ def _contract_type(
         all_type_data = contracts_by_name[name]
     except KeyError:
         raise ManifestBuildingError(
-            "Contract name: {0} not found in the provided compiler output.".format(name)
+            f"Contract name: {name} not found in the provided compiler output."
         )
     if selected_fields:
         contract_type_data = {
@@ -437,8 +432,8 @@ def validate_link_ref(offset: int, length: int, bytecode: str) -> str:
     slot = bytecode[offset:slot_length]
     if slot[:2] != "__" and slot[-2:] != "__":
         raise ValidationError(
-            "Slot: {0}, at offset: {1} of length: {2} is not a valid "
-            "link_ref that can be replaced.".format(slot, offset, length)
+            f"Slot: {slot}, at offset: {offset} of length: {length} is not a valid "
+            "link_ref that can be replaced."
         )
     return bytecode
 
@@ -513,11 +508,9 @@ def _write_to_disk(
             cwd = manifest_root_dir
         else:
             raise ManifestBuildingError(
-                "Manifest root directory: {0} cannot be found, please "
+                f"Manifest root directory: {manifest_root_dir} cannot be found, please "
                 "provide a valid directory for writing the manifest to disk. "
-                "(Path obj // leave manifest_root_dir blank to default to cwd)".format(
-                    manifest_root_dir
-                )
+                "(Path obj // leave manifest_root_dir blank to default to cwd)"
             )
     else:
         cwd = Path.cwd()
@@ -525,9 +518,7 @@ def _write_to_disk(
     if manifest_name:
         if not manifest_name.lower().endswith(".json"):
             raise ManifestBuildingError(
-                "Invalid manifest name: {0}. All manifest names must end in .json".format(
-                    manifest_name
-                )
+                f"Invalid manifest name: {manifest_name}. All manifest names must end in .json"
             )
         disk_manifest_name = manifest_name
     else:
@@ -537,7 +528,7 @@ def _write_to_disk(
 
     if (cwd / disk_manifest_name).is_file():
         raise ManifestBuildingError(
-            "Manifest: {0} already exists in cwd: {1}".format(disk_manifest_name, cwd)
+            f"Manifest: {disk_manifest_name} already exists in cwd: {cwd}"
         )
     (cwd / disk_manifest_name).write_text(contents)
     return manifest

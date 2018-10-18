@@ -26,20 +26,19 @@ def validate_meta_object(meta: Dict[str, Any], allow_extra_meta_fields: bool) ->
         if key in META_FIELDS:
             if type(value) is not META_FIELDS[key]:
                 raise ValidationError(
-                    "Values for {0} are expected to have the type {1}, instead got {2}.".format(
-                        key, META_FIELDS[key], type(value)
-                    )
+                    f"Values for {key} are expected to have the type {META_FIELDS[key]}, "
+                    f"instead got {type(value)}."
                 )
         elif allow_extra_meta_fields:
             if key[:2] != "x-":
                 raise ValidationError(
                     "Undefined meta fields need to begin with 'x-', "
-                    "{0} is not a valid undefined meta field.".format(key)
+                    f"{key} is not a valid undefined meta field."
                 )
         else:
             raise ValidationError(
-                "{0} is not a permitted meta field. To allow undefined fields, "
-                "set `allow_extra_meta_fields` to True.".format(key)
+                f"{key} is not a permitted meta field. To allow undefined fields, "
+                "set `allow_extra_meta_fields` to True."
             )
 
 
@@ -67,8 +66,8 @@ def validate_manifest_against_schema(manifest: Dict[str, Any]) -> None:
         validate(manifest, schema_data)
     except jsonValidationError as e:
         raise ValidationError(
-            "Manifest invalid for schema version {0}. "
-            "Reason: {1}".format(schema_data["version"], e.message)
+            f"Manifest invalid for schema version {schema_data['version']}. "
+            f"Reason: {e.message}"
         )
 
 
@@ -99,9 +98,7 @@ def validate_manifest_deployments(manifest: Dict[str, Any]) -> None:
         )
         if missing_contract_types:
             raise ValidationError(
-                "Manifest missing references to contracts: {0}.".format(
-                    missing_contract_types
-                )
+                f"Manifest missing references to contracts: {missing_contract_types}."
             )
 
 
@@ -111,7 +108,7 @@ def validate_manifest_exists(manifest_id: str) -> None:
     """
     if not (V2_PACKAGES_DIR / manifest_id).is_file():
         raise ValidationError(
-            "Manifest not found in V2_PACKAGES_DIR with id: {0}".format(manifest_id)
+            f"Manifest not found in V2_PACKAGES_DIR with id: {manifest_id}"
         )
 
 

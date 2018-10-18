@@ -6,10 +6,8 @@ HASH_A = "0x1234567890123456789012345678901234567890123456789012345678901234"
 HASH_A_NO_PREFIX = "1234567890123456789012345678901234567890123456789012345678901234"
 HASH_B = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
 HASH_B_NO_PREFIX = "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
-BLOCK_URI = "blockchain://{0}/block/{1}".format(HASH_A_NO_PREFIX, HASH_B_NO_PREFIX)
-TRANSACTION_URI = "blockchain://{0}/transaction/{1}".format(
-    HASH_A_NO_PREFIX, HASH_B_NO_PREFIX
-)
+BLOCK_URI = f"blockchain://{HASH_A_NO_PREFIX}/block/{HASH_B_NO_PREFIX}"
+TRANSACTION_URI = f"blockchain://{HASH_A_NO_PREFIX}/transaction/{HASH_B_NO_PREFIX}"
 
 
 @pytest.mark.parametrize(
@@ -17,21 +15,11 @@ TRANSACTION_URI = "blockchain://{0}/transaction/{1}".format(
     (
         (BLOCK_URI, True),
         (TRANSACTION_URI, False),
-        ("blockchain://{0}/block/{1}".format(HASH_A, HASH_B_NO_PREFIX), False),
-        ("blockchain://{0}/block/{1}".format(HASH_A_NO_PREFIX, HASH_B), False),
-        ("blockchain://{0}/block/{1}".format(HASH_A, HASH_B_NO_PREFIX), False),
-        (
-            "blockchain://{0}/block/{1}".format(
-                HASH_A_NO_PREFIX[:-1], HASH_B_NO_PREFIX
-            ),
-            False,
-        ),
-        (
-            "blockchain://{0}/block/{1}".format(
-                HASH_A_NO_PREFIX, HASH_B_NO_PREFIX[:-1]
-            ),
-            False,
-        ),
+        (f"blockchain://{HASH_A}/block/{HASH_B_NO_PREFIX}", False),
+        (f"blockchain://{HASH_A_NO_PREFIX}/block/{HASH_B}", False),
+        (f"blockchain://{HASH_A}/block/{HASH_B_NO_PREFIX}", False),
+        (f"blockchain://{HASH_A_NO_PREFIX[:-1]}/block/{HASH_B_NO_PREFIX}", False),
+        (f"blockchain://{HASH_A_NO_PREFIX}/block/{HASH_B_NO_PREFIX[:-1]}", False),
     ),
 )
 def test_is_BIP122_block_uri(value, expected):
