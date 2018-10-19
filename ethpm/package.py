@@ -52,7 +52,7 @@ class Package(object):
         if not isinstance(manifest, dict):
             raise TypeError(
                 "Package object must be initialized with a dictionary. "
-                "Got {0}".format(type(manifest))
+                f"Got {type(manifest)}"
             )
 
         validate_manifest_against_schema(manifest)
@@ -79,7 +79,7 @@ class Package(object):
     def __repr__(self) -> str:
         name = self.name
         version = self.version
-        return "<Package {0}=={1}>".format(name, version)
+        return f"<Package {name}=={version}>"
 
     @property
     def name(self) -> str:
@@ -106,7 +106,7 @@ class Package(object):
         else:
             raise TypeError(
                 "The Package.from_file method takes either a filesystem path or a file-like object."
-                "Got {0} instead.".format(type(file_path_or_obj))
+                f"Got {type(file_path_or_obj)} instead."
             )
 
         return cls(manifest, w3)
@@ -140,8 +140,8 @@ class Package(object):
         except KeyError:
             raise InsufficientAssetsError(
                 "This package does not contain any package data to generate "
-                "a contract factory for contract type: {0}. Available contract types include: "
-                "{1}".format(name, list(self.manifest["contract_types"].keys()))
+                f"a contract factory for contract type: {name}. Available contract types include: "
+                f"{ list(self.manifest['contract_types'].keys()) }."
             )
 
         validate_minimal_contract_factory_data(contract_data)
@@ -160,7 +160,7 @@ class Package(object):
         except KeyError:
             raise InsufficientAssetsError(
                 "Package does not have the ABI required to generate a contract instance "
-                "for contract: {0} at address: {1}.".format(name, address)
+                f"for contract: {name} at address: {address}."
             )
         contract_kwargs = generate_contract_factory_kwargs(
             self.manifest["contract_types"][name]
@@ -191,8 +191,8 @@ class Package(object):
                 dependency_package = Package.from_uri(uri, self.w3)
             except PyEthPMError as e:
                 raise FailureToFetchIPFSAssetsError(
-                    "Failed to retrieve build dependency: {0} from URI: {1}.\n"
-                    "Got error: {2}.".format(name, uri, e)
+                    f"Failed to retrieve build dependency: {name} from URI: {uri}.\n"
+                    f"Got error: {e}."
                 )
             else:
                 dependency_packages[name] = dependency_package
@@ -254,16 +254,13 @@ class Package(object):
         # No nested deployment, but invalid ref
         elif ":" not in value:
             raise BytecodeLinkingError(
-                "Contract instance reference: {0} not found in package's deployment data.".format(
-                    value
-                )
+                f"Contract instance reference: {value} not found in package's deployment data."
             )
         # Expects child pkg in build_dependencies
         elif value.split(":")[0] not in self.build_dependencies:
             raise BytecodeLinkingError(
-                "Expected build dependency: {0} not found in package's build dependencies.".format(
-                    value.split(":")[0]
-                )
+                f"Expected build dependency: {value.split(':')[0]} not found "
+                "in package's build dependencies."
             )
         # Find and return resolved, nested ref
         else:

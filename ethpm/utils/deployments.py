@@ -22,8 +22,8 @@ def get_linked_deployments(deployments: Dict[str, Any]) -> Dict[str, Any]:
             for link_dep in data["runtime_bytecode"]["link_dependencies"]
         ):
             raise BytecodeLinkingError(
-                "Link dependency found in {0} deployment that references it's own contract "
-                "instance, which is disallowed".format(deployment)
+                f"Link dependency found in {deployment} deployment that references its "
+                "own contract instance, which is disallowed"
             )
     return linked_deployments
 
@@ -47,9 +47,9 @@ def validate_linked_references(
         if actual_bytes != values[idx]:
             raise ValidationError(
                 "Error validating linked reference. "
-                "Offset: {0} "
-                "Value: {1} "
-                "Bytecode: {2} .".format(offset, values[idx], bytecode)
+                f"Offset: {offset} "
+                f"Value: {values[idx]} "
+                f"Bytecode: {bytecode} ."
             )
 
 
@@ -89,23 +89,19 @@ def validate_deployments_tx_receipt(
 
             if not is_same_address(tx_address, data["address"]):
                 raise ValidationError(
-                    "Error validating tx_receipt for {0} deployment. "
-                    "Address found in deployment: {1} "
+                    f"Error validating tx_receipt for {name} deployment. "
+                    f"Address found in deployment: {data['address']} "
                     "Does not match "
-                    "Address found on tx_receipt: {2}.".format(
-                        name, data["address"], tx_address
-                    )
+                    f"Address found on tx_receipt: {tx_address}."
                 )
 
             if "block" in data:
                 if tx_receipt["blockHash"] != to_bytes(hexstr=data["block"]):
                     raise ValidationError(
-                        "Error validating tx_receipt for {0} deployment. "
-                        "Block found in deployment: {1} "
+                        f"Error validating tx_receipt for {name} deployment. "
+                        f"Block found in deployment: {data['block']} "
                         "Does not match "
-                        "Block found on tx_receipt: {2}.".format(
-                            name, data["block"], tx_receipt["blockHash"]
-                        )
+                        f"Block found on tx_receipt: {tx_receipt['blockHash']}."
                     )
             elif allow_missing_data is False:
                 raise ValidationError(

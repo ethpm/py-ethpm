@@ -34,7 +34,7 @@ def is_BIP122_uri(value: URI) -> bool:
 def parse_BIP122_uri(blockchain_uri: URI) -> Tuple[str, str, str]:
     match = re.match(BIP122_URL_REGEX, blockchain_uri)
     if match is None:
-        raise ValueError("Invalid URI format: '{0}'".format(blockchain_uri))
+        raise ValueError(f"Invalid URI format: '{blockchain_uri}'")
     chain_id, resource_type, resource_hash = match.groups()
     return (add_0x_prefix(chain_id), resource_type, add_0x_prefix(resource_hash))
 
@@ -57,7 +57,7 @@ def check_if_chain_matches_chain_uri(web3: Web3, blockchain_uri: URI) -> bool:
     if resource_type == BLOCK:
         resource = web3.eth.getBlock(resource_hash)
     else:
-        raise ValueError("Unsupported resource type: {0}".format(resource_type))
+        raise ValueError(f"Unsupported resource type: {resource_type}")
 
     if encode_hex(resource["hash"]) == resource_hash:
         return True
@@ -91,7 +91,7 @@ def create_BIP122_uri(
         [
             "blockchain",
             remove_0x_prefix(chain_id),
-            "{0}/{1}".format(resource_type, remove_0x_prefix(resource_identifier)),
+            f"{resource_type}/{remove_0x_prefix(resource_identifier)}",
             "",
             "",
         ]

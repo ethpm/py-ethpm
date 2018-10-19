@@ -23,9 +23,7 @@ class Dependencies:
     def _validate_name(self, name: str) -> None:
         validate_package_name(name)
         if name not in self.build_dependencies:
-            raise KeyError(
-                "Package name: {0} not found in build dependencies.".format(name)
-            )
+            raise KeyError(f"Package name: {name} not found in build dependencies.")
 
     def items(self) -> Tuple[Tuple[str, "Package"], ...]:  # type: ignore
         """

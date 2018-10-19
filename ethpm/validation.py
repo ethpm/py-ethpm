@@ -25,11 +25,11 @@ def validate_address(address: Any) -> None:
     Raise a ValidationError if an address is not canonicalized.
     """
     if not is_address(address):
-        raise ValidationError("Expected an address, got: {0}".format(address))
+        raise ValidationError(f"Expected an address, got: {address}")
     if not is_canonical_address(address):
         raise ValidationError(
             "Py-EthPM library only accepts canonicalized addresses. "
-            "{0} is not in the accepted format.".format(address)
+            f"{address} is not in the accepted format."
         )
 
 
@@ -39,9 +39,7 @@ def validate_package_version(version: Any) -> None:
     """
     if not is_text(version):
         raise ValidationError(
-            "Expected a version of text type, instead received {0}.".format(
-                type(version)
-            )
+            f"Expected a version of text type, instead received {type(version)}."
         )
 
 
@@ -54,9 +52,8 @@ def validate_empty_bytes(offset: int, length: int, bytecode: bytes) -> None:
     slot = bytecode[offset:slot_length]
     if slot != bytearray(length):
         raise ValidationError(
-            "Bytecode segment: [{0}:{1}] is not comprised of empty bytes, rather: {2}.".format(
-                offset, slot_length, slot
-            )
+            f"Bytecode segment: [{offset}:{slot_length}] is not comprised of empty bytes, "
+            f"rather: {slot}."
         )
 
 
@@ -66,7 +63,7 @@ def validate_package_name(pkg_name: str) -> None:
     as defined in the EthPM-Spec.
     """
     if not bool(re.match(PACKAGE_NAME_REGEX, pkg_name)):
-        raise ValidationError("{0} is not a valid package name.".format(pkg_name))
+        raise ValidationError(f"{pkg_name} is not a valid package name.")
 
 
 def validate_manifest_version(version: str) -> None:
@@ -75,9 +72,7 @@ def validate_manifest_version(version: str) -> None:
     """
     if not version == "2":
         raise ValidationError(
-            "Py-EthPM does not support the provided specification version: {0}".format(
-                version
-            )
+            f"Py-EthPM does not support the provided specification version: {version}"
         )
 
 
@@ -86,7 +81,7 @@ def validate_ipfs_uri(uri: str) -> None:
     Raise an exception if the provided URI is not a valid IPFS URI.
     """
     if not is_ipfs_uri(uri):
-        raise ValidationError("URI: {0} is not a valid IPFS URI.".format(uri))
+        raise ValidationError(f"URI: {uri} is not a valid IPFS URI.")
 
 
 def validate_build_dependency(key: str, uri: str) -> None:
@@ -135,7 +130,7 @@ def validate_registry_uri_authority(auth: str) -> None:
     or a valid checksummed contract address.
     """
     if is_ens_domain(auth) is False and not is_checksum_address(auth):
-        raise ValidationError("{0} is not a valid registry URI authority.".format(auth))
+        raise ValidationError(f"{auth} is not a valid registry URI authority.")
 
 
 def validate_registry_uri_scheme(scheme: str) -> None:
@@ -143,7 +138,7 @@ def validate_registry_uri_scheme(scheme: str) -> None:
     Raise an exception if the scheme is not the valid registry URI scheme ('ercXXX').
     """
     if scheme != REGISTRY_URI_SCHEME:
-        raise ValidationError("{0} is not a valid registry URI scheme.".format(scheme))
+        raise ValidationError(f"{scheme} is not a valid registry URI scheme.")
 
 
 def validate_registry_uri_version(query: str) -> None:
@@ -152,9 +147,7 @@ def validate_registry_uri_version(query: str) -> None:
     """
     query_dict = parse.parse_qs(query, keep_blank_values=True)
     if "version" not in query_dict:
-        raise ValidationError(
-            "{0} is not a correctly formatted version param.".format(query)
-        )
+        raise ValidationError(f"{query} is not a correctly formatted version param.")
 
 
 def validate_single_matching_uri(all_blockchain_uris: List[str], w3: Web3) -> str:
@@ -170,9 +163,7 @@ def validate_single_matching_uri(all_blockchain_uris: List[str], w3: Web3) -> st
         raise ValidationError("Package has no matching URIs on chain.")
     elif len(matching_uris) != 1:
         raise ValidationError(
-            "Package has too many ({0}) matching URIs: {1}.".format(
-                len(matching_uris), matching_uris
-            )
+            f"Package has too many ({len(matching_uris)}) matching URIs: {matching_uris}."
         )
     return matching_uris[0]
 
@@ -186,7 +177,6 @@ def validate_uri_contents(contents: bytes, validation_hash: str) -> None:
     if hashed_contents != decoded_validation:
         raise ValidationError(
             "Invalid content-addressed URI. "
-            "Validation hash:{0} does not match the hash of URI contents: {1}.".format(
-                to_hex(decoded_validation), to_hex(hashed_contents)
-            )
+            f"Validation hash:{to_hex(decoded_validation)} does not match the "
+            f"hash of URI contents: {to_hex(hashed_contents)}."
         )

@@ -43,7 +43,7 @@ def resolve_uri_contents(uri: str, fingerprint: bool = None) -> bytes:
             return resolve_uri_contents(package_id, True)
 
     raise CannotHandleURI(
-        "URI: {0} cannot be resolved by any of the available backends.".format(uri)
+        f"URI: {uri} cannot be resolved by any of the available backends."
     )
 
 

@@ -83,7 +83,7 @@ class IPFSOverHTTPBackend(BaseIPFSBackend):
             return [file_data]
         else:
             raise TypeError(
-                "{0} is not a valid file or directory path.".format(file_or_dir_path)
+                f"{file_or_dir_path} is not a valid file or directory path."
             )
 
 
@@ -165,7 +165,7 @@ class DummyIPFSBackend(BaseIPFSBackend):
             asset_data = [dummy_ipfs_pin(file_or_dir_path)]
         else:
             raise FileNotFoundError(
-                "{0} is not a valid file or directory path.".format(file_or_dir_path)
+                f"{file_or_dir_path} is not a valid file or directory path."
             )
         return asset_data
 

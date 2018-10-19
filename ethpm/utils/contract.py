@@ -26,7 +26,7 @@ CONTRACT_NAME_REGEX = re.compile("^[a-zA-Z][-a-zA-Z0-9_]{0,255}$")
 
 def validate_contract_name(name: str) -> None:
     if not CONTRACT_NAME_REGEX.match(name):
-        raise ValidationError("Contract name: {0} is not valid.".format(name))
+        raise ValidationError(f"Contract name: {name} is not valid.")
 
 
 def validate_w3_instance(w3: Web3) -> None:
@@ -63,7 +63,7 @@ def compile_contracts(contract_name: str, alias: str, paths: List[str]) -> str:
     """
     Compile multiple contracts to bytecode.
     """
-    bin_id = "{0}.sol:{0}".format(contract_name)
+    bin_id = f"{contract_name}.sol:{contract_name}"
     contract_paths = [(V2_PACKAGES_DIR / alias / path[1:]) for path in paths]
     compiled_source = compile_files(contract_paths)
     bin_lookup = V2_PACKAGES_DIR / alias / bin_id

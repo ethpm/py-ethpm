@@ -20,7 +20,7 @@ def dummy_ipfs_pin(path: Path) -> Dict[str, str]:
 
 
 def create_ipfs_uri(ipfs_hash: str) -> str:
-    return "ipfs://{0}".format(ipfs_hash)
+    return f"ipfs://{ipfs_hash}"
 
 
 def extract_ipfs_path_from_uri(value: str) -> str:
