@@ -8,6 +8,8 @@ from ethpm.constants import PACKAGE_NAME_REGEX
 from ethpm.tools.builder import build
 from ethpm.typing import Manifest
 
+# todo: validate no duplicate blockchain uris in deployments, if web3 is available
+
 WARNINGS = {
     "manifest_version_missing": "Manifest missing a required 'manifest_version' field.",
     "manifest_version_invalid": "'manifest_version' is invalid. The only supported version is '2'.",

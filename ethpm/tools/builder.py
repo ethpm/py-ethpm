@@ -3,19 +3,28 @@ from pathlib import Path
 import tempfile
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple
 
-import cytoolz
-from eth_utils import add_0x_prefix, to_bytes, to_dict, to_list
-from eth_utils.toolz import assoc, assoc_in, curry, pipe
+from eth_utils import (
+    add_0x_prefix,
+    is_hex,
+    is_string,
+    to_bytes,
+    to_dict,
+    to_hex,
+    to_list,
+)
+from eth_utils.toolz import assoc, assoc_in, concat, curry, pipe
 from web3 import Web3
 
 from ethpm import Package
 from ethpm.backends.ipfs import BaseIPFSBackend
 from ethpm.exceptions import ManifestBuildingError, ValidationError
-from ethpm.typing import Manifest
+from ethpm.typing import URI, HexStr, Manifest
+from ethpm.utils.chains import is_BIP122_block_uri
 from ethpm.utils.manifest_validation import (
     format_manifest,
     validate_manifest_against_schema,
 )
+from ethpm.validation import validate_address
 
 
 def build(obj: Dict[str, Any], *fns: Callable[..., Any]) -> Dict[str, Any]:
@@ -137,7 +146,7 @@ def source_inliner(
     return _inline_sources(compiler_output, package_root_dir)
 
 
-@cytoolz.curry
+@curry
 def _inline_sources(
     compiler_output: Dict[str, Any], package_root_dir: Optional[Path], name: str
 ) -> Manifest:
@@ -195,7 +204,7 @@ def source_pinner(
     return _pin_sources(compiler_output, ipfs_backend, package_root_dir)
 
 
-@cytoolz.curry
+@curry
 def _pin_sources(
     compiler_output: Dict[str, Any],
     ipfs_backend: BaseIPFSBackend,
@@ -381,19 +390,19 @@ def process_bytecode(link_refs: Dict[str, Any], bytecode: bytes) -> bytes:
     # Link ref validation.
     validate_link_ref_fns = (
         validate_link_ref(ref["start"] * 2, ref["length"] * 2)
-        for ref in cytoolz.concat(all_offsets)
+        for ref in concat(all_offsets)
     )
-    cytoolz.pipe(bytecode, *validate_link_ref_fns)
+    pipe(bytecode, *validate_link_ref_fns)
     # Convert link_refs in bytecode to 0's
     link_fns = (
         replace_link_ref_in_bytecode(ref["start"] * 2, ref["length"] * 2)
-        for ref in cytoolz.concat(all_offsets)
+        for ref in concat(all_offsets)
     )
-    processed_bytecode = cytoolz.pipe(bytecode, *link_fns)
+    processed_bytecode = pipe(bytecode, *link_fns)
     return add_0x_prefix(processed_bytecode)
 
 
-@cytoolz.curry
+@curry
 def replace_link_ref_in_bytecode(offset: int, length: int, bytecode: str) -> str:
     new_bytes = (
         bytecode[:offset] + "0" * length + bytecode[offset + length :]  # noqa: E203
@@ -426,7 +435,7 @@ def normalize_offsets(data: Dict[str, Any], bytecode: str) -> Iterable[List[int]
             yield ref["start"]
 
 
-@cytoolz.curry
+@curry
 def validate_link_ref(offset: int, length: int, bytecode: str) -> str:
     slot_length = offset + length
     slot = bytecode[offset:slot_length]
@@ -439,11 +448,163 @@ def validate_link_ref(offset: int, length: int, bytecode: str) -> str:
 
 
 #
+# Deployments
+#
+
+
+def deployment_type(
+    *,
+    contract_instance: str,
+    contract_type: str,
+    deployment_bytecode: Dict[str, Any] = None,
+    runtime_bytecode: Dict[str, Any] = None,
+    compiler: Dict[str, Any] = None,
+) -> Manifest:
+    """
+    Returns a callable that allows the user to add deployments of the same type
+    across multiple chains.
+    """
+    return _deployment_type(
+        contract_instance,
+        contract_type,
+        deployment_bytecode,
+        runtime_bytecode,
+        compiler,
+    )
+
+
+def deployment(
+    *,
+    block_uri: URI,
+    contract_instance: str,
+    contract_type: str,
+    address: HexStr,
+    transaction: HexStr = None,
+    block: HexStr = None,
+    deployment_bytecode: Dict[str, Any] = None,
+    runtime_bytecode: Dict[str, Any] = None,
+    compiler: Dict[str, Any] = None,
+) -> Manifest:
+    """
+    Returns a manifest, with the newly included deployment. Requires a valid blockchain URI,
+    however no validation is provided that this URI is unique amongst the other deployment
+    URIs, so the user must take care that each blockchain URI represents a unique blockchain.
+    """
+    return _deployment(
+        contract_instance,
+        contract_type,
+        deployment_bytecode,
+        runtime_bytecode,
+        compiler,
+        block_uri,
+        address,
+        transaction,
+        block,
+    )
+
+
+@curry
+def _deployment_type(
+    contract_instance: str,
+    contract_type: str,
+    deployment_bytecode: Dict[str, Any],
+    runtime_bytecode: Dict[str, Any],
+    compiler: Dict[str, Any],
+    block_uri: URI,
+    address: HexStr,
+    tx: HexStr = None,
+    block: HexStr = None,
+    manifest: Manifest = None,
+) -> Manifest:
+    return _deployment(
+        contract_instance,
+        contract_type,
+        deployment_bytecode,
+        runtime_bytecode,
+        compiler,
+        block_uri,
+        address,
+        tx,
+        block,
+    )
+
+
+@curry
+def _deployment(
+    contract_instance: str,
+    contract_type: str,
+    deployment_bytecode: Dict[str, Any],
+    runtime_bytecode: Dict[str, Any],
+    compiler: Dict[str, Any],
+    block_uri: URI,
+    address: HexStr,
+    tx: HexStr,
+    block: HexStr,
+    manifest: Manifest,
+) -> Manifest:
+    validate_address(address)
+    if not is_BIP122_block_uri(block_uri):
+        raise ManifestBuildingError(f"{block_uri} is not a valid BIP122 URI.")
+
+    if tx:
+        if not is_string(tx) and not is_hex(tx):
+            raise ManifestBuildingError(
+                f"Transaction hash: {tx} is not a valid hexstring"
+            )
+
+    if block:
+        if not is_string(block) and not is_hex(block):
+            raise ManifestBuildingError(f"Block hash: {block} is not a valid hexstring")
+    # todo: validate db, rb and compiler are properly formatted dicts
+    deployment_data = _build_deployments_object(
+        contract_type,
+        deployment_bytecode,
+        runtime_bytecode,
+        compiler,
+        address,
+        tx,
+        block,
+        manifest,
+    )
+    return assoc_in(
+        manifest, ["deployments", block_uri, contract_instance], deployment_data
+    )
+
+
+@to_dict
+def _build_deployments_object(
+    contract_type: str,
+    deployment_bytecode: Dict[str, Any],
+    runtime_bytecode: Dict[str, Any],
+    compiler: Dict[str, Any],
+    address: HexStr,
+    tx: HexStr,
+    block: HexStr,
+    manifest: Dict[str, Any],
+) -> Iterable[Tuple[str, Any]]:
+    """
+    Returns a dict with properly formatted deployment data.
+    """
+    yield "contract_type", contract_type
+    yield "address", to_hex(address)
+    if deployment_bytecode:
+        yield "deployment_bytecode", deployment_bytecode
+    if compiler:
+        yield "compiler", compiler
+    if tx:
+        yield "transaction", tx
+    if block:
+        yield "block", block
+    if runtime_bytecode:
+        yield "runtime_bytecode", runtime_bytecode
+
+
+#
 # Helpers
 #
 
 
-@cytoolz.curry
+@curry
 def init_manifest(
     package_name: str, version: str, manifest_version: Optional[str] = "2"
 ) -> Dict[str, Any]:
@@ -534,7 +695,7 @@ def _write_to_disk(
     return manifest
 
 
-@cytoolz.curry
+@curry
 def pin_to_ipfs(
     manifest: Manifest, *, backend: BaseIPFSBackend, prettify: Optional[bool] = False
 ) -> List[Dict[str, str]]:

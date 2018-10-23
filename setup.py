@@ -61,7 +61,7 @@ setup(
         'jsonschema>=2.6.0,<3',
         'protobuf>=3.0.0,<4',
         'py-solc>=2.1.0,<3',
-        'pytest-ethereum>=0.1.3a.0,<1',
+        'pytest-ethereum>=0.1.3a.1,<1',
         'rlp>=1.0.1,<2',
         'web3[tester]>=4.7,<5',
     ],

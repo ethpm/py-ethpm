@@ -4,12 +4,12 @@ from pathlib import Path
 
 from eth_utils import to_canonical_address, to_hex
 import pytest
+from pytest_ethereum import linker as l
 from web3 import Web3
 
 from ethpm import ASSETS_DIR, V2_PACKAGES_DIR, Package
 from ethpm.tools import get_manifest
 from ethpm.utils.chains import create_block_uri, get_genesis_block_hash
-from pytest_ethereum import linker as l
 
 PACKAGE_NAMES = [
     "escrow",
