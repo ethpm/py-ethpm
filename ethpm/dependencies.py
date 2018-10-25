@@ -14,7 +14,7 @@ class Dependencies:
     ) -> None:
         self.build_dependencies = build_dependencies
 
-    def __getitem__(self, key: str) -> "Package":  # type: ignore
+    def __getitem__(self, key: str) -> "Package":  # type: ignore # noqa: F821
         return self.build_dependencies.get(key)
 
     def __contains__(self, key: str) -> bool:
@@ -42,7 +42,9 @@ class Dependencies:
         values = [self.build_dependencies.get(name) for name in self.build_dependencies]
         return values
 
-    def get_dependency_package(self, package_name: str) -> "Package":  # type: ignore
+    def get_dependency_package(
+        self, package_name: str
+    ) -> "Package":  # type: ignore # noqa: F821
         """
         Return the dependency Package for a given package name.
         """

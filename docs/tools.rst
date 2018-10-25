@@ -235,7 +235,7 @@ To add meta fields
 Compiler Output
 ~~~~~~~~~~~~~~~
 
-To build a more complex manifest, it is required that you provide standard-json output from the solidity compiler.
+To build a more complex manifest for solidity contracts, it is required that you provide standard-json output from the solidity compiler.
 
 Here is an example of how to compile the contracts and generate the standard-json output. More information can be found in the `Solidity Compiler <https://solidity.readthedocs.io/en/v0.4.24/using-the-compiler.html>`__ docs.
 
@@ -465,6 +465,115 @@ If you would like to alias your contract type, provide the desired alias as a kw
    ...     contract_type("Owned", compiler_output, alias="OwnedAlias", abi=True, natspec=True)
    ... )
    >>> assert expected_manifest == built_manifest
+
+
+To add a deployment
+~~~~~~~~~~~~~~~~~~~
+
+.. code:: python
+
+   build(
+       ...,
+       deployment(
+           block_uri,
+           contract_instance,
+           contract_type,
+           address,
+           transaction=None,
+           block=None,
+           deployment_bytecode=None,
+           runtime_bytecode=None,
+           compiler=None,
+       ),
+       ...,
+   )
+   
+There are two strategies for adding a deployment to your manifest.
+
+.. py:function:: deployment(block_uri, contract_instance, contract_type, address, transaction=None, block=None, deployment_bytecode=None, runtime_bytecode=None, compiler=None)
+
+This is the simplest builder function for adding a deployment to a manifest. All arguments require keywords. This builder function requires a valid ``block_uri``, it's up to the user to be sure that multiple chain URIs representing the same blockchain are not included in the "deployments" object keys.
+
+``runtime_bytecode``, ``deployment_bytecode`` and ``compiler`` must all be validly formatted dicts according to the `EthPM Spec <http://ethpm.github.io/ethpm-spec/package-spec.html#the-contract-instance-object>`__. If your contract has link dependencies, be sure to include them in the bytecode objects.
+
+
+.. doctest::
+
+   >>> from eth_utils import to_canonical_address
+   >>> expected_manifest = {
+   ...   'package_name': 'owned',
+   ...   'manifest_version': '2',
+   ...   'version': '1.0.0',
+   ...   'deployments': {
+   ...     'blockchain://1234567890123456789012345678901234567890123456789012345678901234/block/1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef': {
+   ...       'Owned': {
+   ...         'contract_type': 'Owned',
+   ...         'address': '0x4f5b11c860b37b68de6d14fb7e7b5f18a9a1bd00',
+   ...       }
+   ...     }
+   ...   }
+   ... }
+   >>> built_manifest = build(
+   ...     BASE_MANIFEST,
+   ...     deployment(
+   ...         block_uri='blockchain://1234567890123456789012345678901234567890123456789012345678901234/block/1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+   ...         contract_instance='Owned',
+   ...         contract_type='Owned',
+   ...         address=to_canonical_address('0x4f5b11c860b37b68de6d14fb7e7b5f18a9a1bd00'),
+   ...     ),
+   ... )
+   >>> assert expected_manifest == built_manifest
+
+.. py:function:: deployment_type(contract_instance, contract_type, deployment_bytecode=None, runtime_bytecode=None, compiler=None)
+
+This builder function simplifies adding the same contract type deployment across multiple chains. It requires both a ``contract_instance`` and ``contract_type`` argument (in many cases these are the same, though ``contract_type`` *must* always match its correspondent in the manifest's "contract_types") and all arguments require keywords.
+
+``runtime_bytecode``, ``deployment_bytecode`` and ``compiler`` must all be validly formatted dicts according to the `EthPM Spec <http://ethpm.github.io/ethpm-spec/package-spec.html#the-contract-instance-object>`__. If your contract has link dependencies, be sure to include them in the bytecode objects.
+
+.. code:: python
+
+   owned_type = deployment_type(contract_instance="Owned", contract_type="Owned")
+   escrow_type = deployment_type(
+       contract_instance = "Escrow",
+       contract_type = "Escrow",
+       deployment_bytecode = {
+           "bytecode": "0x608060405234801561001057600080fd5b5060405160208061045383398101604081815291516002819055336000818152602081815285822084905583855294519294919390927fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef929181900390910190a3506103d2806100816000396000f3006080604052600436106100775763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663095ea7b3811461007c57806318160ddd146100b457806323b872dd146100db57806370a0823114610105578063a9059cbb14610126578063dd62ed3e1461014a575b600080fd5b34801561008857600080fd5b506100a0600160a060020a0360043516602435610171565b604080519115158252519081900360200190f35b3480156100c057600080fd5b506100c96101d8565b60408051918252519081900360200190f35b3480156100e757600080fd5b506100a0600160a060020a03600435811690602435166044356101de565b34801561011157600080fd5b506100c9600160a060020a03600435166102c9565b34801561013257600080fd5b506100a0600160a060020a03600435166024356102e4565b34801561015657600080fd5b506100c9600160a060020a036004358116906024351661037b565b336000818152600160209081526040808320600160a060020a038716808552908352818420869055815186815291519394909390927f8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925928290030190a35060015b92915050565b60025481565b600160a060020a03831660009081526020819052604081205482118015906102295750600160a060020a03841660009081526001602090815260408083203384529091529020548211155b80156102355750600082115b156102be57600160a060020a0380841660008181526020818152604080832080548801905593881680835284832080548890039055600182528483203384528252918490208054879003905583518681529351929391927fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef9281900390910190a35060016102c2565b5060005b9392505050565b600160a060020a031660009081526020819052604090205490565b3360009081526020819052604081205482118015906103035750600082115b15610373573360008181526020818152604080832080548790039055600160a060020a03871680845292819020805487019055805186815290519293927fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef929181900390910190a35060016101d2565b5060006101d2565b600160a060020a039182166000908152600160209081526040808320939094168252919091522054905600a165627a7a72305820cf9d6a3f751ca1e6b9bc2324e42633a4cde513d64c3e6cc32d6359629249e90200290000000000000000000000000000000000000000000000000000000000000001"
+       },
+       runtime_bytecode = {
+           "bytecode": "0x6080604052600436106100775763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663095ea7b3811461007c57806318160ddd146100b457806323b872dd146100db57806370a0823114610105578063a9059cbb14610126578063dd62ed3e1461014a575b600080fd5b34801561008857600080fd5b506100a0600160a060020a0360043516602435610171565b604080519115158252519081900360200190f35b3480156100c057600080fd5b506100c96101d8565b60408051918252519081900360200190f35b3480156100e757600080fd5b506100a0600160a060020a03600435811690602435166044356101de565b34801561011157600080fd5b506100c9600160a060020a03600435166102c9565b34801561013257600080fd5b506100a0600160a060020a03600435166024356102e4565b34801561015657600080fd5b506100c9600160a060020a036004358116906024351661037b565b336000818152600160209081526040808320600160a060020a038716808552908352818420869055815186815291519394909390927f8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925928290030190a35060015b92915050565b60025481565b600160a060020a03831660009081526020819052604081205482118015906102295750600160a060020a03841660009081526001602090815260408083203384529091529020548211155b80156102355750600082115b156102be57600160a060020a0380841660008181526020818152604080832080548801905593881680835284832080548890039055600182528483203384528252918490208054879003905583518681529351929391927fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef9281900390910190a35060016102c2565b5060005b9392505050565b600160a060020a031660009081526020819052604090205490565b3360009081526020819052604081205482118015906103035750600082115b15610373573360008181526020818152604080832080548790039055600160a060020a03871680845292819020805487019055805186815290519293927fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef929181900390910190a35060016101d2565b5060006101d2565b600160a060020a039182166000908152600160209081526040808320939094168252919091522054905600a165627a7a72305820cf9d6a3f751ca1e6b9bc2324e42633a4cde513d64c3e6cc32d6359629249e9020029"
+       },
+       compiler = {
+           "name": "solc",
+           "version": "0.4.24+commit.e67f0147.Emscripten.clang",
+           "settings": {
+               "optimize": True
+           }
+       }
+   )
+   manifest = build(
+       package_name("escrow"),
+       version("1.0.0"),
+       manifest_version("2"),
+       owned_type(
+           block_uri='blockchain://abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd/block/1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+           address=owned_testnet_address,
+       ),
+       owned_type(
+           block_uri='blockchain://1234567890123456789012345678901234567890123456789012345678901234/block/1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+           address=owned_mainnet_address,
+           transaction=owned_mainnet_transaction,
+           block=owned_mainnet_block,
+       ),
+       escrow_type(
+           block_uri='blockchain://abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd/block/1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+           address=escrow_testnet_address,
+       ),
+       escrow_type(
+           block_uri='blockchain://1234567890123456789012345678901234567890123456789012345678901234/block/1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+           address=escrow_mainnet_address,
+           transaction=escrow_mainnet_transaction,
+       ),
+   )
 
 
 Checker
