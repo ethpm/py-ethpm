@@ -50,18 +50,12 @@ def __init__():
 
 @public
 def transferOwner(newOwner: address):
-    """
-    Change ownership of contract.
-    """
     assert self.owner == msg.sender
     self.owner = newOwner
 
 
 @public
 def getReleaseId(packageName: bytes32, version: bytes32) -> bytes32:
-    """
-    Return the `release_id` associated with a given package name and release version.
-    """
     releaseConcat: bytes[64] = concat(packageName, version)
     releaseId: bytes32 = sha3(releaseConcat)
     assert self.releases[releaseId].exists
@@ -96,8 +90,8 @@ def getPackageData(packageName: bytes32) -> (bytes32, bytes32, int128):
 def getAllPackageIds(
     offset: uint256, length: uint256
 ) -> (bytes32, bytes32, bytes32, bytes32, bytes32):
-    offset_int: int128 = convert(offset, "int128")
-    length_int: int128 = convert(length, "int128")
+    offset_int: int128 = convert(offset, int128)
+    length_int: int128 = convert(length, int128)
     assert length_int == 5
     assert offset_int <= self.packageCount
     ids: bytes32[5]
@@ -112,10 +106,7 @@ def getAllPackageIds(
 
 @private
 def generatePackageReleaseId(packageId: bytes32, count: int128) -> bytes32:
-    """
-    Create the package_release_id associated with a given package_id and a release count.
-    """
-    countBytes: bytes32 = convert(count, "bytes32")
+    countBytes: bytes32 = convert(count, bytes32)
     packageReleaseTag: bytes[64] = concat(packageId, countBytes)
     packageReleaseId: bytes32 = sha3(packageReleaseTag)
     return packageReleaseId
@@ -125,8 +116,8 @@ def generatePackageReleaseId(packageId: bytes32, count: int128) -> bytes32:
 def getAllReleaseIds(
     packageName: bytes32, offset: uint256, length: uint256
 ) -> (bytes32, bytes32, bytes32, bytes32, bytes32):
-    offset_int: int128 = convert(offset, "int128")
-    length_int: int128 = convert(length, "int128")
+    offset_int: int128 = convert(offset, int128)
+    length_int: int128 = convert(length, int128)
     assert length_int == 5
     packageId: bytes32 = sha3(packageName)
     assert self.packages[packageId].exists
@@ -182,9 +173,6 @@ def cutRelease(
 
 @public
 def release(name: bytes32, version: bytes32, uri: bytes32) -> bytes32:
-    """
-    Return a relase_id after publishing a release.
-    """
     assert uri != self.EMPTY_BYTES
     assert name != self.EMPTY_BYTES
     assert version != self.EMPTY_BYTES
