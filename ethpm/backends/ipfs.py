@@ -6,7 +6,7 @@ from typing import Dict, List, Type
 from eth_utils import import_string, to_bytes
 import ipfsapi
 
-from ethpm import V2_PACKAGES_DIR
+from ethpm import ASSETS_DIR
 from ethpm.backends.base import BaseURIBackend
 from ethpm.constants import (
     DEFAULT_IPFS_BACKEND,
@@ -144,12 +144,12 @@ class DummyIPFSBackend(BaseIPFSBackend):
     ---
     `ipfs_uri` can either be:
     - Valid IPFS URI -> safe-math-lib manifest (ALWAYS)
-    - Path to manifest/contract in V2_PACKAGES_DIR -> defined manifest/contract
+    - Path to manifest/contract in ASSETS_DIR -> defined manifest/contract
     """
 
     def fetch_uri_contents(self, ipfs_uri: str) -> bytes:
         pkg_name = MANIFEST_URIS[ipfs_uri]
-        pkg_contents = (V2_PACKAGES_DIR / pkg_name / "1.0.0.json").read_text()
+        pkg_contents = (ASSETS_DIR / pkg_name / "1.0.0.json").read_text()
         return to_bytes(text=pkg_contents)
 
     def can_resolve_uri(self, uri: str) -> bool:
