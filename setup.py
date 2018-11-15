@@ -55,6 +55,7 @@ setup(
         "toolz>=0.9.0,<1.0.0;implementation_name=='pypy'",
         "cytoolz>=0.9.0,<1.0.0;implementation_name=='cpython'",
         'bumpversion>=0.5.3,<1',
+        'eth-abi>=1.2.2,<2',
         'eth-keys>=0.2.0b3,<1',
         'eth-utils>=1.2.1,<2',
         'ipfsapi>=0.4.3,<1',

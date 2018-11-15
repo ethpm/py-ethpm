@@ -1,15 +1,15 @@
 import copy
 import json
-from pathlib import Path
 
-from eth_utils import to_canonical_address, to_hex
 import pytest
-from pytest_ethereum import linker as l
+from pytest_ethereum import linker as l  # noqa: E741
 from web3 import Web3
 
 from ethpm import ASSETS_DIR, V2_PACKAGES_DIR, Package
-from ethpm.tools import get_manifest
+from ethpm.tools import get_manifest as get_manifest_tool
 from ethpm.utils.chains import create_block_uri, get_genesis_block_hash
+
+pytest_plugins = ["pytest_ethereum.plugins"]
 
 PACKAGE_NAMES = [
     "escrow",
@@ -28,7 +28,7 @@ def pytest_addoption(parser):
 
 
 def fetch_manifest(name):
-    return get_manifest(name, "1.0.0.json")
+    return get_manifest_tool(name, "1.0.0.json")
 
 
 MANIFESTS = {name: fetch_manifest(name) for name in PACKAGE_NAMES}
@@ -203,7 +203,7 @@ def manifest_with_conflicting_deployments(tmpdir, safe_math_manifest):
     # two different blockchain uri's representing the same chain
     manifest = copy.deepcopy(safe_math_manifest)
     manifest["deployments"][
-        "blockchain://41941023680923e0fe4d74a34bdac8141f2540e3ae90623718e47d66d1ca4a2d/block/1e96de11320c83cca02e8b9caf3e489497e8e432befe5379f2f08599f8aecede"
+        "blockchain://41941023680923e0fe4d74a34bdac8141f2540e3ae90623718e47d66d1ca4a2d/block/1e96de11320c83cca02e8b9caf3e489497e8e432befe5379f2f08599f8aecede"  # noqa: E501
     ] = {
         "WrongNameLib": {
             "contract_type": "WrongNameLib",
