@@ -2,28 +2,14 @@ pragma solidity ^0.4.24;
 pragma experimental "v0.5.0";
 
 import {IndexedOrderedSetLib} from "./IndexedOrderedSetLib.sol";
+import {Authorized} from "./Authority.sol";
 
 
 /// @title Database contract for a package index package data.
 /// @author Tim Coulter <tim.coulter@consensys.net>, Piper Merriam <pipermerriam@gmail.com>
-contract PackageDB {
+contract PackageDB is Authorized {
   using IndexedOrderedSetLib for IndexedOrderedSetLib.IndexedOrderedSet;
 
-  address public owner;
-  
-  modifier auth {
-    require(msg.sender == owner ,"PackageDB:caller-not-authorized");
-    _;
-  }
-  
-  function setOwner(address new_owner) public {
-      owner = new_owner;
-  }
-  
-  constructor() public {
-      owner = msg.sender;
-  }
-  
   struct Package {
     bool exists;
     uint createdAt;
