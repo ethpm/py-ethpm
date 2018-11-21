@@ -79,4 +79,19 @@ contract PackageRegistryInterface {
     public
     view
     returns (bytes32);
+    
+  /// @dev Returns the release id for a given name and version pair if present on registry.
+  /// @param packageName Package name
+  /// @param version Version string(ex: '1.0.0')
+  function getReleaseId(string packageName, string version)
+    public
+    view
+    returns (bytes32);
+    
+  /// @dev Returns the number of packages stored on the registry
+  function numPackageIds() public view returns (uint);
+  
+  /// @dev Returns the number of releases for a given package name on the registry
+  /// @param packageName Package name
+  function numReleaseIds(string packageName) public view returns (uint);
 }

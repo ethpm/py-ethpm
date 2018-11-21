@@ -3,27 +3,13 @@ pragma experimental "v0.5.0";
 
 
 import {IndexedOrderedSetLib} from "./IndexedOrderedSetLib.sol";
+import {Authorized} from "./Authority.sol";
 
 
 /// @title Database contract for a package index.
 /// @author Tim Coulter <tim.coulter@consensys.net>, Piper Merriam <pipermerriam@gmail.com>
-contract ReleaseDB {
+contract ReleaseDB is Authorized {
   using IndexedOrderedSetLib for IndexedOrderedSetLib.IndexedOrderedSet;
-  
-  address public owner;
-  
-  modifier auth {
-    require(msg.sender == owner ,"ReleaseDB:caller-not-authorized");
-    _;
-  }
-  
-  function setOwner(address new_owner) public {
-      owner = new_owner;
-  }
-  
-  constructor() public {
-      owner = msg.sender;
-  }
 
   struct Release {
     bool exists;
@@ -36,6 +22,7 @@ contract ReleaseDB {
 
   // Release Data: (releaseId => value)
   mapping (bytes32 => Release) _recordedReleases;
+  mapping (bytes32 => bool) _removedReleases;
   IndexedOrderedSetLib.IndexedOrderedSet _allReleaseIds;
   mapping (bytes32 => IndexedOrderedSetLib.IndexedOrderedSet) _releaseIdsByNameHash;
 
@@ -132,6 +119,9 @@ contract ReleaseDB {
     // Remove the release hash from the list of all release hashes
     _allReleaseIds.remove(releaseId);
     _releaseIdsByNameHash[nameHash].remove(releaseId);
+
+    // Add the release hash to the map of removed releases
+    _removedReleases[releaseId] = true;
 
     // Log the removal.
     emit ReleaseDelete(releaseId, reason);
@@ -232,6 +222,16 @@ contract ReleaseDB {
     returns (bool)
   {
     return _recordedReleases[releaseId].exists;
+  }
+
+  /// @dev Query the past existence of a release at the provided version for a package.  Returns boolean indicating whether such a release ever existed.
+  /// @param releaseHash The release hash to query.
+  function releaseExisted(bytes32 releaseHash)
+    public
+    view
+    returns (bool)
+  {
+    return _removedReleases[releaseHash];
   }
 
   /// @dev Query the existence of the provided version in the recorded versions.  Returns boolean indicating whether such a version exists.

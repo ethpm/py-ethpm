@@ -6,25 +6,15 @@ import {PackageDB} from "./PackageDB.sol";
 import {ReleaseDB} from "./ReleaseDB.sol";
 import {ReleaseValidator} from "./ReleaseValidator.sol";
 import {PackageRegistryInterface} from "./PackageRegistryInterface.sol";
+import {Authorized} from "./Authority.sol";
 
 
 /// @title Database contract for a package index.
 /// @author Tim Coulter <tim.coulter@consensys.net>, Piper Merriam <pipermerriam@gmail.com>
-contract PackageRegistry is PackageRegistryInterface {
+contract PackageRegistry is Authorized, PackageRegistryInterface {
   PackageDB private packageDb;
   ReleaseDB private releaseDb;
   ReleaseValidator private releaseValidator;
-  
-  address public owner;
-  
-  modifier auth {
-    require(msg.sender == owner ,"PackageRegistry:caller-not-authorized");
-    _;
-  }
-  
-  constructor() public {
-      owner = msg.sender;
-  }
 
   // Events
   event PackageRelease(bytes32 indexed nameHash, bytes32 indexed releaseId);
@@ -298,17 +288,53 @@ contract PackageRegistry is PackageRegistryInterface {
     return releaseDb.getAllReleaseIds(nameHash, _offset, limit);
   }
 
-  // @dev Returns release id that *would* be generated for a name and version pair on `release`.
-  // @param name Package name
-  // @param version Version string (ex: '1.0.0')
-  function generateReleaseId(string name, string version)
+  /// @dev Returns release id that *would* be generated for a name and version pair on `release`.
+  /// @param packageName Package name
+  /// @param version Version string (ex: '1.0.0')
+  function generateReleaseId(string packageName, string version)
     public
     view
     returns (bytes32)
   {
-    bytes32 nameHash = packageDb.hashName(name);
+    bytes32 nameHash = packageDb.hashName(packageName);
     bytes32 versionHash = releaseDb.hashVersion(version);
     return keccak256(abi.encodePacked(nameHash, versionHash));
+  }
+  
+  /// @dev Returns the release id for a given name and version pair if present on registry.
+  /// @param packageName Package name
+  /// @param version Version string(ex: '1.0.0')
+  function getReleaseId(string packageName, string version)
+    public
+    view
+    returns (bytes32)
+  {
+      bytes32 releaseId = generateReleaseId(packageName, version);
+      require(releaseDb.releaseExists(releaseId), "escape:ReleaseDB:version-not-found");
+      return releaseId;
+  }
+  
+  /// @dev Returns the number of packages stored on the registry
+  function numPackageIds()
+    public
+    view
+    returns (uint)
+  {
+    uint totalCount = packageDb.getNumPackages();
+    return totalCount;
+  }
+  
+  /// @dev Returns the number of releases for a given package name on the registry
+  /// @param packageName Package name
+  function numReleaseIds(string packageName)
+    public
+    view
+    returns (uint)
+  {
+    bytes32 nameHash = packageDb.hashName(packageName);
+    require(packageDb.packageExists(nameHash), "escape:PackageDB:package-not-found");
+    uint totalCount = releaseDb.getNumReleasesForNameHash(nameHash);
+    return totalCount;
   }
 
   //
