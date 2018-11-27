@@ -1,8 +1,7 @@
-# todo
-# delete pkgs
+# Vyper Reference Implementation of ERC1319
 
 # Events
-Release: event({_package: indexed(bytes32), _version: bytes32, _uri: bytes32})
+Release: event({_package: indexed(bytes32), _version: bytes32, _uri: bytes[1000]})
 
 owner: public(address)
 
@@ -24,7 +23,7 @@ releases: public(
         createdAt: timestamp,
         packageId: bytes32,
         version: bytes32,
-        uri: bytes32,
+        uri: bytes[1000],
     }[bytes32]
 )
 
@@ -87,6 +86,18 @@ def getPackageData(packageName: bytes32) -> (bytes32, bytes32, int128):
 
 
 @public
+def numPackageIds() -> int128:
+    return self.packageCount
+
+
+@public
+def numReleaseIds(packageName: bytes32) -> int128:
+    packageId: bytes32 = sha3(packageName)
+    assert self.packages[packageId].exists
+    return self.packages[packageId].releaseCount
+
+
+@public
 def getAllPackageIds(
     offset: uint256, length: uint256
 ) -> (bytes32, bytes32, bytes32, bytes32, bytes32):
@@ -136,7 +147,7 @@ def getAllReleaseIds(
 
 
 @public
-def getReleaseData(releaseId: bytes32) -> (bytes32, bytes32, bytes32):
+def getReleaseData(releaseId: bytes32) -> (bytes32, bytes32, bytes[1000]):
     assert self.releases[releaseId].exists
     packageId: bytes32 = self.releases[releaseId].packageId
     return (
@@ -151,7 +162,7 @@ def cutRelease(
     releaseId: bytes32,
     packageId: bytes32,
     version: bytes32,
-    uri: bytes32,
+    uri: bytes[1000],
     name: bytes32,
 ):
     self.releases[releaseId] = {
@@ -172,35 +183,36 @@ def cutRelease(
 
 
 @public
-def release(name: bytes32, version: bytes32, uri: bytes32) -> bytes32:
-    assert uri != self.EMPTY_BYTES
-    assert name != self.EMPTY_BYTES
+def release(packageName: bytes32, version: bytes32, manifestURI: bytes[1000]) -> bytes32:
+    assert packageName != self.EMPTY_BYTES
     assert version != self.EMPTY_BYTES
+    assert len(manifestURI) > 0
     assert self.owner == msg.sender
 
-    packageId: bytes32 = sha3(name)
-    releaseId: bytes32 = self.generateReleaseId(name, version)
+
+    packageId: bytes32 = sha3(packageName)
+    releaseId: bytes32 = self.generateReleaseId(packageName, version)
 
     if self.packages[packageId].exists == True:
         self.packages[packageId] = {
             exists: True,
             createdAt: self.packages[packageId].createdAt,
             updatedAt: block.timestamp,
-            name: name,
+            name: packageName,
             releaseCount: self.packages[packageId].releaseCount,
         }
         assert self.releases[releaseId].exists == False
-        self.cutRelease(releaseId, packageId, version, uri, name)
+        self.cutRelease(releaseId, packageId, version, manifestURI, packageName)
         return releaseId
     else:
         self.packages[packageId] = {
             exists: True,
             createdAt: block.timestamp,
             updatedAt: block.timestamp,
-            name: name,
+            name: packageName,
             releaseCount: 0,
         }
         self.packageIds[self.packageCount] = packageId
         self.packageCount += 1
-        self.cutRelease(releaseId, packageId, version, uri, name)
+        self.cutRelease(releaseId, packageId, version, manifestURI, packageName)
         return releaseId
