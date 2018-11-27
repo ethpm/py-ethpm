@@ -68,7 +68,7 @@ def registry_package():
         "contracts"
     ]
     contracts_dir = root / "contracts"
-    manifest = json.loads((root / "1.0.2.json").read_text())
+    manifest = json.loads((root / "1.0.0.json").read_text())
     return contracts_dir, manifest, compiler
 
 
@@ -445,15 +445,51 @@ def test_builder_with_link_references(
     pinner = source_pinner(compiler_output, ipfs_backend)
     manifest = build(
         {},
-        package_name("registry"),
+        package_name("solidity-registry"),
         manifest_version("2"),
-        version("1.0.1"),
+        version("1.0.0"),
+        pinner("Authorized"),
         pinner("IndexedOrderedSetLib"),
         pinner("PackageDB"),
         pinner("PackageRegistry"),
         pinner("PackageRegistryInterface"),
         pinner("ReleaseDB"),
         pinner("ReleaseValidator"),
+        contract_type(
+            "AuthorityInterface",
+            compiler_output,
+            abi=True,
+            deployment_bytecode=True,
+            runtime_bytecode=True,
+        ),
+        contract_type(
+            "Authorized",
+            compiler_output,
+            abi=True,
+            deployment_bytecode=True,
+            runtime_bytecode=True,
+        ),
+        contract_type(
+            "AuthorizedInterface",
+            compiler_output,
+            abi=True,
+            deployment_bytecode=True,
+            runtime_bytecode=True,
+        ),
+        contract_type(
+            "WhitelistAuthority",
+            compiler_output,
+            abi=True,
+            deployment_bytecode=True,
+            runtime_bytecode=True,
+        ),
+        contract_type(
+            "WhitelistAuthorityInterface",
+            compiler_output,
+            abi=True,
+            deployment_bytecode=True,
+            runtime_bytecode=True,
+        ),
         contract_type(
             "IndexedOrderedSetLib",
             compiler_output,
