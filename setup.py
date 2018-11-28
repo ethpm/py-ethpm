@@ -31,6 +31,8 @@ extras_require={
     ],
     'dev': [
         'pytest-watch>=4.1.0,<5',
+        'twine',
+        'wheel',
     ],
 }
 
@@ -52,8 +54,6 @@ setup(
     url='https://github.com/ethpm/py-ethpm',
     include_package_data=True,
     install_requires=[
-        "toolz>=0.9.0,<1.0.0;implementation_name=='pypy'",
-        "cytoolz>=0.9.0,<1.0.0;implementation_name=='cpython'",
         'bumpversion>=0.5.3,<1',
         'eth-abi>=1.2.2,<2',
         'eth-keys>=0.2.0b3,<1',
@@ -75,7 +75,7 @@ setup(
     keywords='ethereum',
     packages=find_packages(exclude=['tests', 'tests.*']),
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',

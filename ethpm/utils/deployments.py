@@ -1,7 +1,7 @@
 from typing import Any, Dict, Generator, List, Tuple
 
-import cytoolz
 from eth_utils import is_same_address, to_bytes, to_tuple
+from eth_utils.toolz import get_in
 from web3 import Web3
 
 from ethpm.exceptions import BytecodeLinkingError, ValidationError
@@ -14,7 +14,7 @@ def get_linked_deployments(deployments: Dict[str, Any]) -> Dict[str, Any]:
     linked_deployments = {
         dep: data
         for dep, data in deployments.items()
-        if cytoolz.get_in(("runtime_bytecode", "link_dependencies"), data)
+        if get_in(("runtime_bytecode", "link_dependencies"), data)
     }
     for deployment, data in linked_deployments.items():
         if any(
