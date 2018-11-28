@@ -1,8 +1,7 @@
 import re
 from typing import Any, Dict
 
-import cytoolz
-from eth_utils.toolz import assoc, assoc_in
+from eth_utils.toolz import assoc, assoc_in, curry
 
 from ethpm.constants import PACKAGE_NAME_REGEX
 from ethpm.tools.builder import build
@@ -66,7 +65,7 @@ def check_manifest(manifest: Manifest) -> Dict[str, str]:
 #
 
 
-@cytoolz.curry
+@curry
 def check_manifest_version(
     manifest: Manifest, warnings: Dict[str, str]
 ) -> Dict[str, str]:
@@ -77,7 +76,7 @@ def check_manifest_version(
     return warnings
 
 
-@cytoolz.curry
+@curry
 def check_package_name(manifest: Manifest, warnings: Dict[str, str]) -> Dict[str, str]:
     if "package_name" not in manifest or not manifest["package_name"]:
         return assoc(warnings, "package_name", WARNINGS["package_name_missing"])
@@ -86,7 +85,7 @@ def check_package_name(manifest: Manifest, warnings: Dict[str, str]) -> Dict[str
     return warnings
 
 
-@cytoolz.curry
+@curry
 def check_version(manifest: Manifest, warnings: Dict[str, str]) -> Dict[str, str]:
     if "version" not in manifest or not manifest["version"]:
         return assoc(warnings, "version", WARNINGS["version_missing"])
@@ -98,7 +97,7 @@ def check_version(manifest: Manifest, warnings: Dict[str, str]) -> Dict[str, str
 #
 
 
-@cytoolz.curry
+@curry
 def check_meta(manifest: Manifest, warnings: Dict[str, str]) -> Dict[str, str]:
     if "meta" not in manifest or not manifest["meta"]:
         return assoc(warnings, "meta", WARNINGS["meta_missing"])
@@ -112,35 +111,35 @@ def check_meta(manifest: Manifest, warnings: Dict[str, str]) -> Dict[str, str]:
     return build(warnings, *meta_validation)
 
 
-@cytoolz.curry
+@curry
 def check_authors(meta: Dict[str, Any], warnings: Dict[str, str]) -> Dict[str, str]:
     if "authors" not in meta:
         return assoc(warnings, "meta.authors", WARNINGS["authors_missing"])
     return warnings
 
 
-@cytoolz.curry
+@curry
 def check_license(meta: Dict[str, Any], warnings: Dict[str, str]) -> Dict[str, str]:
     if "license" not in meta or not meta["license"]:
         return assoc(warnings, "meta.license", WARNINGS["license_missing"])
     return warnings
 
 
-@cytoolz.curry
+@curry
 def check_description(meta: Dict[str, Any], warnings: Dict[str, str]) -> Dict[str, str]:
     if "description" not in meta or not meta["description"]:
         return assoc(warnings, "meta.description", WARNINGS["description_missing"])
     return warnings
 
 
-@cytoolz.curry
+@curry
 def check_keywords(meta: Dict[str, Any], warnings: Dict[str, str]) -> Dict[str, str]:
     if "keywords" not in meta or not meta["keywords"]:
         return assoc(warnings, "meta.keywords", WARNINGS["keywords_missing"])
     return warnings
 
 
-@cytoolz.curry
+@curry
 def check_links(meta: Dict[str, Any], warnings: Dict[str, str]) -> Dict[str, str]:
     if "links" not in meta or not meta["links"]:
         return assoc(warnings, "meta.links", WARNINGS["links_missing"])
@@ -152,7 +151,7 @@ def check_links(meta: Dict[str, Any], warnings: Dict[str, str]) -> Dict[str, str
 #
 
 
-@cytoolz.curry
+@curry
 def check_sources(manifest: Manifest, warnings: Dict[str, str]) -> Dict[str, str]:
     if "sources" not in manifest or not manifest["sources"]:
         return assoc(warnings, "sources", WARNINGS["sources_missing"])
@@ -164,7 +163,7 @@ def check_sources(manifest: Manifest, warnings: Dict[str, str]) -> Dict[str, str
 #
 
 # todo: validate a contract type matches source
-@cytoolz.curry
+@curry
 def check_contract_types(
     manifest: Manifest, warnings: Dict[str, str]
 ) -> Dict[str, str]:
@@ -185,7 +184,7 @@ def check_contract_types(
     return build(warnings, *sum(all_contract_type_validations, ()))
 
 
-@cytoolz.curry
+@curry
 def check_abi(
     contract_name: str, data: Dict[str, Any], warnings: Dict[str, str]
 ) -> Dict[str, str]:
@@ -198,7 +197,7 @@ def check_abi(
     return warnings
 
 
-@cytoolz.curry
+@curry
 def check_contract_type(
     contract_name: str, data: Dict[str, Any], warnings: Dict[str, str]
 ) -> Dict[str, str]:
@@ -211,7 +210,7 @@ def check_contract_type(
     return warnings
 
 
-@cytoolz.curry
+@curry
 def check_deployment_bytecode(
     contract_name: str, data: Dict[str, Any], warnings: Dict[str, str]
 ) -> Dict[str, str]:
@@ -227,7 +226,7 @@ def check_deployment_bytecode(
     )
 
 
-@cytoolz.curry
+@curry
 def check_runtime_bytecode(
     contract_name: str, data: Dict[str, Any], warnings: Dict[str, str]
 ) -> Dict[str, str]:
@@ -243,7 +242,7 @@ def check_runtime_bytecode(
     )
 
 
-@cytoolz.curry
+@curry
 def check_bytecode_object(
     contract_name: str,
     bytecode_type: str,
@@ -260,7 +259,7 @@ def check_bytecode_object(
     return warnings
 
 
-@cytoolz.curry
+@curry
 def check_natspec(
     contract_name: str, data: Dict[str, Any], warnings: Dict[str, str]
 ) -> Dict[str, str]:
@@ -273,7 +272,7 @@ def check_natspec(
     return warnings
 
 
-@cytoolz.curry
+@curry
 def check_compiler(
     contract_name: str, data: Dict[str, Any], warnings: Dict[str, str]
 ) -> Dict[str, str]:

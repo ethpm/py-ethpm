@@ -1,8 +1,7 @@
 from typing import Any, Dict, List, Tuple, Type  # noqa: F401
 
-import cytoolz
 from eth_utils import combomethod, is_canonical_address, to_bytes, to_checksum_address
-from eth_utils.toolz import assoc
+from eth_utils.toolz import assoc, curry, pipe
 from web3 import Web3
 from web3.contract import Contract
 
@@ -140,11 +139,11 @@ def apply_all_link_refs(
         for ref in link_refs
         for offset in ref["offsets"]
     )
-    linked_bytecode = cytoolz.pipe(bytecode, *link_fns)
+    linked_bytecode = pipe(bytecode, *link_fns)
     return linked_bytecode
 
 
-@cytoolz.curry
+@curry
 def apply_link_ref(offset: int, length: int, value: bytes, bytecode: bytes) -> bytes:
     """
     Returns the new bytecode with `value` put into the location indicated by `offset` and `length`.
