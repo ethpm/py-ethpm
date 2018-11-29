@@ -40,23 +40,35 @@ IPFS
    Pin asset(s) found at the given path and returns the pinned asset data.
 
 
-HTTP
-----
+HTTPS
+-----
 
 ``Py-EthPM`` offers a backend to fetch files from Github, ``GithubOverHTTPSBackend``.
 
-A valid Github URI *should* conform to the following scheme.
+A valid content-addressed Github URI *must* conform to the following scheme, as described in `ERC1319 <https://github.com/ethereum/EIPs/issues/1319>`__, to be used with this backend.
 
 .. code:: python
 
-   https://raw.githubusercontent.com/user/repo/commit_hash/path/to/manifest.json#content_hash
+   https://api.github.com/repos/:owner/:repo/git/blobs/:file_sha
 
-To generate a valid Github PM URI.
 
-- Go to the target manifest in your browser.
-- Press ``y`` to generate the permalink in the address bar.
-- Replace ``"github"`` with ``"raw.githubusercontent"``, and remove the ``"blob"`` namespace from the URI.
-- Suffix the URI with ``#`` followed by the ``keccak`` hash of the bytes found at the Github URI.
+.. py:method:: create_content_addressed_github_uri(uri)
+
+   This util function will return a content-addressed URI, as defined by Github's `blob <https://developer.github.com/v3/git/blobs/>`__ scheme. To generate a content-addressed URI for any manifest stored on github, this function requires accepts a Github API uri that follows the following scheme.
+
+::
+  
+   https://api.github.com/repos/:owner/:repo/contents/:path/:to/manifest.json
+
+.. doctest::
+
+   >>> from ethpm.utils.uri import create_content_addressed_github_uri
+
+   >>> owned_github_api_uri = "https://api.github.com/repos/ethpm/py-ethpm/contents/ethpm/assets/owned/1.0.1.json"
+   >>> content_addressed_uri = "https://api.github.com/repos/ethpm/py-ethpm/git/blobs/a7232a93f1e9e75d606f6c1da18aa16037e03480"
+
+   >>> actual_blob_uri = create_content_addressed_github_uri(owned_github_api_uri)
+   >>> assert actual_blob_uri == content_addressed_uri
 
 
 Registry URIs

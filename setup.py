@@ -16,7 +16,6 @@ readme = open(os.path.join(DIR, 'README.md')).read()
 extras_require={
     'test': [
         'pytest>=3.2.1,<4',
-        'requests-mock>=1.5.0,<2',
         'tox>=1.8.0,<2',
     ],
     'lint': [

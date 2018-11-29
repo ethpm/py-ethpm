@@ -2,15 +2,7 @@ import re
 from typing import Any, List
 from urllib import parse
 
-from eth_utils import (
-    decode_hex,
-    is_address,
-    is_canonical_address,
-    is_checksum_address,
-    is_text,
-    keccak,
-    to_hex,
-)
+from eth_utils import is_address, is_canonical_address, is_checksum_address, is_text
 from web3 import Web3
 
 from ethpm.constants import PACKAGE_NAME_REGEX, REGISTRY_URI_SCHEME
@@ -166,17 +158,3 @@ def validate_single_matching_uri(all_blockchain_uris: List[str], w3: Web3) -> st
             f"Package has too many ({len(matching_uris)}) matching URIs: {matching_uris}."
         )
     return matching_uris[0]
-
-
-def validate_uri_contents(contents: bytes, validation_hash: str) -> None:
-    """
-    Validate that the keccak(contents) matches the validation_hash.
-    """
-    hashed_contents = keccak(contents)
-    decoded_validation = decode_hex(validation_hash)
-    if hashed_contents != decoded_validation:
-        raise ValidationError(
-            "Invalid content-addressed URI. "
-            f"Validation hash:{to_hex(decoded_validation)} does not match the "
-            f"hash of URI contents: {to_hex(hashed_contents)}."
-        )

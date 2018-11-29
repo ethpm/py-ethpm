@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from ethpm.typing import URI
+
 
 class BaseURIBackend(ABC):
     """
@@ -10,7 +12,7 @@ class BaseURIBackend(ABC):
     """
 
     @abstractmethod
-    def can_resolve_uri(self, uri: str) -> bool:
+    def can_resolve_uri(self, uri: URI) -> bool:
         """
         Return a bool indicating whether this backend class can
         resolve the given URI to it's contents.
@@ -18,7 +20,7 @@ class BaseURIBackend(ABC):
         pass
 
     @abstractmethod
-    def can_translate_uri(self, uri: str) -> bool:
+    def can_translate_uri(self, uri: URI) -> bool:
         """
         Return a bool indicating whether this backend class can
         translate the given URI to a corresponding content-addressed URI.
@@ -26,7 +28,7 @@ class BaseURIBackend(ABC):
         pass
 
     @abstractmethod
-    def fetch_uri_contents(self, uri: str) -> bytes:
+    def fetch_uri_contents(self, uri: URI) -> bytes:
         """
         Fetch the contents stored at a URI.
         """
