@@ -373,13 +373,13 @@ def normalize_contract_type(
 
 @to_dict
 def normalize_bytecode_object(obj: Dict[str, Any]) -> Iterable[Tuple[str, Any]]:
-    if obj["linkReferences"]:
-        yield "link_references", process_link_references(
-            obj["linkReferences"], obj["object"]
-        )
-        yield "bytecode", process_bytecode(obj["linkReferences"], obj["object"])
+    link_references = obj.get("linkReferences")
+    bytecode = obj.get("object")
+    if link_references:
+        yield "link_references", process_link_references(link_references, bytecode)
+        yield "bytecode", process_bytecode(link_references, bytecode)
     else:
-        yield "bytecode", add_0x_prefix(obj["object"])
+        yield "bytecode", add_0x_prefix(bytecode)
 
 
 def process_bytecode(link_refs: Dict[str, Any], bytecode: bytes) -> bytes:
