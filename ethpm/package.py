@@ -222,7 +222,7 @@ class Package(object):
             )
             for deployment_data in deployments.values()
         }
-        validate_deployments_tx_receipt(deployments, self.w3)
+        validate_deployments_tx_receipt(deployments, self.w3, allow_missing_data=True)
         linked_deployments = get_linked_deployments(deployments)
         if linked_deployments:
             for deployment_data in linked_deployments.values():

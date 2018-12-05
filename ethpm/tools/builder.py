@@ -175,25 +175,31 @@ def _inline_source(
 ) -> Manifest:
     names_and_paths = get_names_and_paths(compiler_output)
     cwd = Path.cwd()
-    source_path_suffix = names_and_paths[name]
+    try:
+        source_path = names_and_paths[name]
+    except KeyError:
+        raise ManifestBuildingError(
+            f"Unable to inline source: {name}. "
+            f"Available sources include: {list(names_and_paths.keys())}."
+        )
 
     if package_root_dir:
-        if (package_root_dir / source_path_suffix).is_file():
-            source_data = (package_root_dir / source_path_suffix).read_text()
+        if (package_root_dir / source_path).is_file():
+            source_data = (package_root_dir / source_path).read_text()
         else:
             raise ManifestBuildingError(
-                f"Contract source: {source_path_suffix} cannot be found in "
+                f"Contract source: {source_path} cannot be found in "
                 f"provided package_root_dir: {package_root_dir}."
             )
-    elif (cwd / source_path_suffix).is_file():
-        source_data = (cwd / source_path_suffix).read_text()
+    elif (cwd / source_path).is_file():
+        source_data = (cwd / source_path).read_text()
     else:
         raise ManifestBuildingError(
             "Contract source cannot be resolved, please make sure that the working "
             "directory is set to the correct directory or provide `package_root_dir`."
         )
 
-    return assoc_in(manifest, ["sources", source_path_suffix], source_data)
+    return assoc_in(manifest, ["sources", source_path], source_data)
 
 
 def source_pinner(
@@ -239,7 +245,13 @@ def _pin_source(
     manifest: Manifest,
 ) -> Manifest:
     names_and_paths = get_names_and_paths(compiler_output)
-    source_path = names_and_paths[name]
+    try:
+        source_path = names_and_paths[name]
+    except KeyError:
+        raise ManifestBuildingError(
+            f"Unable to pin source: {name}. "
+            f"Available sources include: {list(names_and_paths.keys())}."
+        )
     if package_root_dir:
         if not (package_root_dir / source_path).is_file():
             raise ManifestBuildingError(
