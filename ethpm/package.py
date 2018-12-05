@@ -66,7 +66,15 @@ class Package(object):
 
     def set_default_w3(self, w3: Web3) -> None:
         """
-        Set the default Web3 instance.
+        Sets or updates the current ``web3`` instance belonging to a ``Package``.
+        This will also bust the `cached_properties`:
+        ``Package.build_dependencies`` and ``Package.deployments``.
+
+        .. doctest::
+
+           >>> new_w3 = Web3(Web3.EthereumTesterProvider())
+           >>> OwnedPackage.set_default_w3(new_w3)
+           >>> assert OwnedPackage.w3 == new_w3
         """
         validate_w3_instance(w3)
         # Mechanism to bust cached properties when switching chains.
@@ -78,26 +86,61 @@ class Package(object):
         self.w3.eth.defaultContractFactory = LinkableContract
 
     def __repr__(self) -> str:
+        """
+        String readable representation of the Package.
+
+        .. doctest::
+
+           >>> OwnedPackage.__repr__()
+           '<Package owned==1.0.0>'
+        """
         name = self.name
         version = self.version
         return f"<Package {name}=={version}>"
 
     @property
     def name(self) -> str:
+        """
+        The name of this ``Package``.
+
+        .. doctest::
+
+           >>> OwnedPackage.name
+           'owned'
+        """
         return self.manifest["package_name"]
 
     @property
     def version(self) -> str:
+        """
+        The package version of a ``Package``.
+
+        .. doctest::
+
+           >>> OwnedPackage.version
+           '1.0.0'
+        """
         return self.manifest["version"]
 
     @property
     def manifest_version(self) -> str:
+        """
+        The manifest version of a ``Package``.
+
+        .. doctest::
+
+           >>> OwnedPackage.manifest_version
+           '2'
+        """
+
         return self.manifest["manifest_version"]
 
     @classmethod
     def from_file(cls, file_path: Path, w3: Web3) -> "Package":
         """
-        Return a Package object instantiated by a manifest located at the provided Path.
+        Returns a ``Package`` instantiated by a manifest located at the provided Path.
+        ``file_path`` arg must be a ``pathlib.Path`` instance.
+        A valid ``Web3`` instance is required to instantiate a ``Package``.
         """
         if isinstance(file_path, Path):
             raw_manifest = file_path.read_text()
@@ -105,7 +148,7 @@ class Package(object):
             manifest = json.loads(raw_manifest)
         else:
             raise TypeError(
-                "The Package.from_file method takes either a filesystem path or a file-like object."
+                "The Package.from_file method expects a pathlib.Path instance."
                 f"Got {type(file_path)} instead."
             )
         return cls(manifest, w3)
@@ -113,11 +156,16 @@ class Package(object):
     @classmethod
     def from_uri(cls, uri: str, w3: Web3) -> "Package":
         """
-        Return a Package object instantiated by a manifest located at a content-addressed URI.
+        Returns a Package object instantiated by a manifest located at a content-addressed URI.
+        A valid ``Web3`` instance is also required.
         URI schemes supported:
-            - IPFS          `ipfs://Qm...`
-            - HTTP          `https://raw.githubusercontent.com/repo/path.json#hash`
-            - Registry      `ercXXX://registry.eth/greeter?version=1.0.0`
+        - IPFS          `ipfs://Qm...`
+        - HTTP          `https://raw.githubusercontent.com/repo/path.json#hash`
+        - Registry      `ercXXX://registry.eth/greeter?version=1.0.0`
+
+        .. code:: python
+
+           OwnedPackage = Package.from_uri('ipfs://QmbeVyFLSuEUxiXKwSsEjef7icpdTdA4kGG9BcrJXKNKUW', w3)  # noqa: E501
         """
         contents = to_text(resolve_uri_contents(uri))
         validate_raw_manifest_format(contents)
@@ -130,7 +178,26 @@ class Package(object):
 
     def get_contract_factory(self, name: ContractName) -> Contract:
         """
-        Return a contract factory for a given contract type.
+        Return the contract factory for a given contract type, generated from the data vailable
+        in ``Package.manifest``. Contract factories are accessible from the package class.
+
+        .. code:: python
+
+           Owned = OwnedPackage.get_contract_factory('owned')
+
+        In cases where a contract uses a library, the contract factory will have
+        unlinked bytecode. The ``ethpm`` package ships with its own subclass of
+        ``web3.contract.Contract``, ``ethpm.contract.LinkableContract`` with a few extra
+        methods and properties related to bytecode linking.
+
+        .. code:: python
+
+           >>> math = owned_package.contract_factories.math
+           >>> math.needs_bytecode_linking
+           True
+           >>> linked_math = math.link_bytecode({'MathLib': '0x1234...'})
+           >>> linked_math.needs_bytecode_linking
+           False
         """
         validate_contract_name(name)
 
@@ -155,7 +222,9 @@ class Package(object):
 
     def get_contract_instance(self, name: ContractName, address: Address) -> Contract:
         """
-        Return a Contract object representing the contract type at the provided address.
+        Will return a ``Web3.contract`` instance generated from the contract type data available
+        in ``Package.manifest`` and the provided ``address``. The provided ``address`` must be
+        valid on the connected chain available through ``Package.w3``.
         """
         validate_address(address)
         validate_contract_name(name)
@@ -184,6 +253,13 @@ class Package(object):
         """
         Return `Dependencies` instance containing the build dependencies available on this Package.
         Cached property (self.build_dependencies) busted everytime self.set_default_w3() is called.
+        The ``Package`` class should provide access to the full dependency tree.
+
+
+        .. code:: python
+
+           >>> owned_package.build_dependencies['zeppelin']
+           <ZeppelinPackage>
         """
         validate_build_dependencies_are_present(self.manifest)
 
@@ -210,8 +286,14 @@ class Package(object):
     @cached_property
     def deployments(self) -> Union["Deployments", Dict[None, None]]:
         """
-        API to retrieve package deployments available on the current w3-connected chain.
+        Returns a ``Deployments`` object containing all the deployment data and contract
+        factories of a ``Package``'s `contract_types`. Automatically filters deployments
+        to only expose those available on the current ``Package.w3`` instance.
         Cached property (self.deployments) gets busted everytime self.set_default_w3() is called.
+
+        .. code:: python
+
+           package.deployments.get_instance("ContractType")
         """
         if not check_for_deployments(self.manifest):
             return {}

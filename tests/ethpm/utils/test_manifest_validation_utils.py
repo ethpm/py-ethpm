@@ -12,37 +12,17 @@ from ethpm.utils.manifest_validation import (
 from ethpm.validation import validate_manifest_version
 
 
-@pytest.fixture
-def all_raw_strict_manifests(package_names):
-    manifests = []
-    for name in package_names:
-        with open(str(V2_PACKAGES_DIR / name / "1.0.0.json")) as file_obj:
-            manifests.append(file_obj.read().strip("\n"))
-    return manifests
-
-
-@pytest.fixture
-def all_pretty_manifests(package_names):
-    manifests = []
-    for name in package_names:
-        with open(str(V2_PACKAGES_DIR / name / "1.0.0-pretty.json")) as file_obj:
-            manifests.append(file_obj.read())
-    return manifests
-
-
 def test_validate_raw_manifest_configuration_validates_strict_manifests(
-    all_raw_strict_manifests
+    all_strict_manifests
 ):
-    for manifest in all_raw_strict_manifests:
-        assert validate_raw_manifest_format(manifest) is None
+    assert validate_raw_manifest_format(all_strict_manifests) is None
 
 
 def test_validate_raw_manifest_format_invalidates_pretty_manifests(
     all_pretty_manifests
 ):
-    for manifest in all_pretty_manifests:
-        with pytest.raises(ValidationError):
-            validate_raw_manifest_format(manifest)
+    with pytest.raises(ValidationError):
+        validate_raw_manifest_format(all_pretty_manifests)
 
 
 @pytest.mark.parametrize(

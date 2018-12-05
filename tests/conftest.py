@@ -32,6 +32,18 @@ def package_names():
     return PACKAGE_NAMES
 
 
+@pytest.fixture(params=PACKAGE_NAMES)
+def all_strict_manifests(request):
+    return (V2_PACKAGES_DIR / request.param / "1.0.0.json").read_text().rstrip("\n")
+
+
+@pytest.fixture(params=PACKAGE_NAMES)
+def all_pretty_manifests(request):
+    return (
+        (V2_PACKAGES_DIR / request.param / "1.0.0-pretty.json").read_text().rstrip("\n")
+    )
+
+
 def fetch_manifest(name):
     return get_manifest_tool(name, "1.0.0.json")
 

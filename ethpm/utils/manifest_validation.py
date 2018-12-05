@@ -138,6 +138,7 @@ def validate_raw_manifest_format(raw_manifest: str) -> None:
     compact_manifest = json.dumps(manifest_dict, sort_keys=True, separators=(",", ":"))
     if raw_manifest != compact_manifest:
         raise ValidationError(
-            "Manifest is not correctly configured as specified in the EthPM-Spec. "
+            "The manifest appears to be malformed. Please ensure that it conforms to the "
+            "EthPM-Spec for document format. "
             "http://ethpm.github.io/ethpm-spec/package-spec.html#document-format "
         )
