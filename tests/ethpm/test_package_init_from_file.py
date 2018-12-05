@@ -1,6 +1,6 @@
-import contextlib
 import json
 import os
+from pathlib import Path
 
 import pytest
 
@@ -8,48 +8,29 @@ from ethpm import Package
 from ethpm.exceptions import ValidationError
 
 
-@contextlib.contextmanager
-def _generate_fixture_param(tmpdir, as_file_path, file_content):
+@pytest.fixture
+def valid_manifest_from_path(tmpdir):
+    valid_manifest = '{"manifest_version":"2","package_name":"foo","version":"1.0.0"}'
     temp_manifest = tmpdir.mkdir("invalid").join("manifest.json")
-    temp_manifest.write(file_content)
-
-    if as_file_path:
-        yield str(temp_manifest)
-    else:
-        with open(str(temp_manifest)) as file_obj:
-            yield file_obj
+    temp_manifest.write(valid_manifest)
+    yield Path(str(temp_manifest))
 
 
-@pytest.fixture(params=[True, False])
-def valid_manifest_from_path(tmpdir, request):
-    valid_manifest = json.dumps(
-        {"package_name": "foo", "manifest_version": "2", "version": "1.0.0"}
+@pytest.fixture
+def invalid_manifest_from_path(tmpdir):
+    invalid_manifest = (
+        '{"manifest_version":"xx","package_name":"foo","version":"1.0.0"}'
     )
-    with _generate_fixture_param(tmpdir, request.param, valid_manifest) as file_obj:
-        yield file_obj
+    temp_manifest = tmpdir.mkdir("invalid").join("manifest.json")
+    temp_manifest.write(invalid_manifest)
+    yield Path(str(temp_manifest))
 
 
-@pytest.fixture(params=[True, False])
-def invalid_manifest_from_path(tmpdir, request):
-    invalid_manifest = json.dumps(
-        {
-            "package_name": "foo",
-            "manifest_version": "not a valid version",
-            "version": "1.0.0",
-        }
-    )
-    with _generate_fixture_param(
-        tmpdir, request.param, invalid_manifest
-    ) as file_obj_or_path:
-        yield file_obj_or_path
-
-
-@pytest.fixture(params=[True, False])
-def non_json_manifest(tmpdir, request):
-    with _generate_fixture_param(
-        tmpdir, request.param, "This is invalid json"
-    ) as file_obj_or_path:
-        yield file_obj_or_path
+@pytest.fixture
+def non_json_manifest(tmpdir):
+    temp_manifest = tmpdir.mkdir("invalid").join("manifest.json")
+    temp_manifest.write("This is invalid json")
+    yield Path(str(temp_manifest))
 
 
 def test_init_from_minimal_valid_manifest(w3):
@@ -89,7 +70,7 @@ def test_from_file_fails_with_missing_filepath(tmpdir, w3):
 
     assert not os.path.exists(path)
     with pytest.raises(FileNotFoundError):
-        Package.from_file(path, w3)
+        Package.from_file(Path(path), w3)
 
 
 def test_from_file_fails_with_non_json(non_json_manifest, w3):

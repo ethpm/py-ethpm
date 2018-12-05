@@ -7,8 +7,44 @@ from ethpm.utils.manifest_validation import (
     validate_manifest_against_schema,
     validate_manifest_deployments,
     validate_manifest_exists,
+    validate_raw_manifest_format,
 )
 from ethpm.validation import validate_manifest_version
+
+
+def test_validate_raw_manifest_configuration_validates_strict_manifests(
+    all_strict_manifests
+):
+    assert validate_raw_manifest_format(all_strict_manifests) is None
+
+
+def test_validate_raw_manifest_format_invalidates_pretty_manifests(
+    all_pretty_manifests
+):
+    with pytest.raises(ValidationError):
+        validate_raw_manifest_format(all_pretty_manifests)
+
+
+@pytest.mark.parametrize(
+    "manifest",
+    (
+        # not alphabetical
+        '{"x":"y","a":"b"}',
+        # not UTF-8
+        '{"\x80":"b","c":"d"}',
+        # newlines
+        '{"a":"b",\n"c":"d"}',
+        '{"a":"b","c":"d"}\n',
+        # whitespace
+        '{"a":"b","c": "d"}',
+    ),
+)
+def test_validate_raw_manifest_format_invalidates_invalid_manifests(tmpdir, manifest):
+    p = tmpdir.mkdir("invalid").join("manifest.json")
+    p.write(manifest)
+    invalid_manifest = p.read()
+    with pytest.raises(ValidationError):
+        validate_raw_manifest_format(invalid_manifest)
 
 
 def test_validate_manifest_exists_validates():

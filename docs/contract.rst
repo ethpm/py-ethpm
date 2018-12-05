@@ -10,7 +10,7 @@ LinkableContract
    >>> from ethpm import Package, ASSETS_DIR
 
    >>> w3 = Web3(Web3.EthereumTesterProvider())
-   >>> escrow_manifest_path = str(ASSETS_DIR / 'escrow' / '1.0.3.json')
+   >>> escrow_manifest_path = ASSETS_DIR / 'escrow' / '1.0.3.json'
 
    >>> # Try to deploy from unlinked factory
    >>> EscrowPackage = Package.from_file(escrow_manifest_path, w3)
