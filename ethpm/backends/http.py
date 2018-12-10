@@ -7,7 +7,10 @@ from ethpm.backends.base import BaseURIBackend
 from ethpm.constants import GITHUB_API_AUTHORITY
 from ethpm.exceptions import CannotHandleURI
 from ethpm.typing import URI
-from ethpm.utils.uri import is_valid_content_addressed_github_uri
+from ethpm.utils.uri import (
+    is_valid_content_addressed_github_uri,
+    validate_blob_uri_contents,
+)
 
 
 class GithubOverHTTPSBackend(BaseURIBackend):
@@ -37,7 +40,9 @@ class GithubOverHTTPSBackend(BaseURIBackend):
                 "Expected contents returned from Github to be base64 encoded, "
                 f"instead received {contents['encoding']}."
             )
-        return base64.b64decode(contents["content"])
+        decoded_contents = base64.b64decode(contents["content"])
+        validate_blob_uri_contents(decoded_contents, uri)
+        return decoded_contents
 
     @property
     def base_uri(self) -> str:
