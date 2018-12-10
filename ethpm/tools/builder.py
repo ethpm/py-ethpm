@@ -134,10 +134,26 @@ def get_names_and_paths(compiler_output: Dict[str, Any]) -> Dict[str, str]:
     Return a mapping of contract name to relative path as defined in compiler output.
     """
     return {
-        contract_name: path
+        contract_name: make_path_relative(path)
         for path in compiler_output
         for contract_name in compiler_output[path].keys()
     }
+
+
+def make_path_relative(path: str) -> str:
+    """
+    Returns the given path prefixed with "./" if the path
+    is not already relative in the compiler output.
+    """
+    if "../" in path:
+        raise ManifestBuildingError(
+            f"Path: {path} appears to be outside of the virtual source tree. "
+            "Please make sure all sources are within the virtual source tree root directory."
+        )
+
+    if path[:2] != "./":
+        return f"./{path}"
+    return path
 
 
 def source_inliner(
