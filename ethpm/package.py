@@ -160,7 +160,7 @@ class Package(object):
         A valid ``Web3`` instance is also required.
         URI schemes supported:
         - IPFS          `ipfs://Qm...`
-        - HTTP          `https://raw.githubusercontent.com/repo/path.json#hash`
+        - HTTP          `https://api.github.com/repos/:owner/:repo/git/blobs/:file_sha`
         - Registry      `ercXXX://registry.eth/greeter?version=1.0.0`
 
         .. code:: python
