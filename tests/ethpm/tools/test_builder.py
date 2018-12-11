@@ -47,13 +47,24 @@ def owned_package():
     return contracts_dir, manifest, compiler
 
 
+@pytest.fixture
+def owned_package_devdoc():
+    root = ASSETS_DIR / "owned"
+    manifest = json.loads((root / "1.0.0.json").read_text())
+    compiler = json.loads((root / "owned_compiler_output_devdoc.json").read_text())[
+        "contracts"
+    ]
+    contracts_dir = root / "contracts"
+    return contracts_dir, manifest, compiler
+
+
 # todo validate no duplicate contracts in package
 
 
 @pytest.fixture
 def standard_token_package():
     root = ASSETS_DIR / "standard-token"
-    manifest = json.loads((root / "1.0.0.json").read_text())
+    manifest = json.loads((root / "1.0.0.json").read_text().rstrip("\n"))
     compiler = json.loads((root / "standard_token_compiler_output.json").read_text())[
         "contracts"
     ]
@@ -235,7 +246,7 @@ def test_builder_with_inline_source(owned_package, monkeypatch):
         {
             "Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
             """ owner;\n    \n    modifier onlyOwner { require(msg.sender == owner); _; }\n\n    """
-            """constructor() public {\n        owner = msg.sender;\n    }\n}\n"""
+            """constructor() public {\n        owner = msg.sender;\n    }\n}"""
         },
     )
     assert manifest == expected
@@ -254,7 +265,7 @@ def test_builder_with_source_inliner(owned_package, monkeypatch):
         {
             "Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
             """ owner;\n    \n    modifier onlyOwner { require(msg.sender == owner); _; }\n\n    """
-            """constructor() public {\n        owner = msg.sender;\n    }\n}\n"""
+            """constructor() public {\n        owner = msg.sender;\n    }\n}"""
         },
     )
     assert manifest == expected
@@ -274,7 +285,7 @@ def test_builder_with_inline_source_with_package_root_dir_arg(owned_package):
         {
             "Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
             """ owner;\n    \n    modifier onlyOwner { require(msg.sender == owner); _; }\n\n    """
-            """constructor() public {\n        owner = msg.sender;\n    }\n}\n"""
+            """constructor() public {\n        owner = msg.sender;\n    }\n}"""
         },
     )
     assert manifest == expected
@@ -378,9 +389,7 @@ def test_builder_without_alias_and_with_select_contract_types(owned_package):
     _, _, compiler_output = owned_package
 
     manifest = build(
-        BASE_MANIFEST,
-        contract_type("Owned", compiler_output, abi=True, natspec=True),
-        validate(),
+        BASE_MANIFEST, contract_type("Owned", compiler_output, abi=True), validate()
     )
 
     contract_type_data = normalize_contract_type(compiler_output["Owned.sol"]["Owned"])
@@ -391,8 +400,8 @@ def test_builder_without_alias_and_with_select_contract_types(owned_package):
     assert manifest == expected
 
 
-def test_builder_with_alias_and_select_contract_types(owned_package):
-    _, _, compiler_output = owned_package
+def test_builder_with_alias_and_select_contract_types(owned_package_devdoc):
+    _, _, compiler_output = owned_package_devdoc
 
     manifest = build(
         BASE_MANIFEST,
@@ -403,6 +412,8 @@ def test_builder_with_alias_and_select_contract_types(owned_package):
             abi=True,
             natspec=True,
             deployment_bytecode=True,
+            runtime_bytecode=True,
+            compiler=True,
         ),
         validate(),
     )
@@ -414,6 +425,17 @@ def test_builder_with_alias_and_select_contract_types(owned_package):
         {"OwnedAlias": assoc(contract_type_data, "contract_type", "Owned")},
     )
     assert manifest == expected
+
+
+def test_builder_raises_exception_if_selected_contract_type_missing_from_solc(
+    owned_package
+):
+    _, _, compiler_output = owned_package
+    with pytest.raises(ManifestBuildingError):
+        build(
+            BASE_MANIFEST,
+            contract_type("Owned", compiler_output, abi=True, natspec=True),
+        )
 
 
 def test_builder_with_standard_token_manifest(

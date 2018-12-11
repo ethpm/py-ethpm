@@ -322,7 +322,7 @@ To inline the source code directly in the manifest, use ``inline_source()`` or `
    ...   "sources": {
    ...     "Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
    ...     """ owner;\n    \n    modifier onlyOwner { require(msg.sender == owner); _; }\n\n    """
-   ...     """constructor() public {\n        owner = msg.sender;\n    }\n}\n"""
+   ...     """constructor() public {\n        owner = msg.sender;\n    }\n}"""
    ...   }
    ... }
    >>> # With `inline_source()`
@@ -406,8 +406,7 @@ The default behavior of the manifest builder's ``contract_type()`` function is t
    ...       'abi': [{'inputs': [], 'payable': False, 'stateMutability': 'nonpayable', 'type': 'constructor'}],
    ...       'deployment_bytecode': {
    ...         'bytecode': '0x6080604052348015600f57600080fd5b50336000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550603580605d6000396000f3006080604052600080fd00a165627a7a72305820d6ab9e295aa1d1adb0fca69ce42c2c73e991afe290852e8247a208a78b352ff00029'
-   ...       },
-   ...       'natspec': {}
+   ...       }
    ...     }
    ...   }
    ... }
@@ -434,13 +433,12 @@ To select only certain contract type data to be included in your manifest, provi
    ...   'contract_types': {
    ...     'Owned': {
    ...       'abi': [{'inputs': [], 'payable': False, 'stateMutability': 'nonpayable', 'type': 'constructor'}],
-   ...       'natspec': {}
    ...     }
    ...   }
    ... }
    >>> built_manifest = build(
    ...     BASE_MANIFEST,
-   ...     contract_type("Owned", compiler_output, abi=True, natspec=True)
+   ...     contract_type("Owned", compiler_output, abi=True)
    ... )
    >>> assert expected_manifest == built_manifest
 
@@ -455,14 +453,13 @@ If you would like to alias your contract type, provide the desired alias as a kw
    ...   'contract_types': {
    ...     'OwnedAlias': {
    ...       'abi': [{'inputs': [], 'payable': False, 'stateMutability': 'nonpayable', 'type': 'constructor'}],
-   ...       'natspec': {},
    ...       'contract_type': 'Owned'
    ...     }
    ...   }
    ... }
    >>> built_manifest = build(
    ...     BASE_MANIFEST,
-   ...     contract_type("Owned", compiler_output, alias="OwnedAlias", abi=True, natspec=True)
+   ...     contract_type("Owned", compiler_output, alias="OwnedAlias", abi=True)
    ... )
    >>> assert expected_manifest == built_manifest
 
