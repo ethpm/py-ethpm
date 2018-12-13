@@ -1,4 +1,5 @@
 import functools
+import json
 from pathlib import Path
 import tempfile
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple
@@ -24,6 +25,7 @@ from ethpm.utils.manifest_validation import (
     format_manifest,
     validate_manifest_against_schema,
 )
+from ethpm.utils.mappings import deep_merge_dicts
 from ethpm.validation import validate_address
 
 
@@ -180,7 +182,7 @@ def _inline_source(
     except KeyError:
         raise ManifestBuildingError(
             f"Unable to inline source: {name}. "
-            f"Available sources include: {list(names_and_paths.keys())}."
+            f"Available sources include: {list(sorted(names_and_paths.keys()))}."
         )
 
     if package_root_dir:
@@ -199,7 +201,8 @@ def _inline_source(
             "directory is set to the correct directory or provide `package_root_dir`."
         )
 
-    return assoc_in(manifest, ["sources", source_path], source_data)
+    # rstrip used here since Path.read_text() adds a newline to returned contents
+    return assoc_in(manifest, ["sources", source_path], source_data.rstrip("\n"))
 
 
 def source_pinner(
@@ -250,7 +253,7 @@ def _pin_source(
     except KeyError:
         raise ManifestBuildingError(
             f"Unable to pin source: {name}. "
-            f"Available sources include: {list(names_and_paths.keys())}."
+            f"Available sources include: {list(sorted(names_and_paths.keys()))}."
         )
     if package_root_dir:
         if not (package_root_dir / source_path).is_file():
@@ -326,9 +329,9 @@ def _contract_type(
             f"Contract name: {name} not found in the provided compiler output."
         )
     if selected_fields:
-        contract_type_data = {
-            k: v for k, v in all_type_data.items() if k in selected_fields
-        }
+        contract_type_data = filter_all_data_by_selected_fields(
+            all_type_data, selected_fields
+        )
     else:
         contract_type_data = all_type_data
 
@@ -339,6 +342,25 @@ def _contract_type(
             assoc(contract_type_data, "contract_type", name),
         )
     return assoc_in(manifest, ["contract_types", name], contract_type_data)
+
+
+@to_dict
+def filter_all_data_by_selected_fields(
+    all_type_data: Dict[str, Any], selected_fields: List[str]
+) -> Iterable[Tuple[str, Any]]:
+    """
+    Raises exception if selected field data is not available in the contract type data
+    automatically gathered by normalize_compiler_output. Otherwise, returns the data.
+    """
+    for field in selected_fields:
+        if field in all_type_data:
+            yield field, all_type_data[field]
+        else:
+            raise ManifestBuildingError(
+                f"Selected field: {field} not available in data collected from solc output: "
+                f"{list(sorted(all_type_data.keys()))}. Please make sure the relevant data "
+                "is present in your solc output."
+            )
 
 
 def normalize_compiler_output(compiler_output: Dict[str, Any]) -> Dict[str, Any]:
@@ -362,6 +384,9 @@ def normalize_compiler_output(compiler_output: Dict[str, Any]) -> Dict[str, Any]
     }
 
 
+NATSPEC_FIELDS = {"devdoc", "userdoc"}
+
+
 @to_dict
 def normalize_contract_type(
     contract_type_data: Dict[str, Any]
@@ -379,8 +404,22 @@ def normalize_contract_type(
             yield "runtime_bytecode", normalize_bytecode_object(
                 contract_type_data["evm"]["deployedBytecode"]
             )
-    # todo support natspec.
-    yield "natspec", {}
+    if any(key in contract_type_data for key in NATSPEC_FIELDS):
+        natspec = deep_merge_dicts(
+            contract_type_data.get("userdoc", {}), contract_type_data.get("devdoc", {})
+        )
+        yield "natspec", natspec
+    if "metadata" in contract_type_data:
+        yield "compiler", normalize_compiler_object(
+            json.loads(contract_type_data["metadata"])
+        )
+
+
+@to_dict
+def normalize_compiler_object(obj: Dict[str, Any]) -> Iterable[Tuple[str, Any]]:
+    yield "name", "solc"
+    yield "version", obj["compiler"]["version"]
+    yield "settings", {"optimize": obj["settings"]["optimizer"]["enabled"]}
 
 
 @to_dict
