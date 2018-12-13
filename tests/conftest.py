@@ -147,23 +147,23 @@ def manifest_with_empty_deployments(tmpdir, safe_math_manifest):
 
 
 @pytest.fixture
-def escrow_package(solc_deployer, w3):
+def escrow_package(deployer, w3):
     escrow_manifest = ASSETS_DIR / "escrow" / "1.0.3.json"
-    deployer = solc_deployer(escrow_manifest)
+    escrow_deployer = deployer(escrow_manifest)
     escrow_strategy = l.linker(
         l.deploy("SafeSendLib"),
         l.link("Escrow", "SafeSendLib"),
         l.deploy("Escrow", w3.eth.accounts[0]),
     )
-    deployer.register_strategy("Escrow", escrow_strategy)
-    return deployer.deploy("Escrow")
+    escrow_deployer.register_strategy("Escrow", escrow_strategy)
+    return escrow_deployer.deploy("Escrow")
 
 
 @pytest.fixture
-def safe_math_lib_package(solc_deployer, w3):
+def safe_math_lib_package(deployer, w3):
     safe_math_lib_manifest = ASSETS_DIR / "safe-math-lib" / "1.0.1.json"
-    deployer = solc_deployer(safe_math_lib_manifest)
-    return deployer.deploy("SafeMathLib")
+    safe_math_deployer = deployer(safe_math_lib_manifest)
+    return safe_math_deployer.deploy("SafeMathLib")
 
 
 @pytest.fixture
