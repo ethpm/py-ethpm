@@ -560,9 +560,9 @@ def test_builder_with_link_references(
 
 
 @pytest.fixture
-def escrow_package(w3, solc_deployer):
+def escrow_package(w3, deployer):
     manifest = ASSETS_DIR / "escrow" / "1.0.3.json"
-    escrow_deployer = solc_deployer(manifest)
+    escrow_deployer = deployer(manifest)
     escrow_strategy = linker(
         deploy("SafeSendLib"),
         link("Escrow", "SafeSendLib"),

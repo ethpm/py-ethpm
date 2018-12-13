@@ -60,7 +60,7 @@ setup(
         'ipfsapi>=0.4.3,<1',
         'jsonschema>=2.6.0,<3',
         'protobuf>=3.0.0,<4',
-        'pytest-ethereum>=0.1.3a.3,<1',
+        'pytest-ethereum>=0.1.3a.5,<1',
         'py-solc>=3.2.0,<4',
         'rlp>=1.0.1,<2',
         'web3[tester]>=4.7,<5',
