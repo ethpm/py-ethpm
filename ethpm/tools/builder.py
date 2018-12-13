@@ -385,8 +385,17 @@ def normalize_contract_type(
 
 @to_dict
 def normalize_bytecode_object(obj: Dict[str, Any]) -> Iterable[Tuple[str, Any]]:
-    link_references = obj.get("linkReferences")
-    bytecode = obj.get("object")
+    try:
+        link_references = obj["linkReferences"]
+    except KeyError:
+        link_references = None
+    try:
+        bytecode = obj["object"]
+    except KeyError:
+        raise ManifestBuildingError(
+            "'object' key not found in bytecode data from compiler output. "
+            "Please make sure your solidity compiler output is valid."
+        )
     if link_references:
         yield "link_references", process_link_references(link_references, bytecode)
         yield "bytecode", process_bytecode(link_references, bytecode)
