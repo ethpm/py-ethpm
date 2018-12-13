@@ -320,7 +320,7 @@ To inline the source code directly in the manifest, use ``inline_source()`` or `
    ...   "version": "1.0.0",
    ...   "manifest_version": "2",
    ...   "sources": {
-   ...     "Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
+   ...     "./Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
    ...     """ owner;\n    \n    modifier onlyOwner { require(msg.sender == owner); _; }\n\n    """
    ...     """constructor() public {\n        owner = msg.sender;\n    }\n}"""
    ...   }
@@ -352,7 +352,7 @@ To include the source as a content-addressed URI, ``Py-EthPM`` can pin your sour
    ...   "version": "1.0.0",
    ...   "manifest_version": "2",
    ...   "sources": {
-   ...     "Owned.sol": "ipfs://Qme4otpS88NV8yQi8TfTP89EsQC5bko3F5N1yhRoi6cwGV"
+   ...     "./Owned.sol": "ipfs://Qme4otpS88NV8yQi8TfTP89EsQC5bko3F5N1yhRoi6cwGV"
    ...   }
    ... }
    >>> # With `pin_source()`

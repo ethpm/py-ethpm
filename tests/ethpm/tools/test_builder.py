@@ -244,7 +244,7 @@ def test_builder_with_inline_source(owned_package, monkeypatch):
         BASE_MANIFEST,
         "sources",
         {
-            "Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
+            "./Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
             """ owner;\n    \n    modifier onlyOwner { require(msg.sender == owner); _; }\n\n    """
             """constructor() public {\n        owner = msg.sender;\n    }\n}"""
         },
@@ -263,7 +263,7 @@ def test_builder_with_source_inliner(owned_package, monkeypatch):
         BASE_MANIFEST,
         "sources",
         {
-            "Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
+            "./Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
             """ owner;\n    \n    modifier onlyOwner { require(msg.sender == owner); _; }\n\n    """
             """constructor() public {\n        owner = msg.sender;\n    }\n}"""
         },
@@ -283,7 +283,7 @@ def test_builder_with_inline_source_with_package_root_dir_arg(owned_package):
         BASE_MANIFEST,
         "sources",
         {
-            "Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
+            "./Owned.sol": """pragma solidity ^0.4.24;\n\ncontract Owned {\n    address"""
             """ owner;\n    \n    modifier onlyOwner { require(msg.sender == owner); _; }\n\n    """
             """constructor() public {\n        owner = msg.sender;\n    }\n}"""
         },
