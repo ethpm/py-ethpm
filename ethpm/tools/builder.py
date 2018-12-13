@@ -425,7 +425,8 @@ def normalize_contract_type(
             contract_type_data.get("userdoc", {}), contract_type_data.get("devdoc", {})
         )
         yield "natspec", natspec
-    if "metadata" in contract_type_data:
+    # make sure metadata isn't an empty string in solc output
+    if "metadata" in contract_type_data and contract_type_data["metadata"]:
         yield "compiler", normalize_compiler_object(
             json.loads(contract_type_data["metadata"])
         )
