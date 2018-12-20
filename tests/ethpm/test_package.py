@@ -2,7 +2,7 @@ from eth_utils import is_same_address, to_canonical_address
 import pytest
 from web3 import Web3
 
-from ethpm.exceptions import InsufficientAssetsError
+from ethpm.exceptions import InsufficientAssetsError, ValidationError
 from ethpm.package import Package
 
 
@@ -21,16 +21,20 @@ def deployed_safe_math(safe_math_package, w3):
 
 
 def test_package_object_instantiates_with_a_web3_object(all_manifests, w3):
-    current_package = Package(all_manifests, w3)
-    assert current_package.w3 is w3
+    package = Package(all_manifests, w3)
+    assert package.w3 is w3
 
 
-def test_set_default_web3(all_manifests, w3):
+def test_set_default_web3(deployed_safe_math, w3):
     new_w3 = Web3(Web3.EthereumTesterProvider())
-    current_package = Package(all_manifests, w3)
-    assert current_package.w3 is w3
-    current_package.set_default_w3(new_w3)
-    assert current_package.w3 is new_w3
+    original_package, _ = deployed_safe_math
+    assert original_package.w3 is w3
+    new_package = original_package.set_default_w3(new_w3)
+    assert new_package.w3 is new_w3
+    assert original_package is not new_package
+    assert original_package.manifest == new_package.manifest
+    with pytest.raises(ValidationError, match="Package has no matching URIs on chain."):
+        new_package.deployments
 
 
 def test_get_contract_factory_with_default_web3(safe_math_package, w3):
