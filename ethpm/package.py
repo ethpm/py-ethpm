@@ -64,26 +64,20 @@ class Package(object):
         self.w3.eth.defaultContractFactory = LinkableContract
         self.manifest = manifest
 
-    def set_default_w3(self, w3: Web3) -> None:
+    def set_default_w3(self, w3: Web3) -> "Package":
         """
-        Sets or updates the current ``web3`` instance belonging to a ``Package``.
-        This will also bust the `cached_properties`:
-        ``Package.build_dependencies`` and ``Package.deployments``.
+        Returns a new instance of `Package` containing the same manifest,
+        but connected to a different web3 instance.
 
         .. doctest::
 
            >>> new_w3 = Web3(Web3.EthereumTesterProvider())
-           >>> OwnedPackage.set_default_w3(new_w3)
-           >>> assert OwnedPackage.w3 == new_w3
+           >>> NewPackage = OwnedPackage.set_default_w3(new_w3)
+           >>> assert NewPackage.w3 == new_w3
+           >>> assert OwnedPackage.manifest == NewPackage.manifest
         """
         validate_w3_instance(w3)
-        # Mechanism to bust cached properties when switching chains.
-        if "deployments" in self.__dict__:
-            del self.deployments
-        if "build_dependencies" in self.__dict__:
-            del self.build_dependencies
-        self.w3 = w3
-        self.w3.eth.defaultContractFactory = LinkableContract
+        return Package(self.manifest, w3)
 
     def __repr__(self) -> str:
         """
@@ -132,7 +126,6 @@ class Package(object):
            >>> OwnedPackage.manifest_version
            '2'
         """
-
         return self.manifest["manifest_version"]
 
     @classmethod
@@ -252,9 +245,7 @@ class Package(object):
     def build_dependencies(self) -> "Dependencies":
         """
         Return `Dependencies` instance containing the build dependencies available on this Package.
-        Cached property (self.build_dependencies) busted everytime self.set_default_w3() is called.
         The ``Package`` class should provide access to the full dependency tree.
-
 
         .. code:: python
 
@@ -289,7 +280,6 @@ class Package(object):
         Returns a ``Deployments`` object containing all the deployment data and contract
         factories of a ``Package``'s `contract_types`. Automatically filters deployments
         to only expose those available on the current ``Package.w3`` instance.
-        Cached property (self.deployments) gets busted everytime self.set_default_w3() is called.
 
         .. code:: python
 
