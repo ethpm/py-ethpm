@@ -71,37 +71,38 @@ def validate_deployments_tx_receipt(
 ) -> None:
     """
     Validate that address and block hash found in deployment data match what is found on-chain.
+    :allow_missing_data: by default, enforces validation of address and blockHash.
     """
     # todo: provide hook to lazily look up tx receipt via binary search if missing data
     for name, data in deployments.items():
         if "transaction" in data:
             tx_hash = data["transaction"]
             tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
+            # tx_address will be None if contract created via contract factory
             tx_address = tx_receipt["contractAddress"]
 
-            # case when on-chain factory used to deploy a contract
-            if "contractAddress" not in tx_receipt and allow_missing_data is False:
+            if tx_address is None and allow_missing_data is False:
                 raise ValidationError(
-                    "No contract address found in tx receipt. "
-                    "Unable to verify address in deployment data. "
-                    "If this validation is not necessary, please enable `allow_missing_data` arg."
+                    "No contract address found in tx receipt. Unable to verify "
+                    "address found in tx receipt matches address in manifest's deployment data. "
+                    "If this validation is not necessary, please enable `allow_missing_data` arg. "
                 )
 
-            if not is_same_address(tx_address, data["address"]):
+            if tx_address is not None and not is_same_address(
+                tx_address, data["address"]
+            ):
                 raise ValidationError(
                     f"Error validating tx_receipt for {name} deployment. "
-                    f"Address found in deployment: {data['address']} "
-                    "Does not match "
-                    f"Address found on tx_receipt: {tx_address}."
+                    f"Address found in manifest's deployment data: {data['address']} "
+                    f"Does not match address found on tx_receipt: {tx_address}."
                 )
 
             if "block" in data:
                 if tx_receipt["blockHash"] != to_bytes(hexstr=data["block"]):
                     raise ValidationError(
                         f"Error validating tx_receipt for {name} deployment. "
-                        f"Block found in deployment: {data['block']} "
-                        "Does not match "
-                        f"Block found on tx_receipt: {tx_receipt['blockHash']}."
+                        f"Block found in manifest's deployment data: {data['block']} does not "
+                        f"Does not match block found on tx_receipt: {tx_receipt['blockHash']}."
                     )
             elif allow_missing_data is False:
                 raise ValidationError(
