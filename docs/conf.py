@@ -166,3 +166,13 @@ doctest_default_flags = (0
     | doctest.IGNORE_EXCEPTION_DETAIL
     | doctest.NORMALIZE_WHITESPACE
 )
+
+# Setup for autoclassed doctests
+doctest_global_setup = """
+from ethpm import Package, V2_PACKAGES_DIR
+from web3 import Web3
+
+owned_manifest_path = V2_PACKAGES_DIR / 'owned' / '1.0.0.json'
+w3 = Web3(Web3.EthereumTesterProvider())
+OwnedPackage = Package.from_file(owned_manifest_path, w3)
+"""

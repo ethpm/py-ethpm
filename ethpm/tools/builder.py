@@ -315,7 +315,7 @@ def contract_type(
     To alias a contract_type, include a kwarg `alias` (i.e. `alias="OwnedAlias"`)
     If only an alias kwarg is provided, all available contract data will be included.
     Kwargs must match fields as defined in the EthPM Spec (except "alias") if user
-        wants to include them in custom contract_type.
+    wants to include them in custom contract_type.
     """
     contract_type_fields = {
         "contract_type": contract_type,
@@ -728,7 +728,7 @@ def write_to_disk(
     Defaults
     - Writes manifest to cwd unless Path is provided as manifest_root_dir.
     - Writes manifest with a filename of Manifest[version].json unless a desired
-      manifest name (which must end in json) is provided as manifest_name.
+    manifest name (which must end in json) is provided as manifest_name.
     - Writes the minified manifest version to disk unless prettify is set to True.
     """
     return _write_to_disk(manifest_root_dir, manifest_name, prettify)
