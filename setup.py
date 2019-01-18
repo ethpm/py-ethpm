@@ -60,7 +60,6 @@ setup(
         'ipfsapi>=0.4.3,<1',
         'jsonschema>=2.6.0,<3',
         'protobuf>=3.0.0,<4',
-        'py-solc>=3.2.0,<4',
         'rlp>=1.0.1,<2',
         'web3[tester]>=5.0.0a3,<6',
     ],
