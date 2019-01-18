@@ -1,11 +1,9 @@
 import re
-from typing import Any, Dict, Generator, List, Tuple
+from typing import Any, Dict, Generator, Tuple
 
 from eth_utils import to_dict
-from solc import compile_files
 from web3 import Web3
 
-from ethpm import V2_PACKAGES_DIR
 from ethpm.exceptions import InsufficientAssetsError, ValidationError
 
 
@@ -57,15 +55,3 @@ def generate_contract_factory_kwargs(
             yield "linked_references", tuple(
                 contract_data["runtime_bytecode"]["link_references"]
             )
-
-
-def compile_contracts(contract_name: str, alias: str, paths: List[str]) -> str:
-    """
-    Compile multiple contracts to bytecode.
-    """
-    bin_id = f"{contract_name}.sol:{contract_name}"
-    contract_paths = [(V2_PACKAGES_DIR / alias / path[1:]) for path in paths]
-    compiled_source = compile_files(contract_paths)
-    bin_lookup = V2_PACKAGES_DIR / alias / bin_id
-    compiled_source_bin = compiled_source[bin_lookup]["bin"]
-    return compiled_source_bin

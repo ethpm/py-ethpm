@@ -1,25 +1,20 @@
+import json
+
 from eth_utils import to_canonical_address
 import pytest
-from solc import compile_source
 import web3
 
-from ethpm import V2_PACKAGES_DIR, Package
+from ethpm import ASSETS_DIR, Package
 from ethpm.exceptions import BytecodeLinkingError
 
 
-@pytest.fixture
-def compiled_safe_send():
-    safe_send_source = V2_PACKAGES_DIR / "escrow" / "contracts" / "SafeSendLib.sol"
-    safe_send_text = safe_send_source.read_text()
-    compiled_sol = compile_source(safe_send_text)
-    contract_interface = compiled_sol["<stdin>:SafeSendLib"]
-    return contract_interface
-
-
-def test_deployed_escrow_and_safe_send(escrow_manifest, compiled_safe_send, w3):
+def test_deployed_escrow_and_safe_send(escrow_manifest, w3):
     # Deploy a SafeSendLib
+    safe_send_manifest = json.loads((ASSETS_DIR / "escrow" / "1.0.3.json").read_text())
+    safe_send_contract_type = safe_send_manifest["contract_types"]["SafeSendLib"]
     SafeSend = w3.eth.contract(
-        abi=compiled_safe_send["abi"], bytecode=compiled_safe_send["bin"]
+        abi=safe_send_contract_type["abi"],
+        bytecode=safe_send_contract_type["deployment_bytecode"]["bytecode"],
     )
     tx_hash = SafeSend.constructor().transact()
     tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
