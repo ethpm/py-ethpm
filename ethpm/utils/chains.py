@@ -2,7 +2,7 @@ import re
 from typing import Tuple
 from urllib import parse
 
-from eth_utils import add_0x_prefix, encode_hex, remove_0x_prefix
+from eth_utils import add_0x_prefix, encode_hex, remove_0x_prefix, to_hex
 from eth_utils.toolz import curry
 from web3 import Web3
 
@@ -100,3 +100,9 @@ def create_BIP122_uri(
 
 def create_block_uri(chain_id: str, block_identifier: str) -> URI:
     return create_BIP122_uri(chain_id, "block", remove_0x_prefix(block_identifier))
+
+
+def create_latest_block_uri(w3: Web3) -> URI:
+    chain_id = to_hex(get_genesis_block_hash(w3))
+    recent_block = to_hex(w3.eth.getBlock("latest")["hash"])
+    return create_block_uri(chain_id, recent_block)

@@ -48,7 +48,8 @@ class Deployments:
         after validating contract name.
         """
         self._validate_name_and_references(contract_name)
-        factory = self.contract_factories[contract_name]
+        contract_type = self.deployment_data[contract_name]["contract_type"]
+        factory = self.contract_factories[contract_type]
         address = to_canonical_address(self.deployment_data[contract_name]["address"])
         contract_kwargs = {
             "abi": factory.abi,
@@ -61,7 +62,14 @@ class Deployments:
         validate_contract_name(name)
 
         if name not in self.deployment_data:
-            raise KeyError("Contract name not found in deployment data")
+            raise KeyError(
+                "Contract name not found in deployment data. "
+                f"Available deployments include: {list(self.deployment_data.keys())}."
+            )
 
-        if name not in self.contract_factories:
-            raise ValidationError("Contract name not found in contract_factories.")
+        contract_type = self.deployment_data[name]["contract_type"]
+        if contract_type not in self.contract_factories:
+            raise ValidationError(
+                f"Contract type: {contract_type} for alias: {name} not found. "
+                f"Available contract types include: {list(self.contract_factories.keys())}."
+            )

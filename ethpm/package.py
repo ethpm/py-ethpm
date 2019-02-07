@@ -45,7 +45,7 @@ from ethpm.validation import (
 
 
 class Package(object):
-    def __init__(self, manifest: Dict[str, Any], w3: Web3) -> None:
+    def __init__(self, manifest: Dict[str, Any], w3: Web3, uri: str = None) -> None:
         """
         A package should be created using one of the available
         classmethods and a valid w3 instance.
@@ -63,6 +63,7 @@ class Package(object):
         self.w3 = w3
         self.w3.eth.defaultContractFactory = LinkableContract
         self.manifest = manifest
+        self._uri = uri
 
     def set_default_w3(self, w3: Web3) -> "Package":
         """
@@ -77,7 +78,7 @@ class Package(object):
            >>> assert OwnedPackage.manifest == NewPackage.manifest
         """
         validate_w3_instance(w3)
-        return Package(self.manifest, w3)
+        return Package(self.manifest, w3, self.uri)
 
     def __repr__(self) -> str:
         """
@@ -128,6 +129,13 @@ class Package(object):
         """
         return self.manifest["manifest_version"]
 
+    @property
+    def uri(self) -> str:
+        """
+        The uri (local file_path / content-addressed URI) of a ``Package``'s manifest.
+        """
+        return self._uri
+
     @classmethod
     def from_file(cls, file_path: Path, w3: Web3) -> "Package":
         """
@@ -144,7 +152,7 @@ class Package(object):
                 "The Package.from_file method expects a pathlib.Path instance."
                 f"Got {type(file_path)} instead."
             )
-        return cls(manifest, w3)
+        return cls(manifest, w3, file_path.as_uri())
 
     @classmethod
     def from_uri(cls, uri: str, w3: Web3) -> "Package":
@@ -163,7 +171,7 @@ class Package(object):
         contents = to_text(resolve_uri_contents(uri))
         validate_raw_manifest_format(contents)
         manifest = json.loads(contents)
-        return cls(manifest, w3)
+        return cls(manifest, w3, uri)
 
     #
     # Contracts

@@ -129,6 +129,17 @@ def test_deployments_get_instance(safe_math_lib_package):
     )
 
 
+def test_deployments_get_instance_with_contract_alias(safe_math_lib_package_with_alias):
+    deps = safe_math_lib_package_with_alias.deployments
+    safe_math_instance = deps.get_instance("safe-math-lib-alias")
+    assert isinstance(safe_math_instance, Contract)
+    assert safe_math_instance.bytecode == to_bytes(
+        hexstr=safe_math_lib_package_with_alias.manifest["contract_types"][
+            "SafeMathLib"
+        ]["deployment_bytecode"]["bytecode"]
+    )
+
+
 def test_deployments_get_instance_with_link_dependency(escrow_package):
     deployments = escrow_package.deployments
     escrow_deployment = deployments.get_instance("Escrow")
