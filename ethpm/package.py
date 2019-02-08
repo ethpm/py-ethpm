@@ -65,7 +65,7 @@ class Package(object):
         self.manifest = manifest
         self._uri = uri
 
-    def set_default_w3(self, w3: Web3) -> "Package":
+    def switch_w3(self, w3: Web3) -> "Package":
         """
         Returns a new instance of `Package` containing the same manifest,
         but connected to a different web3 instance.
@@ -73,7 +73,7 @@ class Package(object):
         .. doctest::
 
            >>> new_w3 = Web3(Web3.EthereumTesterProvider())
-           >>> NewPackage = OwnedPackage.set_default_w3(new_w3)
+           >>> NewPackage = OwnedPackage.switch_w3(new_w3)
            >>> assert NewPackage.w3 == new_w3
            >>> assert OwnedPackage.manifest == NewPackage.manifest
         """

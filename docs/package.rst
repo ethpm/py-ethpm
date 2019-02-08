@@ -42,7 +42,7 @@ Methods
 Each ``Package`` exposes the following methods.
 
 .. autoclass:: ethpm.Package
-   :members: from_file, from_uri, set_default_w3, get_contract_factory, get_contract_instance
+   :members: from_file, from_uri, switch_w3, get_contract_factory, get_contract_instance
 
 
 Validation

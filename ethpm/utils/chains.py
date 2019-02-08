@@ -102,7 +102,19 @@ def create_block_uri(chain_id: str, block_identifier: str) -> URI:
     return create_BIP122_uri(chain_id, "block", remove_0x_prefix(block_identifier))
 
 
-def create_latest_block_uri(w3: Web3) -> URI:
+def create_latest_block_uri(w3: Web3, from_blocks_ago: int = 3) -> URI:
+    """
+    Creates a block uri for the given w3 instance.
+    Defaults to 3 blocks prior to the "latest" block to accommodate for block reorgs.
+    If using a testnet with less than 3 mined blocks, adjust :from_blocks_ago:.
+    """
     chain_id = to_hex(get_genesis_block_hash(w3))
-    recent_block = to_hex(w3.eth.getBlock("latest")["hash"])
+    latest_block_tx_receipt = w3.eth.getBlock("latest")
+    target_block_number = latest_block_tx_receipt.number - from_blocks_ago
+    if target_block_number < 0:
+        raise Exception(
+            f"Only {latest_block_tx_receipt.number} blocks avaible on provided w3, "
+            f"cannot create latest block uri for {from_blocks_ago} blocks ago."
+        )
+    recent_block = to_hex(w3.eth.getBlock(target_block_number).hash)
     return create_block_uri(chain_id, recent_block)

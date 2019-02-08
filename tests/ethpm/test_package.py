@@ -25,11 +25,11 @@ def test_package_object_instantiates_with_a_web3_object(all_manifests, w3):
     assert package.w3 is w3
 
 
-def test_set_default_web3(deployed_safe_math, w3):
+def test_switch_web3(deployed_safe_math, w3):
     new_w3 = Web3(Web3.EthereumTesterProvider())
     original_package, _ = deployed_safe_math
     assert original_package.w3 is w3
-    new_package = original_package.set_default_w3(new_w3)
+    new_package = original_package.switch_w3(new_w3)
     assert new_package.w3 is new_w3
     assert original_package is not new_package
     assert original_package.manifest == new_package.manifest

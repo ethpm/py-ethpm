@@ -207,9 +207,9 @@ def manifest_with_no_matching_deployments(w3, tmpdir, safe_math_manifest):
 @pytest.fixture
 def manifest_with_multiple_matches(w3, tmpdir, safe_math_manifest):
     w3.testing.mine(5)
-    block_uri = create_latest_block_uri(w3)
+    block_uri = create_latest_block_uri(w3, from_blocks_ago=0)
     w3.testing.mine(1)
-    second_block_uri = create_latest_block_uri(w3)
+    second_block_uri = create_latest_block_uri(w3, from_blocks_ago=0)
     manifest = copy.deepcopy(safe_math_manifest)
     manifest["deployments"][block_uri] = {
         "SafeMathLib": {
