@@ -1,13 +1,18 @@
 import copy
 import json
 
+from eth_utils.toolz import assoc_in
 import pytest
 from pytest_ethereum import linker as l  # noqa: E741
 from web3 import Web3
 
 from ethpm import ASSETS_DIR, V2_PACKAGES_DIR, Package
 from ethpm.tools import get_manifest as get_manifest_tool
-from ethpm.utils.chains import create_block_uri, get_genesis_block_hash
+from ethpm.utils.chains import (
+    create_block_uri,
+    create_latest_block_uri,
+    get_genesis_block_hash,
+)
 
 pytest_plugins = ["pytest_ethereum.plugins"]
 
@@ -167,6 +172,21 @@ def safe_math_lib_package(deployer, w3):
 
 
 @pytest.fixture
+def safe_math_lib_package_with_alias(deployer, w3):
+    safe_math_lib_manifest = ASSETS_DIR / "safe-math-lib" / "1.0.1.json"
+    safe_math_deployer = deployer(safe_math_lib_manifest)
+    pkg = safe_math_deployer.deploy("SafeMathLib")
+    blockchain_uri = list(pkg.manifest["deployments"].keys())[0]
+    deployment_data = pkg.manifest["deployments"][blockchain_uri]["SafeMathLib"]
+    aliased_manifest = assoc_in(
+        pkg.manifest,
+        ["deployments", blockchain_uri],
+        {"safe-math-lib-alias": deployment_data},
+    )
+    return Package(aliased_manifest, w3)
+
+
+@pytest.fixture
 def manifest_with_no_matching_deployments(w3, tmpdir, safe_math_manifest):
     w3.testing.mine(5)
     incorrect_genesis_hash = b"\x00" * 31 + b"\x01"
@@ -187,14 +207,9 @@ def manifest_with_no_matching_deployments(w3, tmpdir, safe_math_manifest):
 @pytest.fixture
 def manifest_with_multiple_matches(w3, tmpdir, safe_math_manifest):
     w3.testing.mine(5)
-    genesis_hash = get_genesis_block_hash(w3)
-    block = w3.eth.getBlock("latest")
-    block_uri = create_block_uri(w3.toHex(genesis_hash), w3.toHex(block.hash))
+    block_uri = create_latest_block_uri(w3, from_blocks_ago=0)
     w3.testing.mine(1)
-    second_block = w3.eth.getBlock("latest")
-    second_block_uri = create_block_uri(
-        w3.toHex(genesis_hash), w3.toHex(second_block.hash)
-    )
+    second_block_uri = create_latest_block_uri(w3, from_blocks_ago=0)
     manifest = copy.deepcopy(safe_math_manifest)
     manifest["deployments"][block_uri] = {
         "SafeMathLib": {
