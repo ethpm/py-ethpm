@@ -1,6 +1,24 @@
 Release Notes
 =============
 
+v0.1.4-alpha.11
+---------------
+
+Released February 12th, 2019
+
+- Breaking Changes
+
+  - Remove ``py-solc`` dependency and solidity compilation
+    - `#143 <https://github.com/ethpm/py-ethpm/pull/143>`_
+  - Update vyper reference registry assets
+    - `#145 <https://github.com/ethpm/py-ethpm/pull/145>`_
+
+- Features
+
+  - Support contract aliasing for deployments
+    - `#144 <https://github.com/ethpm/py-ethpm/pull/144>`_
+
+
 v0.1.4-alpha.10
 ---------------
 
