@@ -1,4 +1,5 @@
-# Vyper Reference Implementation of ERC1319
+# Vyper Reference Implementation of ERC1319 - with delete
+# Once all the releaseIds of a package are deleted - package namespace is permanently unavailable
 
 # Structs
 struct Package:
@@ -15,7 +16,6 @@ struct Release:
 	version: bytes32
 	uri: bytes[1000]
 
-	
 # Events
 VersionRelease: event({_package: indexed(bytes32), _version: bytes32, _uri: bytes[1000]})
 
@@ -27,13 +27,14 @@ packages: public(map(bytes32, Package))
 #  Release Data: (release_id => value)
 releases: public(map(bytes32, Release))
 
-
 # package_id#release_count => release_id
 packageReleaseIndex: map(bytes32, bytes32)
 # Total number of packages in registry
-packageCount: public(int128)
+totalPackageCount: public(int128)
+activePackageCount: public(int128)
 # Total number of releases in registry
-releaseCount: public(int128)
+totalReleaseCount: public(int128)
+activeReleaseCount: public(int128)
 # Total package number (int128) => package_id (bytes32)
 packageIds: map(int128, bytes32)
 # Total release number (int128) => release_id (bytes32)
@@ -87,7 +88,7 @@ def getPackageData(packageName: bytes32) -> (bytes32, bytes32, int128):
 
 @public
 def numPackageIds() -> int128:
-    return self.packageCount
+    return self.activePackageCount
 
 
 @public
@@ -104,12 +105,15 @@ def getAllPackageIds(
     offset_int: int128 = convert(offset, int128)
     length_int: int128 = convert(length, int128)
     assert length_int == 5
-    assert offset_int <= self.packageCount
+    assert offset_int <= self.activePackageCount
     ids: bytes32[5]
     for idx in range(offset_int, offset_int + 4):
-        if idx <= self.packageCount:
+        if idx <= self.activePackageCount:
             packageId: bytes32 = self.packageIds[idx]
-            ids[(idx - offset_int)] = packageId
+            if self.packages[packageId].exists:
+                ids[(idx - offset_int)] = packageId
+            else:
+                ids[(idx - offset_int)] = self.EMPTY_BYTES
         else:
             ids[(idx - offset_int)] = self.EMPTY_BYTES
     return (ids[0], ids[1], ids[2], ids[3], ids[4])
@@ -140,7 +144,10 @@ def getAllReleaseIds(
                 packageId, (idx + 1)
             )
             releaseId: bytes32 = self.packageReleaseIndex[packageReleaseId]
-            ids[(idx - offset_int)] = releaseId
+            if self.releases[releaseId].exists:
+                ids[(idx - offset_int)] = releaseId
+            else:
+                ids[(idx - offset_int)] = self.EMPTY_BYTES
         else:
             ids[(idx - offset_int)] = self.EMPTY_BYTES
     return (ids[0], ids[1], ids[2], ids[3], ids[4])
@@ -165,6 +172,7 @@ def cutRelease(
     uri: bytes[1000],
     name: bytes32,
 ):
+    assert self.releases[releaseId].createdAt == 0
     self.releases[releaseId] = Release({
         exists: True,
         createdAt: block.timestamp,
@@ -173,8 +181,9 @@ def cutRelease(
         uri: uri,
     })
     self.packages[packageId].releaseCount += 1
-    self.releaseIds[self.releaseCount] = releaseId
-    self.releaseCount += 1
+    self.releaseIds[self.totalReleaseCount] = releaseId
+    self.totalReleaseCount += 1
+    self.activeReleaseCount += 1
     packageReleaseId: bytes32 = self.generatePackageReleaseId(
         packageId, self.packages[packageId].releaseCount
     )
@@ -201,9 +210,9 @@ def release(packageName: bytes32, version: bytes32, manifestURI: bytes[1000]):
             name: packageName,
             releaseCount: self.packages[packageId].releaseCount,
         })
-        assert self.releases[releaseId].exists == False
         self.cutRelease(releaseId, packageId, version, manifestURI, packageName)
     else:
+        assert self.packages[packageId].createdAt == 0
         self.packages[packageId] = Package({
             exists: True,
             createdAt: block.timestamp,
@@ -211,6 +220,25 @@ def release(packageName: bytes32, version: bytes32, manifestURI: bytes[1000]):
             name: packageName,
             releaseCount: 0,
         })
-        self.packageIds[self.packageCount] = packageId
-        self.packageCount += 1
+        self.packageIds[self.totalPackageCount] = packageId
+        self.totalPackageCount += 1
+        self.activePackageCount += 1
         self.cutRelease(releaseId, packageId, version, manifestURI, packageName)
+	
+
+@public
+def deleteReleaseId(releaseId: bytes32):
+    assert self.owner == msg.sender
+    assert self.releases[releaseId].exists
+    packageId: bytes32 = self.releases[releaseId].packageId
+    assert self.packages[packageId].exists
+    assert self.packages[packageId].releaseCount > 0
+    if self.packages[packageId].releaseCount == 1:
+        self.packages[packageId].releaseCount = 0
+        self.packages[packageId].exists = False
+        self.activePackageCount -= 1
+        self.activeReleaseCount -= 1
+    else:
+        self.packages[packageId].releaseCount -= 1
+        self.activeReleaseCount -= 1
+    self.releases[releaseId].exists = False
