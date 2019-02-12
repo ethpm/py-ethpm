@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+v0.1.4-alpha.12
+---------------
+
+Released February 12th, 2019
+
+- Breaking Changes
+
+  - Change ``Package.switch_w3`` to ``Package.update_w3``
+    - `#146 <https://github.com/ethpm/py-ethpm/pull/146>`_
+
 v0.1.4-alpha.11
 ---------------
 
