@@ -2,7 +2,8 @@ import os
 from urllib import parse
 
 from eth_utils import to_bytes
-from web3.auto.infura import w3
+from web3 import Web3
+from web3.providers.auto import load_provider_from_uri
 
 from ethpm.backends.base import BaseURIBackend
 from ethpm.constants import INFURA_API_KEY
@@ -22,7 +23,8 @@ class RegistryURIBackend(BaseURIBackend):
 
     def __init__(self) -> None:
         os.environ.setdefault("INFUFA_API_KEY", INFURA_API_KEY)
-        self.w3 = w3
+        infura_url = f"wss://mainnet.infura.io/ws/v3/{INFURA_API_KEY}"
+        self.w3 = Web3(load_provider_from_uri(infura_url))
 
     def can_translate_uri(self, uri: str) -> bool:
         return is_valid_registry_uri(uri)
