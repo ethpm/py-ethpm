@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+v0.1.4-alpha.13
+---------------
+
+Released March 22nd, 2019
+
+- Bugfix
+
+  - Remove auto infura endpoint
+    - `#149 <https://github.com/ethpm/py-ethpm/pull/149>`_
+
 v0.1.4-alpha.12
 ---------------
 
