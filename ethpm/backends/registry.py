@@ -1,13 +1,12 @@
 import os
-from urllib import parse
 
-from eth_utils import to_bytes
 from web3 import Web3
 from web3.providers.auto import load_provider_from_uri
 
 from ethpm.backends.base import BaseURIBackend
 from ethpm.constants import INFURA_API_KEY
 from ethpm.utils.registry import fetch_standard_registry_abi
+from ethpm.utils.uri import parse_registry_uri
 from ethpm.validation import is_valid_registry_uri
 
 # TODO: Update registry ABI once ERC is finalized.
@@ -36,9 +35,8 @@ class RegistryURIBackend(BaseURIBackend):
         """
         Return content-addressed URI stored at registry URI.
         """
-        parsed_uri = parse.urlparse(uri)
-        authority = parsed_uri.netloc
-        pkg_name = to_bytes(text=parsed_uri.path.strip("/"))
-        registry = self.w3.eth.contract(address=authority, abi=REGISTRY_ABI)
-        manifest_uri = registry.functions.lookupPackage(pkg_name).call()
+        address, pkg_name, pkg_version = parse_registry_uri(uri)
+        self.w3.enable_unstable_package_management_api()
+        self.w3.pm.set_registry(address)
+        _, _, manifest_uri = self.w3.pm.get_release_data(pkg_name, pkg_version)
         return manifest_uri

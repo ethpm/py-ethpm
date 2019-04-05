@@ -20,3 +20,5 @@ ETHPM_SPEC_DIR = ETHPM_DIR.parent / "ethpm-spec"
 V2_PACKAGES_DIR = ETHPM_SPEC_DIR / "examples"
 
 from .package import Package  # noqa: F401
+
+from .utils.uri import RegistryURI  # noqa: F401
