@@ -1,3 +1,4 @@
+from collections import namedtuple
 import hashlib
 import json
 from typing import Tuple
@@ -9,6 +10,9 @@ import requests
 from ethpm.constants import GITHUB_API_AUTHORITY
 from ethpm.exceptions import CannotHandleURI, ValidationError
 from ethpm.typing import URI
+from ethpm.validation import validate_registry_uri
+
+RegistryURI = namedtuple("RegistryURI", ["auth", "name", "version"])
 
 
 def create_content_addressed_github_uri(uri: URI) -> URI:
@@ -90,3 +94,15 @@ def validate_blob_uri_contents(contents: bytes, blob_uri: str) -> None:
         raise ValidationError(
             f"Hash of contents fetched from {blob_uri} do not match its hash: {blob_hash}."
         )
+
+
+def parse_registry_uri(uri: str) -> RegistryURI:
+    """
+    Validate and return (authority, pkg name, version) from a valid registry URI
+    """
+    validate_registry_uri(uri)
+    parsed_uri = parse.urlparse(uri)
+    authority = parsed_uri.netloc
+    pkg_name = parsed_uri.path.strip("/")
+    pkg_version = parsed_uri.query.lstrip("version=").strip("/")
+    return RegistryURI(authority, pkg_name, pkg_version)
