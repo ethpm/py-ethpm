@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+v0.1.4-alpha.14
+---------------
+
+Released April 10th, 2019
+
+- Bugfix
+
+  - Update registry backend to work with ``web3.pm``
+    - `#151 <https://github.com/ethpm/py-ethpm/pull/151>`_
+
 v0.1.4-alpha.13
 ---------------
 
