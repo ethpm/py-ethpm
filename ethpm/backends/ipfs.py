@@ -181,4 +181,9 @@ def get_ipfs_backend(import_path: str = None) -> BaseIPFSBackend:
 def get_ipfs_backend_class(import_path: str = None) -> Type[BaseIPFSBackend]:
     if import_path is None:
         import_path = os.environ.get("ETHPM_IPFS_BACKEND_CLASS", DEFAULT_IPFS_BACKEND)
+        if not import_path:
+            raise CannotHandleURI(
+                "Please provide an import class or set "
+                "`ETHPM_IPFS_BACKEND_CLASS` environment variable."
+            )
     return import_string(import_path)

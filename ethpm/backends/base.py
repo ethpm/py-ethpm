@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Union
 
 from ethpm.typing import URI
 
@@ -28,7 +29,7 @@ class BaseURIBackend(ABC):
         pass
 
     @abstractmethod
-    def fetch_uri_contents(self, uri: URI) -> bytes:
+    def fetch_uri_contents(self, uri: URI) -> Union[bytes, URI]:
         """
         Fetch the contents stored at a URI.
         """

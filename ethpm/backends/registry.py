@@ -5,6 +5,7 @@ from web3.providers.auto import load_provider_from_uri
 
 from ethpm.backends.base import BaseURIBackend
 from ethpm.constants import INFURA_API_KEY
+from ethpm.typing import URI
 from ethpm.utils.registry import fetch_standard_registry_abi
 from ethpm.utils.uri import parse_registry_uri
 from ethpm.validation import is_valid_registry_uri
@@ -31,7 +32,7 @@ class RegistryURIBackend(BaseURIBackend):
     def can_resolve_uri(self, uri: str) -> bool:
         return False
 
-    def fetch_uri_contents(self, uri: str) -> bytes:
+    def fetch_uri_contents(self, uri: str) -> URI:
         """
         Return content-addressed URI stored at registry URI.
         """

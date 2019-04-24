@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Any, Dict, Generator, Tuple, Union
+from typing import Any, Dict, Generator, Optional, Tuple, Union
 
 from eth_utils import to_canonical_address, to_text, to_tuple
 from web3 import Web3
@@ -45,7 +45,9 @@ from ethpm.validation import (
 
 
 class Package(object):
-    def __init__(self, manifest: Dict[str, Any], w3: Web3, uri: str = None) -> None:
+    def __init__(
+        self, manifest: Dict[str, Any], w3: Web3, uri: Optional[str] = None
+    ) -> None:
         """
         A package should be created using one of the available
         classmethods and a valid w3 instance.
@@ -130,7 +132,7 @@ class Package(object):
         return self.manifest["manifest_version"]
 
     @property
-    def uri(self) -> str:
+    def uri(self) -> Optional[str]:
         """
         The uri (local file_path / content-addressed URI) of a ``Package``'s manifest.
         """

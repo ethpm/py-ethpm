@@ -39,8 +39,8 @@ def validate_linked_references(
     for idx, offset in enumerate(offsets):
         value = values[idx]
         # https://github.com/python/mypy/issues/4975
-        offset_value = int(offset)  # type: ignore
-        dep_length = len(value)  # type: ignore
+        offset_value = int(offset)
+        dep_length = len(value)
         end_of_bytes = offset_value + dep_length
         # Ignore b/c whitespace around ':' conflict b/w black & flake8
         actual_bytes = bytecode[offset_value:end_of_bytes]  # noqa: E203
