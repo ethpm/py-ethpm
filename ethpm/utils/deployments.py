@@ -29,7 +29,7 @@ def get_linked_deployments(deployments: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def validate_linked_references(
-    link_deps: Tuple[Tuple[int, str]], bytecode: bytes
+    link_deps: Tuple[Tuple[int, bytes], ...], bytecode: bytes
 ) -> None:
     """
     Validates that normalized linked_references (offset, expected_bytes)

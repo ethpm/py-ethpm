@@ -10,6 +10,7 @@ import requests
 from ethpm.constants import GITHUB_API_AUTHORITY
 from ethpm.exceptions import CannotHandleURI, ValidationError
 from ethpm.typing import URI
+from ethpm.utils.ipfs import is_ipfs_uri
 from ethpm.validation import validate_registry_uri
 
 RegistryURI = namedtuple("RegistryURI", ["auth", "name", "version"])
@@ -106,3 +107,13 @@ def parse_registry_uri(uri: str) -> RegistryURI:
     pkg_name = parsed_uri.path.strip("/")
     pkg_version = parsed_uri.query.lstrip("version=").strip("/")
     return RegistryURI(authority, pkg_name, pkg_version)
+
+
+def is_supported_content_addressed_uri(uri: URI) -> bool:
+    """
+    Returns a bool indicating whether provided uri is currently supported.
+    Currently Py-EthPM only supports IPFS and Github blob content-addressed uris.
+    """
+    if not is_ipfs_uri(uri) and not is_valid_content_addressed_github_uri(uri):
+        return False
+    return True

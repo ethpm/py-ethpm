@@ -15,7 +15,7 @@ from ethpm.exceptions import (
     InsufficientAssetsError,
     PyEthPMError,
 )
-from ethpm.typing import Address, ContractName
+from ethpm.typing import URI, Address, ContractName
 from ethpm.utils.backend import resolve_uri_contents
 from ethpm.utils.cache import cached_property
 from ethpm.utils.contract import (
@@ -155,7 +155,7 @@ class Package(object):
         return cls(manifest, w3, file_path.as_uri())
 
     @classmethod
-    def from_uri(cls, uri: str, w3: Web3) -> "Package":
+    def from_uri(cls, uri: URI, w3: Web3) -> "Package":
         """
         Returns a Package object instantiated by a manifest located at a content-addressed URI.
         A valid ``Web3`` instance is also required.

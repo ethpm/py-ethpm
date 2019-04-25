@@ -14,6 +14,7 @@ from ethpm.backends.ipfs import (
 )
 from ethpm.backends.registry import RegistryURIBackend
 from ethpm.exceptions import CannotHandleURI
+from ethpm.typing import URI
 
 URI_BACKENDS = [
     InfuraIPFSBackend,
@@ -26,7 +27,7 @@ URI_BACKENDS = [
 logger = logging.getLogger("ethpm.utils.backend")
 
 
-def resolve_uri_contents(uri: str, fingerprint: bool = None) -> bytes:
+def resolve_uri_contents(uri: URI, fingerprint: bool = None) -> bytes:
     resolvable_backends = get_resolvable_backends_for_uri(uri)
     if resolvable_backends:
         for backend in resolvable_backends:
@@ -42,9 +43,8 @@ def resolve_uri_contents(uri: str, fingerprint: bool = None) -> bytes:
             raise CannotHandleURI(
                 "Registry URIs must point to a resolvable content-addressed URI."
             )
-        for backend in translatable_backends:
-            package_id = backend().fetch_uri_contents(uri)
-            return resolve_uri_contents(package_id, True)
+        package_id = RegistryURIBackend().fetch_uri_contents(uri)
+        return resolve_uri_contents(package_id, True)  # type: ignore
 
     raise CannotHandleURI(
         f"URI: {uri} cannot be resolved by any of the available backends."
@@ -53,7 +53,7 @@ def resolve_uri_contents(uri: str, fingerprint: bool = None) -> bytes:
 
 @to_tuple
 def get_translatable_backends_for_uri(
-    uri: str
+    uri: URI
 ) -> Generator[Type[BaseURIBackend], None, None]:
     # type ignored because of conflict with instantiating BaseURIBackend
     for backend in URI_BACKENDS:
@@ -66,7 +66,7 @@ def get_translatable_backends_for_uri(
 
 @to_tuple
 def get_resolvable_backends_for_uri(
-    uri: str
+    uri: URI
 ) -> Generator[Type[BaseURIBackend], None, None]:
     # special case the default IPFS backend to the first slot.
     default_ipfs = get_ipfs_backend_class()

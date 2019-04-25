@@ -1,1 +1,1 @@
-from .types import Address, ContractName, HexStr, Manifest, URI  # noqa: F401
+from .types import URI, Address, ContractName, HexStr, Manifest  # noqa: F401
