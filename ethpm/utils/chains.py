@@ -87,14 +87,16 @@ def create_BIP122_uri(
     elif not is_block_or_transaction_hash(chain_id):
         raise ValueError("Invalid chain_id.  Must be a hex encoded 32 byte value")
 
-    return parse.urlunsplit(
-        [
-            "blockchain",
-            remove_0x_prefix(chain_id),
-            f"{resource_type}/{remove_0x_prefix(resource_identifier)}",
-            "",
-            "",
-        ]
+    return URI(
+        parse.urlunsplit(
+            [
+                "blockchain",
+                remove_0x_prefix(chain_id),
+                f"{resource_type}/{remove_0x_prefix(resource_identifier)}",
+                "",
+                "",
+            ]
+        )
     )
 
 
