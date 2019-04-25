@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v0.1.4-alpha.15
+---------------
+
+Released April 25th, 2019
+
+- Write is_supported_content_addressed_uri util.
+    - `#152 <https://github.com/ethpm/py-ethpm/pull/152>`_
+
 v0.1.4-alpha.14
 ---------------
 
