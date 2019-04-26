@@ -32,7 +32,8 @@ def resolve_uri_contents(uri: URI, fingerprint: bool = None) -> bytes:
     if resolvable_backends:
         for backend in resolvable_backends:
             try:
-                contents = backend().fetch_uri_contents(uri)
+                # ignore type b/c resolvable backends only return uri contents
+                contents: bytes = backend().fetch_uri_contents(uri)  # type: ignore
             except CannotHandleURI:
                 continue
             return contents
@@ -44,7 +45,7 @@ def resolve_uri_contents(uri: URI, fingerprint: bool = None) -> bytes:
                 "Registry URIs must point to a resolvable content-addressed URI."
             )
         package_id = RegistryURIBackend().fetch_uri_contents(uri)
-        return resolve_uri_contents(package_id, True)  # type: ignore
+        return resolve_uri_contents(package_id, True)
 
     raise CannotHandleURI(
         f"URI: {uri} cannot be resolved by any of the available backends."

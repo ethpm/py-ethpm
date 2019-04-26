@@ -112,7 +112,7 @@ def validate_manifest_exists(manifest_id: str) -> None:
         )
 
 
-def format_manifest(manifest: Manifest, *, prettify: bool) -> str:
+def format_manifest(manifest: Manifest, *, prettify: bool = None) -> str:
     if prettify:
         return json.dumps(manifest, sort_keys=True, indent=4)
     return json.dumps(manifest, sort_keys=True, separators=(",", ":"))

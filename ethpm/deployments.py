@@ -32,7 +32,7 @@ class Deployments:
 
     def get(self, key: str) -> Dict[str, str]:
         self._validate_name_and_references(key)
-        return self.deployment_data.get(key)
+        return self.deployment_data[key]
 
     def items(self) -> ItemsView[str, Dict[str, str]]:
         item_dict = {name: self.get(name) for name in self.deployment_data}

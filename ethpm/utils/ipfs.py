@@ -3,6 +3,8 @@ from pathlib import Path
 from typing import Dict
 from urllib import parse
 
+from google.protobuf.descriptor import Descriptor
+
 from ethpm.pb.ipfs_file_pb2 import Data, PBNode
 from ethpm.utils.base58 import b58encode
 
@@ -69,11 +71,14 @@ def multihash(value: bytes) -> bytes:
     return multihash_bytes
 
 
-def serialize_bytes(file_bytes: bytes) -> PBNode:
+def serialize_bytes(file_bytes: bytes) -> Descriptor:
     file_size = len(file_bytes)
 
     data_protobuf = Data(
-        Type=Data.DataType.Value("File"), Data=file_bytes, filesize=file_size
+        # type ignored b/c DataType is manually attached in ipfs_file_pb2.py
+        Type=Data.DataType.Value("File"),  # type: ignore
+        Data=file_bytes,
+        filesize=file_size,
     )
     data_protobuf_bytes = data_protobuf.SerializeToString()
 
@@ -83,7 +88,8 @@ def serialize_bytes(file_bytes: bytes) -> PBNode:
 
 
 def generate_file_hash(content_bytes: bytes) -> str:
-    file_protobuf = serialize_bytes(content_bytes)
-    file_protobuf_bytes = file_protobuf.SerializeToString()
+    file_protobuf: Descriptor = serialize_bytes(content_bytes)
+    # type ignored b/c SerializeToString is manually attached in ipfs_file_pb2.py
+    file_protobuf_bytes = file_protobuf.SerializeToString()  # type: ignore
     file_multihash = multihash(file_protobuf_bytes)
     return b58encode(file_multihash)

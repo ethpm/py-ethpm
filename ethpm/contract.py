@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Tuple, Type  # noqa: F401
+from typing import Any, Dict, List, Optional, Tuple, Type  # noqa: F401
 
 from eth_utils import combomethod, is_canonical_address, to_bytes, to_checksum_address
 from eth_utils.toolz import assoc, curry, pipe
@@ -15,11 +15,11 @@ class LinkableContract(Contract):
     contract factories with link references in their package's manifest.
     """
 
-    unlinked_references: Tuple[Dict[str, Any]] = None
-    linked_references: Tuple[Dict[str, Any]] = None
+    unlinked_references: Optional[Tuple[Dict[str, Any]]] = None
+    linked_references: Optional[Tuple[Dict[str, Any]]] = None
     needs_bytecode_linking = None
 
-    def __init__(self, address: bytes = None, **kwargs: Any) -> None:
+    def __init__(self, address: bytes, **kwargs: Any) -> None:
         if self.needs_bytecode_linking:
             raise BytecodeLinkingError(
                 "Contract cannot be instantiated until its bytecode is linked."
@@ -90,13 +90,9 @@ class LinkableContract(Contract):
                 "Unable to validate attr dict, this contract has no linked/unlinked references."
             )
 
-        all_link_refs: Tuple[Any, ...]
-        if self.unlinked_references and self.linked_references:
-            all_link_refs = self.unlinked_references + self.linked_references
-        elif not self.unlinked_references:
-            all_link_refs = self.linked_references
-        else:
-            all_link_refs = self.unlinked_references
+        unlinked_refs = self.unlinked_references or ({},)
+        linked_refs = self.linked_references or ({},)
+        all_link_refs = unlinked_refs + linked_refs
 
         all_link_names = [ref["name"] for ref in all_link_refs]
         if set(attr_dict_names) != set(all_link_names):
