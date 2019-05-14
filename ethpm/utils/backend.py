@@ -2,7 +2,7 @@ import logging
 from typing import Generator, Type
 
 from eth_utils import to_tuple
-from ipfsapi.exceptions import ConnectionError
+from ipfshttpclient.exceptions import ConnectionError
 
 from ethpm.backends.base import BaseURIBackend
 from ethpm.backends.http import GithubOverHTTPSBackend

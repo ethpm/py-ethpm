@@ -4,13 +4,13 @@ from pathlib import Path
 from typing import Dict, List, Type
 
 from eth_utils import import_string, to_bytes
-import ipfsapi
+import ipfshttpclient
 
 from ethpm import ASSETS_DIR
 from ethpm.backends.base import BaseURIBackend
 from ethpm.constants import (
     DEFAULT_IPFS_BACKEND,
-    INFURA_GATEWAY_PREFIX,
+    INFURA_GATEWAY_MULTIADDR,
     IPFS_GATEWAY_PREFIX,
 )
 from ethpm.exceptions import CannotHandleURI, ValidationError
@@ -57,7 +57,7 @@ class IPFSOverHTTPBackend(BaseIPFSBackend):
     """
 
     def __init__(self) -> None:
-        self.client = ipfsapi.connect(self.base_uri, 5001)
+        self.client = ipfshttpclient.connect(self.base_uri)
 
     def fetch_uri_contents(self, uri: str) -> bytes:
         ipfs_hash = extract_ipfs_path_from_uri(uri)
@@ -116,7 +116,7 @@ class InfuraIPFSBackend(IPFSOverHTTPBackend):
 
     @property
     def base_uri(self) -> str:
-        return INFURA_GATEWAY_PREFIX
+        return INFURA_GATEWAY_MULTIADDR
 
 
 class LocalIPFSBackend(IPFSOverHTTPBackend):
@@ -127,7 +127,7 @@ class LocalIPFSBackend(IPFSOverHTTPBackend):
 
     @property
     def base_uri(self) -> str:
-        return "localhost"
+        return "/ip4/127.0.0.1/tcp/5001"
 
 
 MANIFEST_URIS = {
