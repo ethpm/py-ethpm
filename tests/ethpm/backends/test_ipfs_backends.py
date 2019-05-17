@@ -12,7 +12,7 @@ from ethpm.backends.ipfs import (
     get_ipfs_backend,
     get_ipfs_backend_class,
 )
-from ethpm.constants import INFURA_GATEWAY_PREFIX
+from ethpm.constants import INFURA_GATEWAY_MULTIADDR
 
 OWNED_MANIFEST_PATH = V2_PACKAGES_DIR / "owned" / "1.0.0.json"
 
@@ -35,7 +35,7 @@ def fake_client():
 
 
 @pytest.mark.parametrize(
-    "base_uri,backend", ((INFURA_GATEWAY_PREFIX, InfuraIPFSBackend()),)
+    "base_uri,backend", ((INFURA_GATEWAY_MULTIADDR, InfuraIPFSBackend()),)
 )
 def test_ipfs_and_infura_gateway_backends_fetch_uri_contents(base_uri, backend):
     uri = "ipfs://Qme4otpS88NV8yQi8TfTP89EsQC5bko3F5N1yhRoi6cwGV"
@@ -47,8 +47,9 @@ def test_ipfs_and_infura_gateway_backends_fetch_uri_contents(base_uri, backend):
 def test_local_ipfs_backend():
     uri = "ipfs://Qme4otpS88NV8yQi8TfTP89EsQC5bko3F5N1yhRoi6cwGV"
     backend = LocalIPFSBackend()
+    backend.pin_assets(OWNED_MANIFEST_PATH.parent / "contracts" / "Owned.sol")
     contents = backend.fetch_uri_contents(uri)
-    assert contents.startswith(b"pragma")
+    assert contents.startswith(b"pragma solidity")
 
 
 @pytest.mark.parametrize(

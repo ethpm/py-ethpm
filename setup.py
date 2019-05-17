@@ -57,7 +57,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'eth-utils>=1.4.1,<2',
-        'ipfsapi>=0.4.3,<1',
+        'ipfshttpclient>=0.4.11,<1',
         'jsonschema>=2.6.0,<3',
         'protobuf>=3.0.0,<4',
         'rlp>=1.0.1,<2',
