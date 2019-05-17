@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+v0.1.4-alpha.16
+---------------
+
+Released May 17th, 2019
+
+- Update to use new IPFS library
+  - `#158 <https://github.com/ethpm/py-ethpm/pull/158>`_
+
+- Update mypy dependency
+  - `#153 <https://github.com/ethpm/py-ethpm/pull/153>`_
+
 v0.1.4-alpha.15
 ---------------
 
