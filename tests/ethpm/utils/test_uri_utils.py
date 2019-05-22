@@ -50,7 +50,7 @@ def test_is_valid_github_uri(uri, expected):
             "https://api.github.com/repos/ethpm/py-ethpm/git/blobs/a7232a93f1e9e75d606f6c1da18aa16037e03480",
             True,
         ),
-    )
+    ),
 )
 def test_is_valid_content_addressed_github_uri(uri, expected):
     actual = is_valid_content_addressed_github_uri(uri)
