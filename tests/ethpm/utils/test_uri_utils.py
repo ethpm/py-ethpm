@@ -39,6 +39,24 @@ def test_is_valid_github_uri(uri, expected):
     assert actual is expected
 
 
+@pytest.mark.parametrize(
+    "uri,expected",
+    (
+        (
+            "https://api.github.com/repos/ethpm/ethpm-spec/contents/examples/owned/contracts/Owned.sol",
+            False,
+        ),
+        (
+            "https://api.github.com/repos/ethpm/py-ethpm/git/blobs/a7232a93f1e9e75d606f6c1da18aa16037e03480",
+            True,
+        ),
+    ),
+)
+def test_is_valid_content_addressed_github_uri(uri, expected):
+    actual = is_valid_content_addressed_github_uri(uri)
+    assert actual is expected
+
+
 def test_create_github_uri():
     api_uri = "https://api.github.com/repos/ethpm/py-ethpm/contents/ethpm/assets/owned/1.0.1.json"
     expected_blob_uri = "https://api.github.com/repos/ethpm/py-ethpm/git/blobs/a7232a93f1e9e75d606f6c1da18aa16037e03480"
