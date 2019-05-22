@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v0.1.4-alpha.17
+---------------
+
+Released May 22nd, 2019
+
+- Update ipfshttplib dependency & add tests
+  - `#157 <https://github.com/ethpm/py-ethpm/pull/157>`_
+
 v0.1.4-alpha.16
 ---------------
 
