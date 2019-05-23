@@ -17,14 +17,14 @@ from ethpm.utils.chains import (
 pytest_plugins = ["pytest_ethereum.plugins"]
 
 PACKAGE_NAMES = [
-    "escrow",
-    "owned",
-    "piper-coin",
-    "safe-math-lib",
-    "standard-token",
-    "transferable",
-    "wallet-with-send",
-    "wallet",
+    ("escrow", "1.0.3.json"),
+    ("owned", "1.0.0.json"),
+    ("piper-coin", "1.0.0.json"),
+    ("safe-math-lib", "1.0.0.json"),
+    ("standard-token", "1.0.0.json"),
+    ("transferable", "1.0.0.json"),
+    ("wallet-with-send", "1.0.0.json"),
+    ("wallet", "1.0.0.json"),
 ]
 
 
@@ -39,21 +39,23 @@ def package_names():
 
 @pytest.fixture(params=PACKAGE_NAMES)
 def all_strict_manifests(request):
-    return (V2_PACKAGES_DIR / request.param / "1.0.0.json").read_text().rstrip("\n")
+    return (V2_PACKAGES_DIR / request.param[0] / "1.0.0.json").read_text().rstrip("\n")
 
 
 @pytest.fixture(params=PACKAGE_NAMES)
 def all_pretty_manifests(request):
     return (
-        (V2_PACKAGES_DIR / request.param / "1.0.0-pretty.json").read_text().rstrip("\n")
+        (V2_PACKAGES_DIR / request.param[0] / "1.0.0-pretty.json")
+        .read_text()
+        .rstrip("\n")
     )
 
 
-def fetch_manifest(name):
-    return get_manifest_tool(name, "1.0.0.json")
+def fetch_manifest(name, version):
+    return get_manifest_tool(name, version)
 
 
-MANIFESTS = {name: fetch_manifest(name) for name in PACKAGE_NAMES}
+MANIFESTS = {name: fetch_manifest(name, version) for name, version in PACKAGE_NAMES}
 
 
 @pytest.fixture
@@ -80,7 +82,7 @@ def get_manifest():
 
 @pytest.fixture(params=PACKAGE_NAMES)
 def all_manifests(request, get_manifest):
-    return get_manifest(request.param)
+    return get_manifest(request.param[0])
 
 
 # safe-math-lib currently used as default manifest for testing
