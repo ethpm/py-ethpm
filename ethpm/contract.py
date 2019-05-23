@@ -94,7 +94,7 @@ class LinkableContract(Contract):
         linked_refs = self.linked_references or ({},)
         all_link_refs = unlinked_refs + linked_refs
 
-        all_link_names = [ref["name"] for ref in all_link_refs]
+        all_link_names = [ref["name"] for ref in all_link_refs if ref]
         if set(attr_dict_names) != set(all_link_names):
             raise BytecodeLinkingError(
                 "All link references must be defined when calling "
