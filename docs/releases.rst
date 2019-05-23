@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v0.1.4-alpha.18
+---------------
+
+Released May 23nd, 2019
+
+- Bugfix in LinkableContract class
+  - `#159 <https://github.com/ethpm/py-ethpm/pull/159>`_
+
+
 v0.1.4-alpha.17
 ---------------
 
