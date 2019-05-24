@@ -61,7 +61,7 @@ setup(
         'jsonschema>=2.6.0,<3',
         'protobuf>=3.0.0,<4',
         'rlp>=1.0.1,<2',
-        'web3[tester]>=5.0.0b2,<6',
+        'web3[tester]>=5.0.0b1,<6',
     ],
     setup_requires=['setuptools-markdown'],
     python_requires='>=3.6, <4',
