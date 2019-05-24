@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v0.1.4-alpha.19
+---------------
+
+Released May 24nd, 2019
+
+- Relax web3 dependency to 5.0.0b1
+
 v0.1.4-alpha.18
 ---------------
 
@@ -8,7 +15,6 @@ Released May 23nd, 2019
 
 - Bugfix in LinkableContract class
   - `#159 <https://github.com/ethpm/py-ethpm/pull/159>`_
-
 
 v0.1.4-alpha.17
 ---------------
