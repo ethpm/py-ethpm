@@ -4,12 +4,26 @@ from typing import Generator, Type
 from eth_utils import to_tuple
 from ipfshttpclient.exceptions import ConnectionError
 
-from ethpm.backends import ALL_URI_BACKENDS
 from ethpm.backends.base import BaseURIBackend
-from ethpm.backends.ipfs import get_ipfs_backend_class
+from ethpm.backends.http import GithubOverHTTPSBackend
+from ethpm.backends.ipfs import (
+    DummyIPFSBackend,
+    InfuraIPFSBackend,
+    LocalIPFSBackend,
+    get_ipfs_backend_class,
+)
+from ethpm.backends.registry import RegistryURIBackend
 from ethpm.typing import URI
 
 logger = logging.getLogger("ethpm.utils.backend")
+
+ALL_URI_BACKENDS = [
+    InfuraIPFSBackend,
+    DummyIPFSBackend,
+    LocalIPFSBackend,
+    GithubOverHTTPSBackend,
+    RegistryURIBackend,
+]
 
 
 @to_tuple

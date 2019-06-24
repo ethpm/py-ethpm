@@ -8,6 +8,12 @@ from web3 import Web3
 from web3.eth import Contract
 
 from ethpm._utils.cache import cached_property
+from ethpm._utils.deployments import (
+    get_linked_deployments,
+    normalize_linked_references,
+    validate_deployments_tx_receipt,
+    validate_linked_references,
+)
 from ethpm.contract import LinkableContract
 from ethpm.dependencies import Dependencies
 from ethpm.deployments import Deployments
@@ -21,12 +27,6 @@ from ethpm.uri import resolve_uri_contents
 from ethpm.utils.contract import (
     generate_contract_factory_kwargs,
     validate_minimal_contract_factory_data,
-)
-from ethpm.utils.deployments import (
-    get_linked_deployments,
-    normalize_linked_references,
-    validate_deployments_tx_receipt,
-    validate_linked_references,
 )
 from ethpm.utils.manifest_validation import (
     check_for_deployments,

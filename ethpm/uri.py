@@ -21,7 +21,8 @@ def resolve_uri_contents(uri: URI, fingerprint: bool = None) -> bytes:
     if resolvable_backends:
         for backend in resolvable_backends:
             try:
-                contents: bytes = backend().fetch_uri_contents(uri)
+                # type ignored to handle case if URI is returned
+                contents: bytes = backend().fetch_uri_contents(uri)  # type: ignore
             except CannotHandleURI:
                 continue
             return contents
