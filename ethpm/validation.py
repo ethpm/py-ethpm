@@ -12,6 +12,11 @@ from ethpm.utils.ipfs import is_ipfs_uri
 from ethpm._utils.registry import is_ens_domain
 
 
+#
+# Misc.
+#
+
+
 def validate_address(address: Any) -> None:
     """
     Raise a ValidationError if an address is not canonicalized.
@@ -25,14 +30,9 @@ def validate_address(address: Any) -> None:
         )
 
 
-def validate_package_version(version: Any) -> None:
-    """
-    Validates that a package version is of text type.
-    """
-    if not is_text(version):
-        raise ValidationError(
-            f"Expected a version of text type, instead received {type(version)}."
-        )
+def validate_w3_instance(w3: Web3) -> None:
+    if w3 is None or not isinstance(w3, Web3):
+        raise ValueError("Package does not have valid web3 instance.")
 
 
 def validate_empty_bytes(offset: int, length: int, bytecode: bytes) -> None:
@@ -46,6 +46,21 @@ def validate_empty_bytes(offset: int, length: int, bytecode: bytes) -> None:
         raise ValidationError(
             f"Bytecode segment: [{offset}:{slot_length}] is not comprised of empty bytes, "
             f"rather: {slot}."
+        )
+
+
+#
+# Package data
+#
+
+
+def validate_package_version(version: Any) -> None:
+    """
+    Validates that a package version is of text type.
+    """
+    if not is_text(version):
+        raise ValidationError(
+            f"Expected a version of text type, instead received {type(version)}."
         )
 
 
@@ -68,7 +83,6 @@ def validate_manifest_version(version: str) -> None:
         )
 
 
-
 CONTRACT_NAME_REGEX = re.compile("^[a-zA-Z][-a-zA-Z0-9_]{0,255}$")
 
 
@@ -77,14 +91,10 @@ def validate_contract_name(name: str) -> None:
         raise ValidationError(f"Contract name: {name} is not valid.")
 
 
-def validate_w3_instance(w3: Web3) -> None:
-    if w3 is None or not isinstance(w3, Web3):
-        raise ValueError("Package does not have valid web3 instance.")
-
-
 #
 # URIs
 #
+
 
 def validate_ipfs_uri(uri: str) -> None:
     """
@@ -100,20 +110,8 @@ def validate_build_dependency(key: str, uri: str) -> None:
     or if the value is not a valid IPFS URI.
     """
     validate_package_name(key)
+    # validate is supported content-addressed uri
     validate_ipfs_uri(uri)
-
-
-def is_valid_registry_uri(uri: str) -> bool:
-    """
-    Return a boolean indicating whether `uri` argument
-    conforms to the Registry URI scheme.
-    """
-    try:
-        validate_registry_uri(uri)
-    except ValidationError:
-        return False
-    else:
-        return True
 
 
 def validate_registry_uri(uri: str) -> None:

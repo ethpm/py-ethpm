@@ -18,6 +18,7 @@ def validate_minimal_contract_factory_data(contract_data: Dict[str, str]) -> Non
             "contract factory (abi & deployment_bytecode) not found."
         )
 
+
 @to_dict
 def generate_contract_factory_kwargs(
     contract_data: Dict[str, Any]

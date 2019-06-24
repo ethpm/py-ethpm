@@ -1,11 +1,11 @@
 import pytest
 
+from ethpm.backends.http import is_valid_api_github_uri
+from ethpm.backends.registry import parse_registry_uri
 from ethpm.exceptions import ValidationError
-from ethpm.utils.uri import (
+from ethpm.uri import (
     create_content_addressed_github_uri,
-    is_valid_api_github_uri,
     is_valid_content_addressed_github_uri,
-    parse_registry_uri,
 )
 
 
