@@ -3,10 +3,11 @@ from pathlib import Path
 from typing import Dict
 from urllib import parse
 
+from base58 import b58encode
+from eth_utils import to_text
 from google.protobuf.descriptor import Descriptor
 
-from ethpm.pb.ipfs_file_pb2 import Data, PBNode
-from ethpm.utils.base58 import b58encode
+from ethpm.utils.protobuf.ipfs_file_pb2 import Data, PBNode
 
 
 def dummy_ipfs_pin(path: Path) -> Dict[str, str]:
@@ -92,4 +93,4 @@ def generate_file_hash(content_bytes: bytes) -> str:
     # type ignored b/c SerializeToString is manually attached in ipfs_file_pb2.py
     file_protobuf_bytes = file_protobuf.SerializeToString()  # type: ignore
     file_multihash = multihash(file_protobuf_bytes)
-    return b58encode(file_multihash)
+    return to_text(b58encode(file_multihash))
