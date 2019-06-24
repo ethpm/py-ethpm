@@ -1,6 +1,7 @@
 import logging
 from typing import Generator, Type
 
+from eth_typing import URI
 from eth_utils import to_tuple
 from ipfshttpclient.exceptions import ConnectionError
 
@@ -14,7 +15,6 @@ from ethpm.backends.ipfs import (
 )
 from ethpm.backends.registry import RegistryURIBackend
 from ethpm.exceptions import CannotHandleURI
-from ethpm.typing import URI
 
 URI_BACKENDS = [
     InfuraIPFSBackend,
