@@ -14,8 +14,6 @@ from ethpm.utils.chains import (
     get_genesis_block_hash,
 )
 
-pytest_plugins = ["pytest_ethereum.plugins"]
-
 PACKAGE_NAMES = [
     ("escrow", "1.0.3.json"),
     ("owned", "1.0.0.json"),
