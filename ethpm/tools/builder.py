@@ -25,8 +25,8 @@ from ethpm.utils.manifest_validation import (
     format_manifest,
     validate_manifest_against_schema,
 )
-from ethpm.utils.mappings import deep_merge_dicts
-from ethpm.utils.uri import is_supported_content_addressed_uri
+from ethpm._utils.mappings import deep_merge_dicts
+from ethpm.uri import is_supported_content_addressed_uri
 from ethpm.validation import validate_address, validate_package_name
 
 

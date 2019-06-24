@@ -9,7 +9,7 @@ from ethpm.constants import PACKAGE_NAME_REGEX, REGISTRY_URI_SCHEME
 from ethpm.exceptions import ValidationError
 from ethpm.utils.chains import check_if_chain_matches_chain_uri
 from ethpm.utils.ipfs import is_ipfs_uri
-from ethpm.utils.registry import is_ens_domain
+from ethpm._utils.registry import is_ens_domain
 
 
 def validate_address(address: Any) -> None:
@@ -67,6 +67,24 @@ def validate_manifest_version(version: str) -> None:
             f"Py-EthPM does not support the provided specification version: {version}"
         )
 
+
+
+CONTRACT_NAME_REGEX = re.compile("^[a-zA-Z][-a-zA-Z0-9_]{0,255}$")
+
+
+def validate_contract_name(name: str) -> None:
+    if not CONTRACT_NAME_REGEX.match(name):
+        raise ValidationError(f"Contract name: {name} is not valid.")
+
+
+def validate_w3_instance(w3: Web3) -> None:
+    if w3 is None or not isinstance(w3, Web3):
+        raise ValueError("Package does not have valid web3 instance.")
+
+
+#
+# URIs
+#
 
 def validate_ipfs_uri(uri: str) -> None:
     """

@@ -6,7 +6,7 @@ from web3.providers.auto import load_provider_from_uri
 
 from ethpm.backends.base import BaseURIBackend
 from ethpm.constants import INFURA_API_KEY
-from ethpm.utils.registry import fetch_standard_registry_abi
+from ethpm._utils.registry import fetch_standard_registry_abi
 from ethpm.utils.uri import parse_registry_uri
 from ethpm.validation import is_valid_registry_uri
 

@@ -17,12 +17,10 @@ from ethpm.exceptions import (
     PyEthPMError,
 )
 from ethpm.utils.backend import resolve_uri_contents
-from ethpm.utils.cache import cached_property
+from ethpm._utils.cache import cached_property
 from ethpm.utils.contract import (
     generate_contract_factory_kwargs,
-    validate_contract_name,
     validate_minimal_contract_factory_data,
-    validate_w3_instance,
 )
 from ethpm.utils.deployments import (
     get_linked_deployments,
@@ -40,7 +38,9 @@ from ethpm.utils.manifest_validation import (
 from ethpm.validation import (
     validate_address,
     validate_build_dependency,
+    validate_contract_name,
     validate_single_matching_uri,
+    validate_w3_instance,
 )
 
 

@@ -18,20 +18,6 @@ def validate_minimal_contract_factory_data(contract_data: Dict[str, str]) -> Non
             "contract factory (abi & deployment_bytecode) not found."
         )
 
-
-CONTRACT_NAME_REGEX = re.compile("^[a-zA-Z][-a-zA-Z0-9_]{0,255}$")
-
-
-def validate_contract_name(name: str) -> None:
-    if not CONTRACT_NAME_REGEX.match(name):
-        raise ValidationError(f"Contract name: {name} is not valid.")
-
-
-def validate_w3_instance(w3: Web3) -> None:
-    if w3 is None or not isinstance(w3, Web3):
-        raise ValueError("Package does not have valid web3 instance.")
-
-
 @to_dict
 def generate_contract_factory_kwargs(
     contract_data: Dict[str, Any]
