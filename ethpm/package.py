@@ -7,6 +7,7 @@ from eth_utils import to_canonical_address, to_text, to_tuple
 from web3 import Web3
 from web3.eth import Contract
 
+from ethpm._utils.cache import cached_property
 from ethpm.contract import LinkableContract
 from ethpm.dependencies import Dependencies
 from ethpm.deployments import Deployments
@@ -16,8 +17,7 @@ from ethpm.exceptions import (
     InsufficientAssetsError,
     PyEthPMError,
 )
-from ethpm.utils.backend import resolve_uri_contents
-from ethpm._utils.cache import cached_property
+from ethpm.uri import resolve_uri_contents
 from ethpm.utils.contract import (
     generate_contract_factory_kwargs,
     validate_minimal_contract_factory_data,

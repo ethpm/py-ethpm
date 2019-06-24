@@ -1,10 +1,8 @@
-import re
 from typing import Any, Dict, Generator, Tuple
 
 from eth_utils import to_dict
-from web3 import Web3
 
-from ethpm.exceptions import InsufficientAssetsError, ValidationError
+from ethpm.exceptions import InsufficientAssetsError
 
 
 def validate_minimal_contract_factory_data(contract_data: Dict[str, str]) -> None:

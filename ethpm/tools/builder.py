@@ -18,6 +18,7 @@ from eth_utils.toolz import assoc, assoc_in, concat, curry, pipe
 from web3 import Web3
 
 from ethpm import Package
+from ethpm._utils.mappings import deep_merge_dicts
 from ethpm.backends.ipfs import BaseIPFSBackend
 from ethpm.exceptions import ManifestBuildingError, ValidationError
 from ethpm.utils.chains import is_BIP122_block_uri

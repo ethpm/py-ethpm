@@ -6,10 +6,10 @@ from eth_typing import URI
 from web3 import Web3
 from web3.providers.auto import load_provider_from_uri
 
+from ethpm._utils.registry import fetch_standard_registry_abi
 from ethpm.backends.base import BaseURIBackend
 from ethpm.constants import INFURA_API_KEY
 from ethpm.exceptions import ValidationError
-from ethpm._utils.registry import fetch_standard_registry_abi
 from ethpm.validation import validate_registry_uri
 
 # TODO: Update registry ABI once ERC is finalized.

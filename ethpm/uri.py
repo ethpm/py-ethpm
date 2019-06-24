@@ -1,21 +1,43 @@
-from collections import namedtuple
-import hashlib
 import json
-from typing import Tuple
-from urllib import parse
 
-from eth_utils import is_text, to_bytes, to_text
 import requests
 
-from ethpm.backends.http import (
-    is_valid_content_addressed_github_uri,
-    is_valid_api_github_uri,
+from ethpm._utils.backend import (
+    get_resolvable_backends_for_uri,
+    get_translatable_backends_for_uri,
 )
-from ethpm.constants import GITHUB_API_AUTHORITY
-from ethpm.exceptions import CannotHandleURI, ValidationError
+from ethpm.backends.http import (
+    is_valid_api_github_uri,
+    is_valid_content_addressed_github_uri,
+)
+from ethpm.backends.registry import RegistryURIBackend
+from ethpm.exceptions import CannotHandleURI
 from ethpm.typing import URI
 from ethpm.utils.ipfs import is_ipfs_uri
-from ethpm.validation import validate_registry_uri
+
+
+def resolve_uri_contents(uri: URI, fingerprint: bool = None) -> bytes:
+    resolvable_backends = get_resolvable_backends_for_uri(uri)
+    if resolvable_backends:
+        for backend in resolvable_backends:
+            try:
+                contents: bytes = backend().fetch_uri_contents(uri)
+            except CannotHandleURI:
+                continue
+            return contents
+
+    translatable_backends = get_translatable_backends_for_uri(uri)
+    if translatable_backends:
+        if fingerprint:
+            raise CannotHandleURI(
+                "Registry URIs must point to a resolvable content-addressed URI."
+            )
+        package_id = RegistryURIBackend().fetch_uri_contents(uri)
+        return resolve_uri_contents(package_id, True)
+
+    raise CannotHandleURI(
+        f"URI: {uri} cannot be resolved by any of the available backends."
+    )
 
 
 def create_content_addressed_github_uri(uri: URI) -> URI:

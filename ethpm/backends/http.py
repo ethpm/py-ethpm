@@ -10,7 +10,7 @@ import requests
 
 from ethpm.backends.base import BaseURIBackend
 from ethpm.constants import GITHUB_API_AUTHORITY
-from ethpm.exceptions import CannotHandleURI
+from ethpm.exceptions import CannotHandleURI, ValidationError
 from ethpm.utils.uri import (
     is_valid_content_addressed_github_uri,
     validate_blob_uri_contents,

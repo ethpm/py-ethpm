@@ -5,12 +5,11 @@ from urllib import parse
 from eth_utils import is_address, is_canonical_address, is_checksum_address, is_text
 from web3 import Web3
 
+from ethpm._utils.registry import is_ens_domain
 from ethpm.constants import PACKAGE_NAME_REGEX, REGISTRY_URI_SCHEME
 from ethpm.exceptions import ValidationError
 from ethpm.utils.chains import check_if_chain_matches_chain_uri
 from ethpm.utils.ipfs import is_ipfs_uri
-from ethpm._utils.registry import is_ens_domain
-
 
 #
 # Misc.
