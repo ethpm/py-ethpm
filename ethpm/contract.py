@@ -6,7 +6,7 @@ from web3 import Web3
 from web3.contract import Contract
 
 from ethpm.exceptions import BytecodeLinkingError, ValidationError
-from ethpm.validation import validate_address, validate_empty_bytes
+from ethpm.validation.misc import validate_empty_bytes, validate_address
 
 
 class LinkableContract(Contract):

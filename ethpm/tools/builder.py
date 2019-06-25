@@ -21,9 +21,9 @@ from ethpm import Package
 from ethpm._utils.mappings import deep_merge_dicts
 from ethpm.backends.ipfs import BaseIPFSBackend
 from ethpm.exceptions import ManifestBuildingError, ValidationError
+from ethpm.package import format_manifest
 from ethpm.utils.chains import is_BIP122_block_uri
-from ethpm.utils.manifest_validation import (
-    format_manifest,
+from ethpm.validation.manifest import (
     validate_manifest_against_schema,
 )
 from ethpm._utils.mappings import deep_merge_dicts

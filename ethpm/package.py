@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Generator, Optional, Tuple, Union
 
-from eth_typing import URI, Address, ContractName
+from eth_typing import URI, Address, ContractName, Manifest
 from eth_utils import to_canonical_address, to_text, to_tuple
 from web3 import Web3
 from web3.eth import Contract
@@ -28,18 +28,22 @@ from ethpm.utils.contract import (
     generate_contract_factory_kwargs,
     validate_minimal_contract_factory_data,
 )
-from ethpm.utils.manifest_validation import (
+from ethpm.validation.manifest import (
     check_for_deployments,
     validate_build_dependencies_are_present,
     validate_manifest_against_schema,
     validate_manifest_deployments,
     validate_raw_manifest_format,
 )
-from ethpm.validation import (
-    validate_address,
+from ethpm.validation.package import (
     validate_build_dependency,
     validate_contract_name,
+)
+from ethpm.validation.uri import (
     validate_single_matching_uri,
+)
+from ethpm.validation.misc import (
+    validate_address,
     validate_w3_instance,
 )
 
@@ -353,3 +357,9 @@ class Package(object):
             unresolved_linked_ref = value.split(":", 1)[-1]
             build_dependency = self.build_dependencies[value.split(":")[0]]
             yield build_dependency._resolve_link_dependencies(unresolved_linked_ref)
+
+
+def format_manifest(manifest: Manifest, *, prettify: bool = None) -> str:
+    if prettify:
+        return json.dumps(manifest, sort_keys=True, indent=4)
+    return json.dumps(manifest, sort_keys=True, separators=(",", ":"))

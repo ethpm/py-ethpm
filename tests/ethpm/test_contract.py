@@ -5,7 +5,7 @@ from web3.contract import Contract
 from ethpm import Package
 from ethpm.contract import LinkableContract, apply_all_link_refs
 from ethpm.exceptions import BytecodeLinkingError, ValidationError
-from ethpm.validation import validate_empty_bytes
+from ethpm.validation.misc import validate_empty_bytes
 
 
 @pytest.mark.parametrize(

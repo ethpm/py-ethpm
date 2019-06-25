@@ -10,7 +10,7 @@ from ethpm._utils.registry import fetch_standard_registry_abi
 from ethpm.backends.base import BaseURIBackend
 from ethpm.constants import INFURA_API_KEY
 from ethpm.exceptions import ValidationError
-from ethpm.validation import validate_registry_uri
+from ethpm.validation.uri import validate_registry_uri
 
 # TODO: Update registry ABI once ERC is finalized.
 REGISTRY_ABI = fetch_standard_registry_abi()

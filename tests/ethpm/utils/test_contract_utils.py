@@ -5,7 +5,8 @@ from ethpm.utils.contract import (
     generate_contract_factory_kwargs,
     validate_minimal_contract_factory_data,
 )
-from ethpm.validation import validate_contract_name, validate_w3_instance
+from ethpm.validation.misc import validate_w3_instance
+from ethpm.validation.package import validate_contract_name
 
 
 @pytest.mark.parametrize(

@@ -5,7 +5,7 @@ from web3 import Web3
 from web3.eth import Contract
 
 from ethpm.exceptions import ValidationError
-from ethpm.validation import validate_contract_name
+from ethpm.validation.package import validate_contract_name
 
 
 class Deployments:

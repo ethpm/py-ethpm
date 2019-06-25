@@ -1,7 +1,7 @@
 import pytest
 
 from ethpm.exceptions import ValidationError
-from ethpm.validation import validate_address
+from ethpm.validation.misc import validate_address
 
 
 @pytest.mark.parametrize(
