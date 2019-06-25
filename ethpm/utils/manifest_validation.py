@@ -1,11 +1,11 @@
 import json
 from typing import Any, Dict, List, Set
 
+from eth_typing import Manifest
 from jsonschema import ValidationError as jsonValidationError, validate
 
 from ethpm import SPEC_DIR, V2_PACKAGES_DIR
 from ethpm.exceptions import ValidationError
-from ethpm.typing import Manifest
 
 MANIFEST_SCHEMA_PATH = SPEC_DIR / "package.spec.json"
 

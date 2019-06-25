@@ -4,6 +4,7 @@ from pathlib import Path
 import tempfile
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple
 
+from eth_typing import URI, HexStr, Manifest
 from eth_utils import (
     add_0x_prefix,
     is_hex,
@@ -19,7 +20,6 @@ from web3 import Web3
 from ethpm import Package
 from ethpm.backends.ipfs import BaseIPFSBackend
 from ethpm.exceptions import ManifestBuildingError, ValidationError
-from ethpm.typing import URI, HexStr, Manifest
 from ethpm.utils.chains import is_BIP122_block_uri
 from ethpm.utils.manifest_validation import (
     format_manifest,

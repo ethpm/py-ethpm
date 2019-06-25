@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Union
 
-from ethpm.typing import URI
+from eth_typing import URI
 
 
 class BaseURIBackend(ABC):

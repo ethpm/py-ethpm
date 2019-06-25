@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Generator, Optional, Tuple, Union
 
+from eth_typing import URI, Address, ContractName
 from eth_utils import to_canonical_address, to_text, to_tuple
 from web3 import Web3
 from web3.eth import Contract
@@ -15,7 +16,6 @@ from ethpm.exceptions import (
     InsufficientAssetsError,
     PyEthPMError,
 )
-from ethpm.typing import URI, Address, ContractName
 from ethpm.utils.backend import resolve_uri_contents
 from ethpm.utils.cache import cached_property
 from ethpm.utils.contract import (
