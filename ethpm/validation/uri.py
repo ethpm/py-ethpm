@@ -1,5 +1,4 @@
-from ethpm.utils.ipfs import is_ipfs_uri
-from ethpm.utils.chains import check_if_chain_matches_chain_uri
+from ethpm._utils.ipfs import is_ipfs_uri
 from ethpm.constants import REGISTRY_URI_SCHEME
 from ethpm.exceptions import ValidationError
 from ethpm._utils.registry import is_ens_domain
@@ -68,6 +67,7 @@ def validate_single_matching_uri(all_blockchain_uris: List[str], w3: Web3) -> st
     Return a single block URI after validating that it is the *only* URI in
     all_blockchain_uris that matches the w3 instance.
     """
+    from ethpm.uri import check_if_chain_matches_chain_uri
     matching_uris = [
         uri for uri in all_blockchain_uris if check_if_chain_matches_chain_uri(w3, uri)
     ]

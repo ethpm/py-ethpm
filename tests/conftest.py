@@ -8,11 +8,11 @@ from web3 import Web3
 
 from ethpm import ASSETS_DIR, V2_PACKAGES_DIR, Package
 from ethpm.tools import get_manifest as get_manifest_tool
-from ethpm.utils.chains import (
+from ethpm._utils.chains import (
     create_block_uri,
-    create_latest_block_uri,
     get_genesis_block_hash,
 )
+from ethpm.uri import create_latest_block_uri
 
 PACKAGE_NAMES = [
     ("escrow", "1.0.3.json"),

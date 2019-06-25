@@ -4,7 +4,7 @@ from eth_utils import is_text
 from web3 import Web3
 from ethpm.constants import PACKAGE_NAME_REGEX
 from ethpm.exceptions import ValidationError, InsufficientAssetsError
-from ethpm.utils.ipfs import is_ipfs_uri
+from ethpm._utils.ipfs import is_ipfs_uri
 
 
 def validate_minimal_contract_factory_data(contract_data: Dict[str, str]) -> None:

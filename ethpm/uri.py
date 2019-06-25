@@ -1,7 +1,10 @@
 import json
+from web3 import Web3
 
 import requests
 
+from eth_utils import to_hex, encode_hex
+from eth_utils.toolz import curry
 from ethpm._utils.backend import (
     get_resolvable_backends_for_uri,
     get_translatable_backends_for_uri,
@@ -13,7 +16,8 @@ from ethpm.backends.http import (
 from ethpm.backends.registry import RegistryURIBackend
 from ethpm.exceptions import CannotHandleURI
 from ethpm.typing import URI
-from ethpm.utils.ipfs import is_ipfs_uri
+from ethpm._utils.ipfs import is_ipfs_uri
+from ethpm._utils.chains import get_genesis_block_hash, create_block_uri, parse_BIP122_uri, BLOCK
 
 
 def resolve_uri_contents(uri: URI, fingerprint: bool = None) -> bytes:
@@ -69,3 +73,40 @@ def is_supported_content_addressed_uri(uri: URI) -> bool:
     if not is_ipfs_uri(uri) and not is_valid_content_addressed_github_uri(uri):
         return False
     return True
+
+
+def create_latest_block_uri(w3: Web3, from_blocks_ago: int = 3) -> URI:
+    """
+    Creates a block uri for the given w3 instance.
+    Defaults to 3 blocks prior to the "latest" block to accommodate for block reorgs.
+    If using a testnet with less than 3 mined blocks, adjust :from_blocks_ago:.
+    """
+    chain_id = to_hex(get_genesis_block_hash(w3))
+    latest_block_tx_receipt = w3.eth.getBlock("latest")
+    target_block_number = latest_block_tx_receipt.number - from_blocks_ago
+    if target_block_number < 0:
+        raise Exception(
+            f"Only {latest_block_tx_receipt.number} blocks avaible on provided w3, "
+            f"cannot create latest block uri for {from_blocks_ago} blocks ago."
+        )
+    recent_block = to_hex(w3.eth.getBlock(target_block_number).hash)
+    return create_block_uri(chain_id, recent_block)
+
+
+@curry
+def check_if_chain_matches_chain_uri(web3: Web3, blockchain_uri: URI) -> bool:
+    chain_id, resource_type, resource_hash = parse_BIP122_uri(blockchain_uri)
+    genesis_block = web3.eth.getBlock("earliest")
+
+    if encode_hex(genesis_block["hash"]) != chain_id:
+        return False
+
+    if resource_type == BLOCK:
+        resource = web3.eth.getBlock(resource_hash)
+    else:
+        raise ValueError(f"Unsupported resource type: {resource_type}")
+
+    if encode_hex(resource["hash"]) == resource_hash:
+        return True
+    else:
+        return False

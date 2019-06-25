@@ -14,7 +14,7 @@ from ethpm.constants import (
     IPFS_GATEWAY_PREFIX,
 )
 from ethpm.exceptions import CannotHandleURI, ValidationError
-from ethpm.utils.ipfs import (
+from ethpm._utils.ipfs import (
     dummy_ipfs_pin,
     extract_ipfs_path_from_uri,
     generate_file_hash,
