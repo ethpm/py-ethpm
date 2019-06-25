@@ -1,10 +1,23 @@
 import re
-from typing import Any
+from typing import Any, Dict
 from eth_utils import is_text
 from web3 import Web3
 from ethpm.constants import PACKAGE_NAME_REGEX
-from ethpm.exceptions import ValidationError
+from ethpm.exceptions import ValidationError, InsufficientAssetsError
 from ethpm.utils.ipfs import is_ipfs_uri
+
+
+def validate_minimal_contract_factory_data(contract_data: Dict[str, str]) -> None:
+    """
+    Validate that contract data in a package contains at least an "abi" and
+    "deployment_bytecode" necessary to generate a deployable contract factory.
+    """
+    if not all(key in contract_data.keys() for key in ("abi", "deployment_bytecode")):
+        raise InsufficientAssetsError(
+            "Minimum required contract data to generate a deployable "
+            "contract factory (abi & deployment_bytecode) not found."
+        )
+
 
 def validate_package_version(version: Any) -> None:
     """

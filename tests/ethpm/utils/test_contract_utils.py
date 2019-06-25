@@ -1,12 +1,11 @@
 import pytest
 
 from ethpm.exceptions import InsufficientAssetsError, ValidationError
-from ethpm.utils.contract import (
+from ethpm._utils.contract import (
     generate_contract_factory_kwargs,
-    validate_minimal_contract_factory_data,
 )
 from ethpm.validation.misc import validate_w3_instance
-from ethpm.validation.package import validate_contract_name
+from ethpm.validation.package import validate_contract_name, validate_minimal_contract_factory_data
 
 
 @pytest.mark.parametrize(

@@ -24,9 +24,8 @@ from ethpm.exceptions import (
     PyEthPMError,
 )
 from ethpm.uri import resolve_uri_contents
-from ethpm.utils.contract import (
+from ethpm._utils.contract import (
     generate_contract_factory_kwargs,
-    validate_minimal_contract_factory_data,
 )
 from ethpm.validation.manifest import (
     check_for_deployments,
@@ -36,6 +35,7 @@ from ethpm.validation.manifest import (
     validate_raw_manifest_format,
 )
 from ethpm.validation.package import (
+    validate_minimal_contract_factory_data,
     validate_build_dependency,
     validate_contract_name,
 )
