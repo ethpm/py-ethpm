@@ -1,7 +1,6 @@
 import json
 from typing import Any, Dict, List, Set
 
-from eth_typing import Manifest
 from jsonschema import ValidationError as jsonValidationError, validate
 
 from ethpm import SPEC_DIR, V2_PACKAGES_DIR

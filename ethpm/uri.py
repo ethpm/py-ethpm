@@ -1,23 +1,28 @@
 import json
+
+from eth_typing import URI
+from eth_utils import encode_hex, to_hex
+from eth_utils.toolz import curry
+import requests
 from web3 import Web3
 
-import requests
-
-from eth_utils import to_hex, encode_hex
-from eth_utils.toolz import curry
 from ethpm._utils.backend import (
     get_resolvable_backends_for_uri,
     get_translatable_backends_for_uri,
 )
+from ethpm._utils.chains import (
+    BLOCK,
+    create_block_uri,
+    get_genesis_block_hash,
+    parse_BIP122_uri,
+)
+from ethpm._utils.ipfs import is_ipfs_uri
 from ethpm.backends.http import (
     is_valid_api_github_uri,
     is_valid_content_addressed_github_uri,
 )
 from ethpm.backends.registry import RegistryURIBackend
 from ethpm.exceptions import CannotHandleURI
-from ethpm.typing import URI
-from ethpm._utils.ipfs import is_ipfs_uri
-from ethpm._utils.chains import get_genesis_block_hash, create_block_uri, parse_BIP122_uri, BLOCK
 
 
 def resolve_uri_contents(uri: URI, fingerprint: bool = None) -> bytes:

@@ -1,13 +1,15 @@
+import hashlib
+from typing import List
+from urllib import parse
+
+from eth_utils import is_checksum_address, to_bytes, to_text
+from web3 import Web3
+
 from ethpm._utils.ipfs import is_ipfs_uri
+from ethpm._utils.registry import is_ens_domain
 from ethpm.constants import REGISTRY_URI_SCHEME
 from ethpm.exceptions import ValidationError
-from ethpm._utils.registry import is_ens_domain
-from eth_utils import is_checksum_address
 from ethpm.validation.package import validate_package_name
-from typing import List
-
-from web3 import Web3
-from urllib import parse
 
 
 def validate_ipfs_uri(uri: str) -> None:
@@ -68,6 +70,7 @@ def validate_single_matching_uri(all_blockchain_uris: List[str], w3: Web3) -> st
     all_blockchain_uris that matches the w3 instance.
     """
     from ethpm.uri import check_if_chain_matches_chain_uri
+
     matching_uris = [
         uri for uri in all_blockchain_uris if check_if_chain_matches_chain_uri(w3, uri)
     ]
@@ -79,3 +82,21 @@ def validate_single_matching_uri(all_blockchain_uris: List[str], w3: Web3) -> st
             f"Package has too many ({len(matching_uris)}) matching URIs: {matching_uris}."
         )
     return matching_uris[0]
+
+
+def validate_blob_uri_contents(contents: bytes, blob_uri: str) -> None:
+    """
+    Raises an exception if the sha1 hash of the contents does not match the hash found in te
+    blob_uri. Formula for how git calculates the hash found here:
+    http://alblue.bandlem.com/2011/08/git-tip-of-week-objects.html
+    """
+    blob_path = parse.urlparse(blob_uri).path
+    blob_hash = blob_path.split("/")[-1]
+    contents_str = to_text(contents)
+    content_length = len(contents_str)
+    hashable_contents = "blob " + str(content_length) + "\0" + contents_str
+    hash_object = hashlib.sha1(to_bytes(text=hashable_contents))
+    if hash_object.hexdigest() != blob_hash:
+        raise ValidationError(
+            f"Hash of contents fetched from {blob_uri} do not match its hash: {blob_hash}."
+        )

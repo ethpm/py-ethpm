@@ -36,5 +36,3 @@ def validate_empty_bytes(offset: int, length: int, bytecode: bytes) -> None:
             f"Bytecode segment: [{offset}:{slot_length}] is not comprised of empty bytes, "
             f"rather: {slot}."
         )
-
-
