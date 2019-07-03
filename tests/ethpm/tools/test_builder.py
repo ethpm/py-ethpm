@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 from eth_utils import to_canonical_address
-from eth_utils.toolz import assoc
+from eth_utils.toolz import assoc, assoc_in
 import pytest
 from pytest_ethereum.linker import deploy, link, linker
 
@@ -13,6 +13,7 @@ from ethpm.tools.builder import (
     as_package,
     authors,
     build,
+    build_dependency,
     contract_type,
     deployment,
     deployment_type,
@@ -661,3 +662,49 @@ def test_builder_deployment_type_complex(escrow_package):
     assert len(manifest["deployments"].keys()) == 2
     assert len(list(manifest["deployments"].values())[0]) == 2
     assert len(list(manifest["deployments"].values())[1]) == 2
+
+
+def test_builder_with_build_dependencies():
+    expected_single_build_dep = {
+        "package": "ipfs://QmUYcVzTfSwJoigggMxeo2g5STWAgJdisQsqcXHws7b1FW"
+    }
+    expected_double_build_deps = {
+        "escrow": "ipfs://QmPDwMHk8e1aMEZg3iKsUiPSkhHkywpGB3KHKM52RtGrkv",
+        "package": "ipfs://QmUYcVzTfSwJoigggMxeo2g5STWAgJdisQsqcXHws7b1FW",
+    }
+    expected_single = assoc_in(
+        BASE_MANIFEST, ["build_dependencies"], expected_single_build_dep
+    )
+    expected_double = assoc_in(
+        BASE_MANIFEST, ["build_dependencies"], expected_double_build_deps
+    )
+    actual_single = build(
+        BASE_MANIFEST,
+        build_dependency(
+            "package", "ipfs://QmUYcVzTfSwJoigggMxeo2g5STWAgJdisQsqcXHws7b1FW"
+        ),
+    )
+    actual_double = build(
+        BASE_MANIFEST,
+        build_dependency(
+            "package", "ipfs://QmUYcVzTfSwJoigggMxeo2g5STWAgJdisQsqcXHws7b1FW"
+        ),
+        build_dependency(
+            "escrow", "ipfs://QmPDwMHk8e1aMEZg3iKsUiPSkhHkywpGB3KHKM52RtGrkv"
+        ),
+    )
+    assert actual_single == expected_single
+    assert actual_double == expected_double
+
+
+def test_builder_with_invalid_uri():
+    with pytest.raises(
+        ValidationError, match="is not a supported content-addressed URI"
+    ):
+        build(
+            {},
+            package_name("package"),
+            version("1.0.0"),
+            manifest_version("2"),
+            build_dependency("package", "www.google.com"),
+        )
