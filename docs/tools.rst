@@ -572,6 +572,40 @@ This builder function simplifies adding the same contract type deployment across
        ),
    )
 
+To add a build dependency
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code:: python
+
+   build(
+       ...,
+       build_dependency(
+           package_name,
+           uri,
+       ),
+       ...,
+   )
+   
+.. py:function:: build_dependency(package_name, uri)
+
+To add a build dependency to your manifest, just provide the package's name and a supported, content-addressed URI.
+
+.. doctest::
+
+   >>> expected_manifest = {
+   ...   'package_name': 'owned',
+   ...   'manifest_version': '2',
+   ...   'version': '1.0.0',
+   ...   'build_dependencies': {
+   ...     'owned': 'ipfs://QmbeVyFLSuEUxiXKwSsEjef6icpdTdA4kGG9BcrJXKNKUW',
+   ...   }
+   ... }
+   >>> built_manifest = build(
+   ...     BASE_MANIFEST,
+   ...     build_dependency('owned', 'ipfs://QmbeVyFLSuEUxiXKwSsEjef6icpdTdA4kGG9BcrJXKNKUW'),
+   ... )
+   >>> assert expected_manifest == built_manifest
+
 
 Checker
 -------

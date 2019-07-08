@@ -26,7 +26,8 @@ from ethpm.utils.manifest_validation import (
     validate_manifest_against_schema,
 )
 from ethpm.utils.mappings import deep_merge_dicts
-from ethpm.validation import validate_address
+from ethpm.utils.uri import is_supported_content_addressed_uri
+from ethpm.validation import validate_address, validate_package_name
 
 
 def build(obj: Dict[str, Any], *fns: Callable[..., Any]) -> Dict[str, Any]:
@@ -674,6 +675,29 @@ def _build_deployments_object(
         yield "block", block
     if runtime_bytecode:
         yield "runtime_bytecode", runtime_bytecode
+
+
+#
+# Build Dependencies
+#
+
+
+def build_dependency(package_name: str, uri: URI) -> Manifest:
+    """
+    Returns the manifest with injected build dependency.
+    """
+    return _build_dependency(package_name, uri)
+
+
+@curry
+def _build_dependency(package_name: str, uri: URI, manifest: Manifest) -> Manifest:
+    validate_package_name(package_name)
+    if not is_supported_content_addressed_uri(uri):
+        raise ValidationError(
+            f"{uri} is not a supported content-addressed URI. "
+            "Currently only IPFS and Github blob uris are supported."
+        )
+    return assoc_in(manifest, ("build_dependencies", package_name), uri)
 
 
 #
