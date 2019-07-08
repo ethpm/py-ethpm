@@ -75,11 +75,9 @@ def standard_token_package():
 @pytest.fixture
 def registry_package():
     root = ASSETS_DIR / "registry"
-    compiler = json.loads(Path(root / "registry_compiler_output.json").read_text())[
-        "contracts"
-    ]
+    compiler = json.loads(Path(root / "solc_output.json").read_text())["contracts"]
     contracts_dir = root / "contracts"
-    manifest = json.loads((root / "1.0.0.json").read_text())
+    manifest = json.loads((root / "2.0.0.json").read_text())
     return contracts_dir, manifest, compiler
 
 
@@ -465,24 +463,26 @@ def test_builder_with_link_references(
     ipfs_backend = get_ipfs_backend()
     monkeypatch.chdir(root)
     pinner = source_pinner(compiler_output, ipfs_backend)
+    inliner = source_inliner(compiler_output)
     manifest = build(
         {},
         package_name("solidity-registry"),
         manifest_version("2"),
-        version("1.0.0"),
-        pinner("Authorized"),
-        pinner("IndexedOrderedSetLib"),
-        pinner("PackageDB"),
-        pinner("PackageRegistry"),
-        pinner("PackageRegistryInterface"),
-        pinner("ReleaseDB"),
-        pinner("ReleaseValidator"),
+        version("2.0.0"),
+        inliner("Authorized"),
+        inliner("IndexedOrderedSetLib"),
+        inliner("PackageDB"),
+        inliner("PackageRegistry"),
+        inliner("PackageRegistryInterface"),
+        inliner("ReleaseDB"),
+        inliner("ReleaseValidator"),
         contract_type(
             "AuthorityInterface",
             compiler_output,
             abi=True,
             deployment_bytecode=True,
             runtime_bytecode=True,
+            natspec=True,
         ),
         contract_type(
             "Authorized",
@@ -490,6 +490,8 @@ def test_builder_with_link_references(
             abi=True,
             deployment_bytecode=True,
             runtime_bytecode=True,
+            natspec=True,
+            compiler=True,
         ),
         contract_type(
             "AuthorizedInterface",
@@ -497,6 +499,7 @@ def test_builder_with_link_references(
             abi=True,
             deployment_bytecode=True,
             runtime_bytecode=True,
+            natspec=True,
         ),
         contract_type(
             "WhitelistAuthority",
@@ -504,6 +507,8 @@ def test_builder_with_link_references(
             abi=True,
             deployment_bytecode=True,
             runtime_bytecode=True,
+            natspec=True,
+            compiler=True,
         ),
         contract_type(
             "WhitelistAuthorityInterface",
@@ -511,6 +516,7 @@ def test_builder_with_link_references(
             abi=True,
             deployment_bytecode=True,
             runtime_bytecode=True,
+            natspec=True,
         ),
         contract_type(
             "IndexedOrderedSetLib",
@@ -518,6 +524,8 @@ def test_builder_with_link_references(
             abi=True,
             deployment_bytecode=True,
             runtime_bytecode=True,
+            natspec=True,
+            compiler=True,
         ),
         contract_type(
             "PackageDB",
@@ -525,6 +533,8 @@ def test_builder_with_link_references(
             abi=True,
             deployment_bytecode=True,
             runtime_bytecode=True,
+            natspec=True,
+            compiler=True,
         ),
         contract_type(
             "PackageRegistry",
@@ -532,6 +542,8 @@ def test_builder_with_link_references(
             abi=True,
             deployment_bytecode=True,
             runtime_bytecode=True,
+            natspec=True,
+            compiler=True,
         ),
         contract_type(
             "PackageRegistryInterface",
@@ -539,6 +551,7 @@ def test_builder_with_link_references(
             abi=True,
             deployment_bytecode=True,
             runtime_bytecode=True,
+            natspec=True,
         ),
         contract_type(
             "ReleaseDB",
@@ -546,6 +559,8 @@ def test_builder_with_link_references(
             abi=True,
             deployment_bytecode=True,
             runtime_bytecode=True,
+            natspec=True,
+            compiler=True,
         ),
         contract_type(
             "ReleaseValidator",
@@ -553,6 +568,8 @@ def test_builder_with_link_references(
             abi=True,
             deployment_bytecode=True,
             runtime_bytecode=True,
+            natspec=True,
+            compiler=True,
         ),
         validate(),
     )
