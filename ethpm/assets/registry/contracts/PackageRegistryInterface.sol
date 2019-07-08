@@ -14,11 +14,11 @@ contract PackageRegistryInterface {
 
   /// @dev Creates a a new release for the named package.
   /// @notice Will create a new release the given package with the given release information.
-  /// @param name Package name
+  /// @param packageName Package name
   /// @param version Version string (ex: 1.0.0)
   /// @param manifestURI The URI for the release manifest for this release.
   function release(
-    string name,
+    string packageName,
     string version,
     string manifestURI
   )
@@ -36,7 +36,7 @@ contract PackageRegistryInterface {
   function getPackageName(bytes32 packageId)
     public
     view
-    returns (string);
+    returns (string packageName);
 
   /// @dev Returns a slice of the array of all package ids for the named package.
   /// @param offset The starting index for the slice.
@@ -45,20 +45,20 @@ contract PackageRegistryInterface {
     public
     view
     returns (
-      bytes32[] ids,
-      uint _offset
+      bytes32[] packageIds,
+      uint pointer
     );
 
   /// @dev Returns a slice of the array of all release hashes for the named package.
-  /// @param name Package name
+  /// @param packageName Package name
   /// @param offset The starting index for the slice.
   /// @param limit  The length of the slice
-  function getAllReleaseIds(string name, uint offset, uint limit)
+  function getAllReleaseIds(string packageName, uint offset, uint limit)
     public
     view
     returns (
-      bytes32[] ids,
-      uint _offset
+      bytes32[] releaseIds,
+      uint pointer
     );
 
   /// @dev Returns the package data for a release.
@@ -73,25 +73,25 @@ contract PackageRegistryInterface {
     );
 
   // @dev Returns release id that *would* be generated for a name and version pair on `release`.
-  // @param name Package name
+  // @param packageName Package name
   // @param version Version string (ex: '1.0.0')
-  function generateReleaseId(string name, string version)
+  function generateReleaseId(string packageName, string version)
     public
     view
-    returns (bytes32);
-    
+    returns (bytes32 releaseId);
+
   /// @dev Returns the release id for a given name and version pair if present on registry.
   /// @param packageName Package name
   /// @param version Version string(ex: '1.0.0')
   function getReleaseId(string packageName, string version)
     public
     view
-    returns (bytes32);
-    
+    returns (bytes32 releaseId);
+
   /// @dev Returns the number of packages stored on the registry
-  function numPackageIds() public view returns (uint);
-  
+  function numPackageIds() public view returns (uint totalCount);
+
   /// @dev Returns the number of releases for a given package name on the registry
   /// @param packageName Package name
-  function numReleaseIds(string packageName) public view returns (uint);
+  function numReleaseIds(string packageName) public view returns (uint totalCount);
 }

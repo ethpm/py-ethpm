@@ -14,8 +14,11 @@ def get_all_manifest_paths():
     all_use_case_json = set(ASSETS_DIR.glob(SOURCES_GLOB)) - set(
         (ASSETS_DIR / "spec").glob(SOURCES_GLOB)
     )
+    solc_outputs = ("solc", "output")
     all_manifests = [
-        json for json in all_use_case_json if "compiler_output" not in json.name
+        json
+        for json in all_use_case_json
+        if all(known not in json.name for known in solc_outputs)
     ]
     if not all_manifests:
         raise InsufficientAssetsError(

@@ -37,7 +37,7 @@ contract ReleaseValidator {
       revert("escape:ReleaseValidator:caller-not-authorized");
     } else if (!validateIsNewRelease(packageDb, releaseDb, name, version)) {
       // this version has already been released.
-      revert("escape:ReleaseValidator:version-exists");
+      revert("escape:ReleaseValidator:version-previously-published");
     } else if (!validatePackageName(packageDb, name)) {
       // invalid package name.
       revert("escape:ReleaseValidator:invalid-package-name");
@@ -96,7 +96,7 @@ contract ReleaseValidator {
     bytes32 nameHash = packageDb.hashName(name);
     bytes32 versionHash = releaseDb.hashVersion(version);
     bytes32 releaseHash = releaseDb.hashRelease(nameHash, versionHash);
-    return !releaseDb.releaseExists(releaseHash);
+    return !releaseDb.releaseExists(releaseHash) && !releaseDb.releaseExisted(releaseHash);
   }
 
   uint constant DIGIT_0 = uint(bytes1("0"));
