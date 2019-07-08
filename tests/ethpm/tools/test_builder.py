@@ -664,27 +664,27 @@ def test_builder_deployment_type_complex(escrow_package):
     assert len(list(manifest["deployments"].values())[1]) == 2
 
 
-def test_builder_with_build_dependencies():
-    expected_single_build_dep = {
+def test_builder_with_single_build_dependency():
+    expected_build_dep = {
         "package": "ipfs://QmUYcVzTfSwJoigggMxeo2g5STWAgJdisQsqcXHws7b1FW"
     }
-    expected_double_build_deps = {
-        "escrow": "ipfs://QmPDwMHk8e1aMEZg3iKsUiPSkhHkywpGB3KHKM52RtGrkv",
-        "package": "ipfs://QmUYcVzTfSwJoigggMxeo2g5STWAgJdisQsqcXHws7b1FW",
-    }
-    expected_single = assoc_in(
-        BASE_MANIFEST, ["build_dependencies"], expected_single_build_dep
-    )
-    expected_double = assoc_in(
-        BASE_MANIFEST, ["build_dependencies"], expected_double_build_deps
-    )
-    actual_single = build(
+    expected = assoc_in(BASE_MANIFEST, ["build_dependencies"], expected_build_dep)
+    actual = build(
         BASE_MANIFEST,
         build_dependency(
             "package", "ipfs://QmUYcVzTfSwJoigggMxeo2g5STWAgJdisQsqcXHws7b1FW"
         ),
     )
-    actual_double = build(
+    assert actual == expected
+
+
+def test_builder_with_multiple_build_dependencies():
+    expected_build_deps = {
+        "escrow": "ipfs://QmPDwMHk8e1aMEZg3iKsUiPSkhHkywpGB3KHKM52RtGrkv",
+        "package": "ipfs://QmUYcVzTfSwJoigggMxeo2g5STWAgJdisQsqcXHws7b1FW",
+    }
+    expected = assoc_in(BASE_MANIFEST, ["build_dependencies"], expected_build_deps)
+    actual = build(
         BASE_MANIFEST,
         build_dependency(
             "package", "ipfs://QmUYcVzTfSwJoigggMxeo2g5STWAgJdisQsqcXHws7b1FW"
@@ -693,8 +693,7 @@ def test_builder_with_build_dependencies():
             "escrow", "ipfs://QmPDwMHk8e1aMEZg3iKsUiPSkhHkywpGB3KHKM52RtGrkv"
         ),
     )
-    assert actual_single == expected_single
-    assert actual_double == expected_double
+    assert actual == expected
 
 
 def test_builder_with_invalid_uri():
