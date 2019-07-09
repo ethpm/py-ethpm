@@ -18,16 +18,15 @@ from eth_utils.toolz import assoc, assoc_in, concat, curry, pipe
 from web3 import Web3
 
 from ethpm import Package
+from ethpm._utils.chains import is_BIP122_block_uri
+from ethpm._utils.mappings import deep_merge_dicts
 from ethpm.backends.ipfs import BaseIPFSBackend
 from ethpm.exceptions import ManifestBuildingError, ValidationError
-from ethpm.utils.chains import is_BIP122_block_uri
-from ethpm.utils.manifest_validation import (
-    format_manifest,
-    validate_manifest_against_schema,
-)
-from ethpm.utils.mappings import deep_merge_dicts
-from ethpm.utils.uri import is_supported_content_addressed_uri
-from ethpm.validation import validate_address, validate_package_name
+from ethpm.package import format_manifest
+from ethpm.uri import is_supported_content_addressed_uri
+from ethpm.validation.manifest import validate_manifest_against_schema
+from ethpm.validation.misc import validate_address
+from ethpm.validation.package import validate_package_name
 
 
 def build(obj: Dict[str, Any], *fns: Callable[..., Any]) -> Dict[str, Any]:

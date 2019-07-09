@@ -2,7 +2,11 @@ from pathlib import Path
 
 import pytest
 
-from ethpm.utils.ipfs import extract_ipfs_path_from_uri, generate_file_hash, is_ipfs_uri
+from ethpm._utils.ipfs import (
+    extract_ipfs_path_from_uri,
+    generate_file_hash,
+    is_ipfs_uri,
+)
 
 
 @pytest.mark.parametrize(

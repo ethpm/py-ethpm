@@ -1,7 +1,6 @@
 import json
 from typing import Any, Dict, List, Set
 
-from eth_typing import Manifest
 from jsonschema import ValidationError as jsonValidationError, validate
 
 from ethpm import SPEC_DIR, V2_PACKAGES_DIR
@@ -110,12 +109,6 @@ def validate_manifest_exists(manifest_id: str) -> None:
         raise ValidationError(
             f"Manifest not found in V2_PACKAGES_DIR with id: {manifest_id}"
         )
-
-
-def format_manifest(manifest: Manifest, *, prettify: bool = None) -> str:
-    if prettify:
-        return json.dumps(manifest, sort_keys=True, indent=4)
-    return json.dumps(manifest, sort_keys=True, separators=(",", ":"))
 
 
 def validate_raw_manifest_format(raw_manifest: str) -> None:

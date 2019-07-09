@@ -62,7 +62,7 @@ A valid content-addressed Github URI *must* conform to the following scheme, as 
 
 .. doctest::
 
-   >>> from ethpm.utils.uri import create_content_addressed_github_uri
+   >>> from ethpm.uri import create_content_addressed_github_uri
 
    >>> owned_github_api_uri = "https://api.github.com/repos/ethpm/py-ethpm/contents/ethpm/assets/owned/1.0.1.json"
    >>> content_addressed_uri = "https://api.github.com/repos/ethpm/py-ethpm/git/blobs/a7232a93f1e9e75d606f6c1da18aa16037e03480"

@@ -2,11 +2,19 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Generator, Optional, Tuple, Union
 
-from eth_typing import URI, Address, ContractName
+from eth_typing import URI, Address, ContractName, Manifest
 from eth_utils import to_canonical_address, to_text, to_tuple
 from web3 import Web3
 from web3.eth import Contract
 
+from ethpm._utils.cache import cached_property
+from ethpm._utils.contract import generate_contract_factory_kwargs
+from ethpm._utils.deployments import (
+    get_linked_deployments,
+    normalize_linked_references,
+    validate_deployments_tx_receipt,
+    validate_linked_references,
+)
 from ethpm.contract import LinkableContract
 from ethpm.dependencies import Dependencies
 from ethpm.deployments import Deployments
@@ -16,32 +24,21 @@ from ethpm.exceptions import (
     InsufficientAssetsError,
     PyEthPMError,
 )
-from ethpm.utils.backend import resolve_uri_contents
-from ethpm.utils.cache import cached_property
-from ethpm.utils.contract import (
-    generate_contract_factory_kwargs,
-    validate_contract_name,
-    validate_minimal_contract_factory_data,
-    validate_w3_instance,
-)
-from ethpm.utils.deployments import (
-    get_linked_deployments,
-    normalize_linked_references,
-    validate_deployments_tx_receipt,
-    validate_linked_references,
-)
-from ethpm.utils.manifest_validation import (
+from ethpm.uri import resolve_uri_contents
+from ethpm.validation.manifest import (
     check_for_deployments,
     validate_build_dependencies_are_present,
     validate_manifest_against_schema,
     validate_manifest_deployments,
     validate_raw_manifest_format,
 )
-from ethpm.validation import (
-    validate_address,
+from ethpm.validation.misc import validate_address, validate_w3_instance
+from ethpm.validation.package import (
     validate_build_dependency,
-    validate_single_matching_uri,
+    validate_contract_name,
+    validate_minimal_contract_factory_data,
 )
+from ethpm.validation.uri import validate_single_matching_uri
 
 
 class Package(object):
@@ -353,3 +350,9 @@ class Package(object):
             unresolved_linked_ref = value.split(":", 1)[-1]
             build_dependency = self.build_dependencies[value.split(":")[0]]
             yield build_dependency._resolve_link_dependencies(unresolved_linked_ref)
+
+
+def format_manifest(manifest: Manifest, *, prettify: bool = None) -> str:
+    if prettify:
+        return json.dumps(manifest, sort_keys=True, indent=4)
+    return json.dumps(manifest, sort_keys=True, separators=(",", ":"))

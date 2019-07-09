@@ -2,14 +2,14 @@ from eth_utils import to_bytes
 import pytest
 from web3.eth import Contract
 
-from ethpm.contract import LinkableContract
-from ethpm.deployments import Deployments
-from ethpm.exceptions import BytecodeLinkingError, ValidationError
-from ethpm.utils.deployments import (
+from ethpm._utils.deployments import (
     get_linked_deployments,
     normalize_linked_references,
     validate_linked_references,
 )
+from ethpm.contract import LinkableContract
+from ethpm.deployments import Deployments
+from ethpm.exceptions import BytecodeLinkingError, ValidationError
 
 DEPLOYMENT_DATA = {
     "SafeMathLib": {

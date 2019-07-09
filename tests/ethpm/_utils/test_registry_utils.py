@@ -1,7 +1,7 @@
 import pytest
 
 from ethpm.exceptions import ValidationError
-from ethpm.validation import validate_registry_uri
+from ethpm.validation.uri import validate_registry_uri
 
 
 @pytest.mark.parametrize(
