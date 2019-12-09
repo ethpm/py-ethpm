@@ -4,15 +4,12 @@
 [![CircleCI](https://circleci.com/gh/ethpm/py-ethpm.svg?style=svg)](https://circleci.com/gh/ethpm/py-ethpm)
 [![PyPI version](https://badge.fury.io/py/ethpm.svg)](https://badge.fury.io/py/ethpm)
 
-A Python implementation of the [Ethereum Package Manager Specification](http://ethpm.github.io/ethpm-spec/package-spec.html).
-
-Read more in the documentation on [ReadTheDocs](https://py-ethpm.readthedocs.io/en/latest/).
 
 WARNING!
 
-`Py-EthPM` is currently in public alpha. *Keep in mind*:
-- It is expected to have bugs and is not meant to be used in production
-- Things may be ridiculously slow or not work at all
+`py-ethpm` is deprecated, and no longer maintained.
+Please use the [ethpm module](https://web3py.readthedocs.io/en/stable/ethpm.html) in [web3.py](https://github.com/ethereum/web3.py/) instead.
+
 
 ## Quickstart
 ```sh
